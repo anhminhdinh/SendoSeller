@@ -1,0 +1,29 @@
+﻿<div data-options="dxView : { name: 'chatdetails', title: 'Hỏi & đáp', secure: true } " >
+	<div data-bind="dxCommand: { id: 'refresh', icon: 'refresh', action: function() { doLoadChatDetailData(); } }" ></div>
+	<div data-options="dxContent : { targetPlaceholder: 'content' } " >
+		<div data-bind="dxLoadPanel:{message: '', visible: loadPanelVisible }"></div>
+		<div style="font-weight: bold; padding: 10px;" data-bind="text:productName"></div>
+		<div id="chatScroll" class="conversations-content" data-bind="dxScrollView: {
+			pullDownAction: function() {doLoadChatDetailData();},
+			pulledDownText: 'Thả để tải lại...',
+			pullingDownText: 'Kéo để tải lại...' }">
+			<!-- ko foreach: chatDetailDataSource -->
+			<!-- ko if:isShop -->
+			<div class="conversations-date-shop" data-bind="text: date"></div>
+			<!-- /ko -->
+			<!-- ko ifnot:isShop -->
+			<div class="conversations-date" data-bind="text: date"></div>
+			<!-- /ko -->
+			<!-- ko if:isShop -->
+			<div class="conversations-message-shop" data-bind="text:msg, attr: {'id':name}"></div>
+			<!-- /ko -->
+			<!-- ko ifnot:isShop -->
+			<div class="conversations-message" data-bind="text:msg, attr: {'id':name}"></div>
+			<!-- /ko -->
+			<!-- /ko -->
+		</div>
+		<div class="conversations-comment" data-bind="dxTextBox:{value:commentToPost, placeholder:'Trả lời khách hàng' }"></div>
+		<div class="conversations-comment-button" data-bind="dxButton: { clickAction: postComment, text: 'Gửi' }"></div>
+	</div>
+</div>
+

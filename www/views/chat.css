@@ -1,0 +1,78 @@
+/*conversation*/
+.conversations-content .dx-scrollview-content:before, .conversations-content .dx-scrollview-content:after {
+	padding: 10px;
+}
+.conversations-list td.left, .orders-list td.left {
+	text-align: left;
+}
+.conversations-list td.right, .orders-list td.right {
+	text-align: right;
+}
+.conversations-name {
+	font-style: italic;
+	color: blue;
+	width: 66px;
+}
+.conversations-message-shop {
+	padding: 10px;
+	margin-left: 20px;
+	margin-right: 60px;
+	width: auto;
+	color: black;
+	background-color: #E6E7EB;
+	border: 1px solid #d5d7d6;
+	box-shadow: 0px 1px rgba(255, 255, 255, 0.35) inset, 0px 1px 2px rgba(0, 0, 0, 0.15);	
+}
+.conversations-title {
+	padding: 10px;
+	width: auto;
+	color: black;
+	background-color: #feea93;
+	box-shadow: 0px 1px rgba(255, 255, 255, 0.35) inset, 0px 1px 2px rgba(0, 0, 0, 0.15);	
+}
+.conversations-message {
+	padding: 10px;
+	margin-left: 60px;
+	margin-right: 20px;
+	width: auto;
+	color: black;
+	background-color: #feea93;
+	box-shadow: 0px 1px rgba(255, 255, 255, 0.35) inset, 0px 1px 2px rgba(0, 0, 0, 0.15);	
+}
+.conversations-date {
+	text-align: right;
+	padding: 10px;
+	margin-right: 20px;
+	font-size: 10px;
+	color: #0395d0;
+}
+.conversations-date-shop {
+	text-align: left;
+	padding: 10px;
+	margin-left: 20px;
+	font-size: 10px;
+	color: #0395d0;
+}
+.conversations-content {
+	height: 100%;
+	padding-bottom: 84px;
+	box-sizing: border-box;
+}
+.conversations-comment {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	padding-right: 44px;
+	box-sizing: border-box;
+}
+.conversations-comment-button {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+}
+.conversations-comment.dx-texteditor.dx-texteditor-empty.dx-widget.dx-state-hover-enabled.dx-textbox {
+	background-color: #adadad;
+}
+.conversations-comment.dx-texteditor.dx-texteditor-empty.dx-widget.dx-state-hover-enabled.dx-textbox.dx-texteditor-border.dx-texteditor-input {
+	color: white;
+}

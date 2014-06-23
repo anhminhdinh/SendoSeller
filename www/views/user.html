@@ -1,0 +1,57 @@
+<div data-options="dxView : { name: 'user', title: 'Đăng nhập' } " >
+	<div  data-options="dxContent : { targetPlaceholder: 'content' } " >
+		<div data-bind="dxLoadPanel:{message: '', visible: loadPanelVisible }"></div>
+		<div style="color: black;" data-bind="dxScrollView: {}">
+			<img class="user-photo" src="images/logo-sendo.png" />
+			<div align="center">
+				Ứng dụng quản trị dành cho người bán
+			</div>
+			<div style="padding: 10px; margin: 10px; background-color: #e6e7eb; border-radius: 5px;">
+				<!-- ko if:isLoggedOut -->
+				<div class="dx-fieldset">
+					<div class="dx-field">
+						<div id="nameBox" data-bind="
+						dxTextBox: { mode:'email', placeholder: 'Tên người dùng', value:username }"></div>
+					</div>
+					<div class="dx-field">
+						<div id="passBox" data-bind="
+						dxTextBox: { mode: 'password', placeholder: 'Mật khẩu', value:pass }"></div>
+					</div>
+					<div class="dx-field">
+						<div class="dx-field-label" style="width: 110px;" >
+							Lưu mật khẩu
+						</div>
+						<div class="dx-field-value" style="float: left;" width="44px" data-bind="dxCheckBox : { checked:savePassword, valueChangeAction: toggleSavePassword }">
+
+						</div>
+					</div>
+				</div>
+				<!-- <table>
+				<tbody>
+				<tr>
+				<td width="auto" data-bind="dxCheckBox : { checked:savePassword, valueChangeAction: toggleSavePassword }"></td>
+				<td width="100%">Lưu mật khẩu</td>
+				</tr>
+				</tbody>
+				</table> -->
+				<div style="text-align: center;" >
+					<div class="default-button" style="width: 100%" data-bind="dxButton: { text: 'Đăng nhập', clickAction: dologin }"></div>
+				</div>
+				<!-- /ko -->
+				<!-- ko ifnot:isLoggedOut -->
+				<div class="dx-fieldset">
+					<div class="dx-field">
+						<div class="dx-field-label" style="width: 15%;">
+							Tên:
+						</div>
+						<div class="dx-field-value" style="width: 85%; text-align: left;" data-bind="{ text:username, mode:'email' }"></div>
+					</div>
+				</div>
+				<div style="text-align: center;" >
+					<div class="default-button" style="width: 100%" data-bind="dxButton: { text: 'Đăng xuất', clickAction: dologout }"></div>
+				</div>
+				<!-- /ko -->
+			</div>
+		</div>
+	</div>
+</div>
