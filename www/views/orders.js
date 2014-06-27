@@ -76,6 +76,12 @@
 			},
 			disabled : ko.observable(true),
 		}, {
+			text : "Gọi khách hàng",
+			clickAction : function() {
+				processActionSheet("Call");
+			},
+			disabled : ko.observable(true),
+		}, {
 			text : "Xem chi tiết",
 			clickAction : function() {
 				processActionSheet("Details");
@@ -102,6 +108,7 @@
 				viewModel.dropDownMenuData[1].disabled(!dataItem.canDelay);
 				viewModel.dropDownMenuData[2].disabled(!dataItem.canSplit);
 				viewModel.dropDownMenuData[3].disabled(!dataItem.canCancel);
+				viewModel.dropDownMenuData[4].disabled(dataItem.buyerPhone === null);
 				viewModel.actionSheetVisible(true);
 			});
 			e.jQueryEvent.stopPropagation();
@@ -308,6 +315,46 @@
 		// immediate : true,
 	});
 
+	function groupByDate(data) {
+		var MS_PER_DAY = 24 * 60 * 60 * 1000, result = [], todayItems = [], thisWeekItems = [], otherItems = [];
+
+		// Fill intervals
+		$.each(data, function() {
+			var now = $.now();
+			var orderDate = new Date(this.orderDate);
+			var orderTime = orderDate.getTime();
+			var daysAgo = (now - orderTime) / MS_PER_DAY;
+
+			if (daysAgo < 1)
+				todayItems.push(this);
+			else if (daysAgo < 7)
+				thisWeekItems.push(this);
+			else
+				otherItems.push(this);
+		});
+
+		// Construct final result
+		if (todayItems.length)
+			result.push({
+				key : "Hôm nay",
+				items : todayItems
+			});
+
+		if (thisWeekItems.length)
+			result.push({
+				key : "Tuần này",
+				items : thisWeekItems
+			});
+
+		if (otherItems.length)
+			result.push({
+				key : "Đơn hàng cũ",
+				items : otherItems
+			});
+
+		return result;
+	}
+
 	newDataSource = new DevExpress.data.DataSource({
 		store : ordersStore,
 		pageSize : 50,
@@ -315,7 +362,9 @@
 			getter : 'orderDate',
 			desc : true
 		},
-		filter : ["status", "=", "New"]
+		// group : 'orderDate',
+		postProcess : groupByDate,
+		filter : ["status", "=", "New"],
 	});
 
 	processingDataSource = new DevExpress.data.DataSource({
@@ -325,6 +374,8 @@
 			getter : 'orderDate',
 			desc : true
 		},
+		// group : 'orderDate',
+		postProcess : groupByDate,
 		filter : ["status", "=", "Processing"]
 	});
 
@@ -335,6 +386,8 @@
 			getter : 'orderDate',
 			desc : true
 		},
+		// group : 'orderDate',
+		postProcess : groupByDate,
 		filter : ["status", "=", "Delayed"]
 	});
 
@@ -385,6 +438,9 @@
 				break;
 			case "Cancel":
 				doCancelOrder();
+				break;
+			case "Call":
+				window.location = 'tel:' + viewModel.dataItem().buyerPhone;
 				break;
 			case "Details":
 				showDetail();

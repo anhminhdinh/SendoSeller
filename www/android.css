@@ -45,6 +45,6 @@
 	background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABCElEQVRYR+2WWQvCMBCE7T/2wAvvExXP3+qDjzoDLYSgkj1oXxIoTULS+Xa6m7ZoNdyKhvVbGSA74O3AFEn9wnVJTW5PgBNE+6XwCvdlCoQXwARi20DwiP6oLoAwcmomR8/FVgcY6SCIdI3+IiXyao0FIBbf4KFzibjFARdxLUAszuSbSSPXvoIDNg4DsR36rH11k+QA6zpMsD3GLD9TkwDE0auSLqaVAHBv7MIVcz2LBVKAbxA3THa1EBoAVwgtACF45IYHzx3jjtQJC4ALhBXgFwRz4p3ihgcAdc5RNbBkx3UCUItfwupIbqP/qBuAevwVe5bnRYq++X8gSeTfIq8cUINkgOzAB1FpKSG7oDUOAAAAAElFTkSuQmCC) 0 0 no-repeat;
 	width: 32px;
 }
-.dx-theme-android .dx-list-item, .dx-theme-android .dx-list .dx-empty-message {
+/*.dx-theme-android .dx-list-item, .dx-theme-android .dx-list .dx-empty-message {
 	padding: 1em 0px;
-}
+}*/

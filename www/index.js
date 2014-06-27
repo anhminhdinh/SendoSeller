@@ -88,7 +88,7 @@
 		});
 
 		jQuery.support.cors = true;
-		localStorage.clear();
+		// localStorage.clear();
 		MyApp.app.router.register(":view/:id", {
 			view : "user",
 			id : undefined

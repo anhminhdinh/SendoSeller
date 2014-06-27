@@ -57,6 +57,7 @@
 		<div id="pivot" data-bind="dxPivot: { dataSource: items, itemSelectAction: selectNewTab, selectedIndex: 0 }">
 			<div data-options="dxTemplate : { name: 'item' } ">
 				<div data-bind="attr: { id: 'list' + dataName }, dxList: { dataSource: listItems,
+				grouped: true,
 				autoPagingEnabled: true,
 				pageLoadingAction: function() { loadNextOrders(dataName); },
 				pullRefreshEnabled: true,
@@ -66,17 +67,18 @@
 				pullingDownText: 'Kéo để tải lại...',
 				nextButtonText: 'Tải tiếp ...',
 				pageLoadingText: 'Đang tải ...',
-				itemClickAction: function(e) { showDetailsData(e); } }">
-
-					<div data-options="dxTemplate : { name: 'item' }">
-						<div class="order-number-fieldset">
-							<div class="dx-fieldset">
-								<div class="dx-field" style="font-size: smaller;">
-									<div class="dx-field-label" style="color: black;" data-bind="text:'#'+orderNumber"></div>
-									<div class="dx-field-value" style="text-align: right;" data-bind="text:orderDateDisplay"></div>
-								</div>
-							</div>
-						</div>
+				itemClickAction: function(e) { showDetailsData(e); },
+				}">
+					<!-- itemClickAction: function(e) { $root.showActionSheet(e); }, -->
+					<div style="padding: 0 10px; border-radius: 5px; background-color: lightgrey;" data-options="dxTemplate : { name: 'item' }">
+						<table>
+							<tbody>
+								<tr>
+									<td width="auto" style="font-size: smaller;" data-bind="text:'#'+orderNumber"></td>
+									<td width="100%" class="order-total-amount" data-bind="text:totalAmount + ' đ'"></td>
+								</tr>
+							</tbody>
+						</table>
 						<!-- ko foreach: products -->
 						<div class="products-info">
 							<table class="product-table">
@@ -91,23 +93,16 @@
 										<td style="font-size: smaller; white-space: pre-wrap; word-wrap: break-word;" data-bind="text:description"></td>
 									</tr>
 									<!-- <tr>
-										<td data-bind="text:weight + 'g'"></td>
-									</tr> -->									<tr>
+									<td data-bind="text:weight + 'g'"></td>
+									</tr> -->
+									<tr>
 										<td style="font-size: smaller;" class="product-price" data-bind="text:price + ' đ x ' + quantity"></td>
 									</tr>
 								</tbody>
 							</table>
 						</div>
 						<!-- /ko -->
-						<table>
-							<tbody>
-								<tr>
-									<!-- <td width="auto" class="transparent-button"><a style="font-size: 18px; font-weight: bold;" data-bind="attr: {href:'tel:'+buyerPhone}, text:buyerPhone"></a></td> -->
-									<td width="auto" class="transparent-button" data-bind="dxButton: {icon:'tel', text:buyerPhone, clickAction:function(e) { window.location='tel:'+buyerPhone; e.jQueryEvent.stopPropagation();}}"></td>
-									<td width="100%" class="order-total-amount" data-bind="text:totalAmount + ' đ'"></td>
-								</tr>
-							</tbody>
-						</table>
+						<!-- <div data-bind="attr: { id: orderNumber }"></div> -->
 						<div style="width:100%; padding: 10px 0px;" class="default-button" style="width: 100%;" data-bind="attr: { id: orderNumber }, dxButton: {text:'Xử lý ngay', clickAction:function(e) {$root.showActionSheet(e);}}"></div>
 					</div>
 				</div>
