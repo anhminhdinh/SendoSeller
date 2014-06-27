@@ -3,7 +3,7 @@
 	var MyApp = window.MyApp = { };
 
 	// Uncomment the line below to disable platform-specific look and feel and to use the Generic theme for all devices
-	// DevExpress.devices.current({ platform: "generic" });
+	DevExpress.devices.current({ platform: "android" });
 
 	$(function() {
 		MyApp.app = new DevExpress.framework.html.HtmlApplication({
@@ -88,7 +88,7 @@
 		});
 
 		jQuery.support.cors = true;
-		// localStorage.clear();
+		localStorage.clear();
 		MyApp.app.router.register(":view/:id", {
 			view : "user",
 			id : undefined
@@ -186,18 +186,21 @@
 							//You can do this however you like - it doesn't have to be an alert.
 							var titleStr = 'Xem đơn hàng mới!';
 							var newPage = 'orders';
+							var newId = undefined;
 							if (msgObj.data !== null) {
 								if (msgObj.data !== "info") {
-									if (msgObj.data === "newQuestion") {
+									if (msgObj.data.indexOf("newQuestion") === 0) {
 										titleStr = 'Xem câu hỏi mới!';
-										newPage = 'chats';
+										newPage = 'chatdtails';
+										newId = msgObj.data.replace("newQuestion",'');
+										newId = newId.replace("_",'');
 									}
 									var result = DevExpress.ui.dialog.confirm(msgObj.msg, titleStr);
 									result.done(function(dialogResult) {
 										if (dialogResult) {
 											MyApp.app.navigate({
 												view : newPage,
-												id : undefined
+												id : newId
 											}, {
 												root : true
 											});

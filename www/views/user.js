@@ -46,6 +46,10 @@
 			MyApp.app.navigation[2].option('visible', onOff);
 		},
 		dologin : function() {
+			if (!validateEmail(viewModel.username())) {
+				DevExpress.ui.dialog.alert("Địa chỉ email không hợp lệ!", "Sendo.vn");
+				return;
+			}
 			viewModel.loadPanelVisible(true);
 			if ( typeof AppMobi === 'object')
 				AppMobi.notification.showBusyIndicator();
@@ -95,7 +99,7 @@
 						if ( typeof AppMobi === 'object')
 							AppMobi.notification.hideBusyIndicator();
 						if (data.Flag !== true) {
-							DevExpress.ui.dialog.alert("Đăng xuất thất bại!", "Sendo.vn");
+							DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
 							return;
 						}
 						window.localStorage.removeItem("MyTokenId");

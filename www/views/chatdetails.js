@@ -24,7 +24,7 @@
 			if ( typeof AppMobi === 'object')
 				AppMobi.notification.hideBusyIndicator();
 			if (data.Flag !== true) {
-				DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
 				return;
 			}
 			if (data.Data === null || data.Data.data === null || data.Data.data.length === 0)
@@ -71,6 +71,12 @@
 			Id : viewModel.id,
 			Message : viewModel.commentToPost()
 		}, "json").done(function(data) {
+			if ( typeof AppMobi === 'object')
+				AppMobi.notification.hideBusyIndicator();
+			if (data.Flag !== true) {
+				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
+				return;
+			}
 			viewModel.commentToPost('');
 			doLoadChatDetailData();
 		}).fail(function(jqxhr, textStatus, error) {

@@ -1,0 +1,143 @@
+﻿<div data-options="dxView : { name: 'order-details', title: 'Đơn hàng' } " >
+	<!-- <div data-bind="dxCommand: { id: 'edit', icon: 'edit', action: showActionSheet }" ></div> -->
+	<div data-options="dxContent : { targetPlaceholder: 'content' } " >
+		<div data-bind="dxActionSheet: {
+		dataSource: dropDownMenuData,
+		visible: actionSheetVisible,
+		showTitle : false,
+		<!-- title: 'Xử lý đơn hàng', -->
+		cancelText: 'Bỏ qua',
+		usePopover : true,
+		target : '#processbutton'
+		}"></div>
+		<div data-bind="dxScrollView:{}" style="padding: 10px; color: black;">
+			<div>
+				<!-- ko foreach: products -->
+				<div class="products-info">
+					<table class="product-table">
+						<tbody>
+							<tr>
+								<td rowspan="5"valign=top><img class="product-thumbnail" data-bind="attr: { src: thumbnail }"><img></td>
+							</tr>
+							<tr>
+								<td style="font-weight: bolder;white-space: pre-wrap; word-wrap: break-word;" data-bind="text: name"></td>
+							</tr>
+							<tr>
+								<td class="product-property" style="white-space: pre-wrap; word-wrap: break-word;" data-bind="text:description"></td>
+							</tr>
+							<tr>
+								<td class="product-property" data-bind="text:weight + 'g'"></td>
+							</tr>
+							<tr>
+								<td class="product-price" data-bind="text:price + ' đ x ' + quantity"></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<!-- /ko -->
+			</div>
+			<div style="text-align: right;margin: 10px;font-weight: bold;">
+				<span>Tổng tiền: </span><span class="order-total-amount" data-bind="text:totalAmount() + ' đ'"></span>
+			</div>
+			<div class="order-info">
+				<div class="dx-fieldset" style="font-weight: bold;">
+					<div class="dx-field">
+						<div class="dx-field-label">
+							Thanh toán
+						</div>
+						<div class="dx-field-value" style="color: #0847b9;" data-bind="text: ': ' + paymentMethod()" ></div>
+					</div>
+					<div class="dx-field">
+						<div class="dx-field-label">
+							Vận chuyển
+						</div>
+						<div class="dx-field-value" data-bind="text: ': ' + shippingMethod()" ></div>
+					</div>
+					<div class="dx-field">
+						<div class="dx-field-label">
+							Trạng thái
+						</div>
+						<div class="dx-field-value" data-bind="text: ': ' + orderStatus()" ></div>
+					</div>
+					<div class="dx-field">
+						<div class="dx-field-label">
+							Ngày đặt
+						</div>
+						<div class="dx-field-value" data-bind="text: ': ' + orderDateDisplay()" ></div>
+					</div>
+					<div id="delayField" class="dx-field">
+						<div class="dx-field-label">
+							Ngày hoãn
+						</div>
+						<div class="dx-field-value" data-bind="text: ': ' + delayDateDisplay()" ></div>
+					</div>
+					<div class="dx-field">
+						<div class="dx-field-label">
+							Người mua
+						</div>
+						<div class="dx-field-value" data-bind="text: ': ' + buyerName()"></div>
+					</div>
+					<div class="dx-field">
+						<div class="dx-field-label">
+							Địa chỉ
+						</div>
+						<div class="dx-field-value" data-bind="text: ': ' + buyerAddress()" ></div>
+					</div>
+					<div class="dx-field">
+						<div data-bind="dxButton: {icon:'tel', text:buyerPhone, clickAction:function() { window.location = 'tel:' + buyerPhone(); } }"></div>
+					</div>
+				</div>
+			</div>
+			<div id="noteField" style="background: #e6e7eb; border-radius : 10px; padding: 10px; background-image: url('images/qa-icon.png'); background-repeat: no-repeat; background-position: right top;" data-bind="text:note" ></div>
+			<div style="text-align: center;padding: 10px 0px; width: 100%;" id="processbutton" class="default-button" data-bind="dxButton: {text:'Xử lý đơn hàng', clickAction: function() {showActionSheet();}}"></div>
+			<div style="padding: 10px;"></div>
+		</div>
+		<div data-bind="dxLoadPanel:{message: 'Đang xử lý...', visible: loadPanelVisible }"></div>
+		<div class="popup" data-bind="dxPopup:{visible:popupDelayVisible, fullScreen:false, title:'Delay'}">
+			<div data-options="dxTemplate:{name: 'content'}">
+				<div class="dx-fieldset">
+					<div class="dx-field">
+						<div class="dx-field-label">
+							Ngày hoãn
+						</div>
+						<div class="dx-field-value" data-bind="
+						dxDateBox: { value: dateBoxValue, format: 'date' }"></div>
+					</div>
+				</div>
+				<div class="product-popup-footer">
+					<div class="button" data-bind="dxButton: { text: 'Hoãn', clickAction: function() {doDelayOrderByOrderID();}, icon:'clock' }"></div>
+					<div class="button" data-bind="dxButton: { text: 'Huỷ hoãn', clickAction: hideDelayPopUp, icon: 'close' }"></div>
+				</div>
+			</div>
+		</div>
+		<div class="popup" data-bind="dxPopup:{visible:popupSplitVisible, fullScreen:true, title:'Tách đơn hàng'}">
+			<div id="popupSplitContent" data-options="dxTemplate:{name: 'content'}">
+				<div id="popupSplitList" data-bind="dxList: {dataSource: productsToSplit,
+				editEnabled: true,
+				editConfig: {
+				deleteEnabled: true,
+				deleteType: 'toggle'
+				},
+				itemDeleteAction: deleted,
+				}">
+					<div data-options="dxTemplate:{ name:'item' }">
+						<div class="products-info">
+							<table class="product-table">
+								<tbody>
+									<tr>
+										<td valign=top><img class="product-thumbnail lazy" data-bind="attr: { src: thumbnail }"><img></td>
+										<td style="font-weight: bolder;white-space: pre-wrap; word-wrap: break-word;" data-bind="text: name"></td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+				<div id="popupSplitFooter" class="popup-split-footer" style="padding-bottom: 10px;">
+					<div class="default-button"  data-bind="dxButton: { text: 'Tách', clickAction: function() { doSplitOrder(); }, icon:'plus', disabled:cantSplitCurrentItem }"></div>
+					<div class="default-button"  data-bind="dxButton: { text: 'Huỷ tách', clickAction: hideSplitPopUp, icon:'close' }"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

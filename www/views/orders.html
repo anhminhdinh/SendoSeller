@@ -19,39 +19,37 @@
 						dxDateBox: { value: dateBoxValue, format: 'date' }"></div>
 					</div>
 				</div>
-				<div class="footer">
-					<div class="default-button" data-bind="dxButton: { text: 'Hoãn', clickAction: function() {doDelayOrderByOrderID();}, icon:'clock' }"></div>
+				<div class="product-popup-footer">
+					<div class="default-button" data-bind="dxButton: { text: 'Hoãn', clickAction: function() {doDelayOrder();}, icon:'clock' }"></div>
 					<div class="default-button" data-bind="dxButton: { text: 'Huỷ hoãn', clickAction: hideDelayPopUp, icon: 'close' }"></div>
 				</div>
 			</div>
 		</div>
-		<div class="popup" data-bind="dxPopup:{visible:popupSplitVisible, fullScreen:true, title:'Split'}">
-			<div data-options="dxTemplate:{name: 'content'}">
-				<h2>Sản phẩm để tách</h2>
-				<div id="splitList" style="margin: 10px;height=75%;height=calc(100%-68px);" data-bind="dxList: {dataSource: productsToSplit,
+		<div class="popup" data-bind="dxPopup:{visible:popupSplitVisible, fullScreen:true, title:'Tách đơn hàng'}">
+			<div id="popupSplitContent" data-options="dxTemplate:{name: 'content'}">
+				<div id="popupSplitList" data-bind="dxList: {dataSource: productsToSplit,
 				editEnabled: true,
 				editConfig: {
 				deleteEnabled: true,
-				deleteMode: 'toggle'
-				}
+				deleteType: 'toggle'
+				},
+				itemDeleteAction: itemDeleted,
 				}">
-					<div class="listItem" data-options="dxTemplate:{ name:'item' }">
-						<div class="lazy" style="display:inline-block; margin: 5px;">
-							<img width="50" height="50"  style="margin:5px;" data-bind="attr: { src: thumbnail }" />
-						</div>
-						<div style="display:inline-block; margin: 5px;">
-							<p>
-								<i data-bind="text: name" style="white-space: pre-wrap; word-wrap: break-word; text-align: left;"></i>
-							</p>
-							<p>
-								<i data-bind="text: stockAvailability"></i>
-							</p>
+					<div data-options="dxTemplate:{ name:'item' }">
+						<div class="products-info">
+							<table class="product-table">
+								<tbody>
+									<tr>
+										<td valign=top><img class="product-thumbnail lazy" data-bind="attr: { src: thumbnail }"><img></td>
+										<td style="font-weight: bolder;white-space: pre-wrap; word-wrap: break-word;" data-bind="text: name"></td>
+									</tr>
+								</tbody>
+							</table>
 						</div>
 					</div>
 				</div>
-				<div class="footer">
-					<!-- <div style="float:right;" data-bind="dxButton: { text: 'Continue', clickAction: popup.hide }"></div> -->
-					<div class="default-button"  data-bind="dxButton: { text: 'Tách', clickAction: function() { doSplitOrderByOrderID(); }, icon:'plus' }"></div>
+				<div id="popupSplitFooter" class="popup-split-footer" style="padding-bottom: 10px;">
+					<div class="default-button"  data-bind="dxButton: { text: 'Tách', clickAction: function() { doSplitOrder(); }, icon:'plus', disabled:cantSplitCurrentItem }"></div>
 					<div class="default-button"  data-bind="dxButton: { text: 'Huỷ tách', clickAction: hideSplitPopUp, icon:'close' }"></div>
 				</div>
 			</div>
@@ -60,7 +58,7 @@
 			<div data-options="dxTemplate : { name: 'item' } ">
 				<div data-bind="attr: { id: 'list' + dataName }, dxList: { dataSource: listItems,
 				autoPagingEnabled: true,
-				pageLoadingAction: function() { loadImages(); },
+				pageLoadingAction: function() { loadNextOrders(dataName); },
 				pullRefreshEnabled: true,
 				pullRefreshAction: function() { doLoadDataByOrderStatus(dataName); },
 				noDataText: 'Không có đơn hàng nào ở mục này',
@@ -73,7 +71,7 @@
 					<div data-options="dxTemplate : { name: 'item' }">
 						<div class="order-number-fieldset">
 							<div class="dx-fieldset">
-								<div class="dx-field">
+								<div class="dx-field" style="font-size: smaller;">
 									<div class="dx-field-label" style="color: black;" data-bind="text:'#'+orderNumber"></div>
 									<div class="dx-field-value" style="text-align: right;" data-bind="text:orderDateDisplay"></div>
 								</div>
@@ -95,7 +93,7 @@
 									<!-- <tr>
 										<td data-bind="text:weight + 'g'"></td>
 									</tr> -->									<tr>
-										<td style="font-size: smaller;" class="product-price" data-bind="text:price + ' VNĐ x ' + quantity"></td>
+										<td style="font-size: smaller;" class="product-price" data-bind="text:price + ' đ x ' + quantity"></td>
 									</tr>
 								</tbody>
 							</table>
@@ -106,18 +104,10 @@
 								<tr>
 									<!-- <td width="auto" class="transparent-button"><a style="font-size: 18px; font-weight: bold;" data-bind="attr: {href:'tel:'+buyerPhone}, text:buyerPhone"></a></td> -->
 									<td width="auto" class="transparent-button" data-bind="dxButton: {icon:'tel', text:buyerPhone, clickAction:function(e) { window.location='tel:'+buyerPhone; e.jQueryEvent.stopPropagation();}}"></td>
-									<td width="100%" class="order-total-amount" data-bind="text:totalAmount + ' VNĐ'"></td>
+									<td width="100%" class="order-total-amount" data-bind="text:totalAmount + ' đ'"></td>
 								</tr>
 							</tbody>
 						</table>
-						<!-- <table>
-						<tbody>
-						<tr>
-						<td width="auto" data-bind="text:buyerName"></td>
-						<td width="100%" class="order-total-amount" data-bind="text:totalAmount + ' VNĐ'"></td>
-						</tr>
-						</tbody>
-						</table> -->
 						<div style="width:100%; padding: 10px 0px;" class="default-button" style="width: 100%;" data-bind="attr: { id: orderNumber }, dxButton: {text:'Xử lý ngay', clickAction:function(e) {$root.showActionSheet(e);}}"></div>
 					</div>
 				</div>

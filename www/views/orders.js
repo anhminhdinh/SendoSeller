@@ -1,4 +1,5 @@
 ﻿MyApp.orders = function(params) {
+	var LOADSIZE = 50;
 	var viewModel = {
 		viewShowing : function() {
 			if (window.sessionStorage.getItem("MyTokenId") === null) {
@@ -13,20 +14,22 @@
 				refresh();
 			}
 		},
+		loadFrom : ko.observable(0),
 		viewShown : function() {
-			var isAndroid = DevExpress.devices.real().platform === 'android';
+			var platform = DevExpress.devices.real().platform;
+			var isAndroid = platform === 'android' || platform === 'generic';
 			var obj = null;
 			obj = $("#listNew");
 			var list = obj.dxList("instance");
-			// list.option('autoPagingEnabled', !isAndroid);
 			list.option('showNextButton', isAndroid);
 			list.option('pullRefreshEnabled', !isAndroid);
-			loadImages();
+			loadNextImages();
 			var objPivot = $("#pivot").dxPivot("instance");
 			objPivot.option('selectedIndex', 0);
 		},
 		selectNewTab : function(input) {
-			var isAndroid = DevExpress.devices.real().platform === 'android';
+			var platform = DevExpress.devices.real().platform;
+			var isAndroid = platform === 'android' || platform === 'generic';
 			var obj = null;
 			switch (input.selectedIndex) {
 				case 0:
@@ -51,36 +54,37 @@
 		dropDownMenuData : [{
 			text : "Còn hàng",
 			clickAction : function() {
-				processValueChange("Processing");
+				processActionSheet("Processing");
 			},
 			disabled : ko.observable(true),
 		}, {
 			text : "Hoãn",
 			clickAction : function() {
-				processValueChange("Delay");
+				processActionSheet("Delay");
 			},
 			disabled : ko.observable(true),
 		}, {
 			text : "Tách đơn hàng",
 			clickAction : function() {
-				processValueChange("Split");
+				processActionSheet("Split");
 			},
 			disabled : ko.observable(true),
 		}, {
 			text : "Hết hàng",
 			clickAction : function() {
-				processValueChange("Cancel");
+				processActionSheet("Cancel");
 			},
 			disabled : ko.observable(true),
 		}, {
 			text : "Xem chi tiết",
 			clickAction : function() {
-				processValueChange("Details");
+				processActionSheet("Details");
 			},
 			// disabled : ko.observable(false),
 		}],
 		products : ko.observableArray([]),
 		productsToSplit : ko.observableArray([]),
+		cantSplitCurrentItem : ko.observable(false),
 		dataItem : ko.observable(),
 		dateBoxValue : ko.observable(new Date()),
 		popupDelayVisible : ko.observable(false),
@@ -123,142 +127,171 @@
 	};
 
 	doReloadPivot = function(status) {
-		ordersStore.load();
 		switch (status) {
 			case "New":
 				newDataSource.filter("status", status);
 				newDataSource.pageIndex(0);
-				newDataSource.load();
+				newDataSource.sort({
+					getter : 'orderDate',
+					desc : true
+				});
+				newDataSource.load().done(function(results) {
+				});
 				break;
 			case "Processing":
 				processingDataSource.filter("status", status);
 				processingDataSource.pageIndex(0);
-				processingDataSource.load();
+				processingDataSource.sort({
+					getter : 'orderDate',
+					desc : true
+				});
+				processingDataSource.load().done(function(results) {
+				});
 				break;
 			case "Delayed":
 				delayedDataSource.filter("status", status);
 				delayedDataSource.pageIndex(0);
-				delayedDataSource.load();
+				delayedDataSource.sort({
+					getter : 'orderDate',
+					desc : true
+				});
+				delayedDataSource.load().done(function(results) {
+				});
 				break;
 		}
 	};
 
-	doCancelOrderByOrderID = function() {
-		// showLoading(true);
-		AppMobi.notification.showBusyIndicator();
+	doCancelOrder = function() {
+		showLoading(true);
+		if ( typeof AppMobi === 'object')
+			AppMobi.notification.showBusyIndicator();
 		var tokenId = window.sessionStorage.getItem("MyTokenId");
+		var postOrderNumber = Number(viewModel.dataItem().orderId);
 		return $.post("http://180.148.138.140/sellerTest2/api/mobile/ProcessOrder", {
 			TokenId : tokenId,
-			OrderNumber : viewModel.dataItem().orderNumber,
+			OrderId : postOrderNumber,
 			Action : "Cancel",
 		}, "json").done(function(data) {
-			// showLoading(false);
-			AppMobi.notification.hideBusyIndicator();
+			showLoading(false);
+			if ( typeof AppMobi === 'object')
+				AppMobi.notification.hideBusyIndicator();
 			if (data.Flag !== true) {
-				DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
 				return;
 			}
 			var item = viewModel.dataItem();
 			var oldStatus = item.status;
-			item.status = "Cancel";
-			ordersStore.update(item.orderNumber, item);
+			ordersStore.remove(postOrderNumber);
 			doLoadDataByOrderStatus(oldStatus);
-			doLoadDataByOrderStatus("Cancel");
+			// doLoadDataByOrderStatus("Cancel");
 		}).fail(function(jqxhr, textStatus, error) {
-			// showLoading(false);
-			AppMobi.notification.hideBusyIndicator();
+			showLoading(false);
+			if ( typeof AppMobi === 'object')
+				AppMobi.notification.hideBusyIndicator();
 			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
 		});
 	};
 
-	doProcessOrderByOrderID = function() {
-		// showLoading(true);
-		AppMobi.notification.showBusyIndicator();
+	doProcessOrder = function() {
+		showLoading(true);
+		if ( typeof AppMobi === 'object')
+			AppMobi.notification.showBusyIndicator();
 		var tokenId = window.sessionStorage.getItem("MyTokenId");
+		var postOrderNumber = Number(viewModel.dataItem().orderId);
 		return $.post("http://180.148.138.140/sellerTest2/api/mobile/ProcessOrder", {
 			TokenId : tokenId,
-			OrderNumber : viewModel.dataItem().orderNumber,
+			OrderId : postOrderNumber,
 			Action : "Processing",
 		}, "json").done(function(data, textStatus) {
-			// showLoading(false);
-			AppMobi.notification.hideBusyIndicator();
+			showLoading(false);
+			if ( typeof AppMobi === 'object')
+				AppMobi.notification.hideBusyIndicator();
 			if (data.Flag !== true) {
-				DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
 				return;
 			}
 			var item = viewModel.dataItem();
 			var oldStatus = item.status;
-			item.status = "Processing";
-			ordersStore.update(item.orderNumber, item);
+			ordersStore.remove(item.orderNumber);
 			doLoadDataByOrderStatus(oldStatus);
 			doLoadDataByOrderStatus("Processing");
 		}).fail(function(jqxhr, textStatus, error) {
-			// showLoading(false);
-			AppMobi.notification.hideBusyIndicator();
+			showLoading(false);
+			if ( typeof AppMobi === 'object')
+				AppMobi.notification.hideBusyIndicator();
 			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
 		});
 
 	};
 
-	doSplitOrderByOrderID = function() {
-		// showLoading(true);
-		AppMobi.notification.showBusyIndicator();
+	doSplitOrder = function() {
+		showLoading(true);
+		if ( typeof AppMobi === 'object')
+			AppMobi.notification.showBusyIndicator();
 		var splitIDs = [];
 		for (var i = 0; i < viewModel.productsToSplit().length; i++) {
-			var product = {
-				Id : viewModel.productsToSplit()[i].id
-			};
-			splitIDs.push(product);
+			// var product = {
+			// Id : viewModel.productsToSplit()[i].id
+			// };
+			// splitIDs.push(product);
+			splitIDs.push(viewModel.productsToSplit()[i].id);
 		}
 		var tokenId = window.sessionStorage.getItem("MyTokenId");
+		var postOrderNumber = Number(viewModel.dataItem().orderId);
 		return $.post("http://180.148.138.140/sellerTest2/api/mobile/ProcessOrder", {
 			TokenId : tokenId,
-			OrderNumber : viewModel.dataItem().orderNumber,
-			Action : "Split",
-			Products : splitIDs
+			OrderId : postOrderNumber,
+			Action : "Splitting",
+			ProductSplits : splitIDs
 		}, "json").done(function(data) {
 			hideSplitPopUp();
+			if ( typeof AppMobi === 'object')
+				AppMobi.notification.hideBusyIndicator();
 			if (data.Flag !== true) {
-				DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
 				return;
 			}
 			var item = viewModel.dataItem();
 			var oldStatus = item.status;
-			item.status = "Splitting";
-			ordersStore.update(item.orderNumber, item);
+			ordersStore.remove(postOrderNumber);
 			doLoadDataByOrderStatus(oldStatus);
-			doLoadDataByOrderStatus("Splitting");
-			//TODO modify local data here
 		}).fail(function(jqxhr, textStatus, error) {
 			hideSplitPopUp();
+			if ( typeof AppMobi === 'object')
+				AppMobi.notification.hideBusyIndicator();
 			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
 		});
 
 	};
 
-	doDelayOrderByOrderID = function() {
-		// showLoading(true);
-		AppMobi.notification.showBusyIndicator();
+	doDelayOrder = function() {
+		showLoading(true);
+		if ( typeof AppMobi === 'object')
+			AppMobi.notification.showBusyIndicator();
 		var tokenId = window.sessionStorage.getItem("MyTokenId");
 		var newDelayDate = new Date(viewModel.dateBoxValue());
+		var postOrderNumber = Number(viewModel.dataItem().orderId);
 		return $.post("http://180.148.138.140/sellerTest2/api/mobile/ProcessOrder", {
 			TokenId : tokenId,
-			OrderNumber : viewModel.dataItem().orderNumber,
+			OrderId : postOrderNumber,
 			Action : "Delay",
 			DelayDate : Globalize.format(newDelayDate, 'yyyy-MM-dd')
 		}, "json").done(function(data, textStatus) {
 			hideDelayPopUp();
+			if ( typeof AppMobi === 'object')
+				AppMobi.notification.hideBusyIndicator();
 			if (data.Flag !== true) {
-				DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
 				return;
 			}
 			var item = viewModel.dataItem();
 			var oldStatus = item.status;
-			item.status = "Delayed";
-			ordersStore.update(item.orderNumber, item);
+			ordersStore.remove(item.orderNumber);
 			doLoadDataByOrderStatus(oldStatus);
 			doLoadDataByOrderStatus("Delayed");
 		}).fail(function(jqxhr, textStatus, error) {
+			if ( typeof AppMobi === 'object')
+				AppMobi.notification.hideBusyIndicator();
 			hideDelayPopUp();
 			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
 		});
@@ -277,22 +310,31 @@
 
 	newDataSource = new DevExpress.data.DataSource({
 		store : ordersStore,
-		pageSize : 10,
-		sort : "orderNumber",
+		pageSize : 50,
+		sort : {
+			getter : 'orderDate',
+			desc : true
+		},
 		filter : ["status", "=", "New"]
 	});
 
 	processingDataSource = new DevExpress.data.DataSource({
 		store : ordersStore,
-		pageSize : 10,
-		sort : "orderNumber",
+		pageSize : 50,
+		sort : {
+			getter : 'orderDate',
+			desc : true
+		},
 		filter : ["status", "=", "Processing"]
 	});
 
 	delayedDataSource = new DevExpress.data.DataSource({
 		store : ordersStore,
-		pageSize : 10,
-		sort : "orderNumber",
+		pageSize : 50,
+		sort : {
+			getter : 'orderDate',
+			desc : true
+		},
 		filter : ["status", "=", "Delayed"]
 	});
 
@@ -310,10 +352,10 @@
 		listItems : delayedDataSource
 	}];
 
-	processValueChange = function(text) {
+	processActionSheet = function(text) {
 		switch (text) {
 			case "Processing":
-				doProcessOrderByOrderID();
+				doProcessOrder();
 				break;
 			case "Delay":
 				viewModel.popupDelayVisible(true);
@@ -331,13 +373,18 @@
 				}
 
 				viewModel.popupSplitVisible(true);
-				$("#splitList").dxList('instance').option('dataSource', viewModel.productsToSplit());
+				var totalHeight = $("#popupSplitContent").height();
+				var footerHeight = $("#popupSplitFooter").height();
+				$("popupSplitList").height(totalHeight - footerHeight);
+
+				$("#popupSplitList").dxList('instance').option('dataSource', viewModel.productsToSplit());
+				viewModel.cantSplitCurrentItem(true);
 				break;
 			case "New":
-				doNewOrderByOrderID();
+				doNewOrder();
 				break;
 			case "Cancel":
-				doCancelOrderByOrderID();
+				doCancelOrder();
 				break;
 			case "Details":
 				showDetail();
@@ -355,25 +402,36 @@
 		var timeStamp = Number(window.localStorage.getItem(myUserName + "OrdersTimeStamp" + status));
 		if (timeStamp === null)
 			timeStamp = 0;
+		var from = viewModel.loadFrom();
+		var to = viewModel.loadFrom() + LOADSIZE - 1;
+		if (viewModel.loadFrom() > 0)
+			timeStamp = 0;
+
 		return $.post("http://180.148.138.140/sellerTest2/api/mobile/ListSalesOrderByStatus", {
 			TokenId : tokenId,
 			Status : status,
-			TimeStamp : timeStamp
+			TimeStamp : timeStamp,
+			From : from,
+			To : to
 		}, "json").done(function(data, textStatus) {
 			viewModel.loadPanelVisible(false);
 			if ( typeof AppMobi === 'object')
 				AppMobi.notification.hideBusyIndicator();
 			if (data.Flag !== true) {
-				DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
 				return;
 			}
 			if ((data.Data === null) || (data.Data.length === 0)) {
+				doReloadPivot(status);
 				return;
 			}
-			window.localStorage.setItem(myUserName + "OrdersTimeStamp" + status, data.TimeStamp);
+			if (viewModel.loadFrom() === 0)
+				window.localStorage.setItem(myUserName + "OrdersTimeStamp" + status, data.TimeStamp);
 			var result = $.map(data.Data, function(item) {
 				var itemOrderDate = convertDate(item.OrderDate);
-				var orderDateString = Globalize.format(itemOrderDate, 'dd/MM/yyyy');
+				var today = new Date();
+				// var orderDateString = Globalize.format(itemOrderDate, 'dd/MM/yyyy');
+				var orderDateString = DateDiff.showDiff(today, itemOrderDate);
 				var itemDelayDate = convertDate(item.DelayDate);
 
 				var delayDateString = Globalize.format(itemDelayDate, 'dd/MM/yyyy');
@@ -387,14 +445,15 @@
 						thumbnail : product.Thumnail,
 						price : price,
 						weight : product.Weight,
-						upProductDate : product.UpProductDate + 'Z',
-						updatedDate : product.UpdatedDate + 'Z',
+						upProductDate : product.UpProductDate,
+						updatedDate : product.UpdatedDate,
 						description : product.Description,
 					};
 				});
 				var totalAmount = numberWithCommas(item.TotalAmount);
 				return {
 					status : status,
+					orderId : Number(item.Id),
 					orderNumber : item.OrderNumber,
 					orderDate : itemOrderDate,
 					delayDate : itemDelayDate,
@@ -435,6 +494,10 @@
 
 	};
 
+	itemDeleted = function() {
+		viewModel.cantSplitCurrentItem(viewModel.productsToSplit().length === 0);
+	};
+
 	showDetailsData = function(e) {
 		MyApp.app.navigate({
 			view : 'order-details',
@@ -443,9 +506,10 @@
 	};
 
 	showDetail = function() {
+		var orderId = viewModel.dataItem().orderNumber;
 		MyApp.app.navigate({
 			view : 'order-details',
-			id : viewModel.dataItem().orderNumber
+			id : orderId
 		});
 	};
 
@@ -455,11 +519,37 @@
 		doLoadDataByOrderStatus("Processing");
 	};
 
-	loadImages = function() {
+	loadNextOrders = function(dataName) {
+		var page = 0;
+		var pageSize = 0;
+		switch (dataName) {
+			case "New":
+				page = newDataSource._pageIndex;
+				pageSize = newDataSource._pageSize;
+				break;
+			case "Processing":
+				page = processingDataSource._pageIndex;
+				pageSize = processingDataSource._pageSize;
+				break;
+			case "Delayed":
+				page = delayedDataSource._pageIndex;
+				pageSize = delayedDataSource._pageSize;
+				break;
+		}
+		var currentView = (page + 2) * pageSize;
+		if (currentView >= viewModel.loadFrom() + LOADSIZE - 1) {
+			doLoadDataByOrderStatus(dataName);
+			viewModel.loadFrom(viewModel.loadFrom() + LOADSIZE);
+		}
+		loadNextImages();
+	};
+
+	loadNextImages = function() {
 		jQuery("img.product-thumbnail.lazy").lazy({
 			effect : "fadeIn",
 			effectTime : 1500
 		});
 	};
+
 	return viewModel;
 };

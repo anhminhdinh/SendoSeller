@@ -1,6 +1,9 @@
 ﻿MyApp.products = function(params) {
+	var LOADSIZE = 100;
 	var viewModel = {
 		// dataSource : ko.observableArray(),
+		score : ko.observable(0),
+		autoscore : ko.observable(0),
 		viewShowing : function() {
 			if (window.sessionStorage.getItem("MyTokenId") === null) {
 				MyApp.app.navigate({
@@ -15,21 +18,20 @@
 			}
 		},
 		viewShown : function() {
-			var isAndroid = DevExpress.devices.real().platform === 'android';
+			var platform = DevExpress.devices.real().platform;
+			var isAndroid = platform === 'android' || platform === 'generic';
+			var topbar = $("#topbar");
+			var barHeight = topbar.height();
+			var contentview = $("#contentview");
+			var contentHeight = contentview.height();
 			var obj = null;
 			obj = $("#productsList");
+			var listHeight = contentHeight - barHeight;
+			obj.height(listHeight);
 			var list = obj.dxList("instance");
 			list.option('showNextButton', isAndroid);
 			list.option('pullRefreshEnabled', !isAndroid);
-			var _dataSource = list._dataSource;
-			if (_dataSource !== undefined) {
-				var _items = _dataSource._items;
-				if (_items !== undefined) {
-					var length = _items.length;
-					currentView = length;
-				}
-			}
-			// list.option('autoPagingEnabled', !isAndroid);
+			currentLoadStart = 0;
 			loadImages();
 		},
 		loadPanelVisible : ko.observable(false),
@@ -80,8 +82,6 @@
 		},
 	};
 	var currentLoadStart = 0;
-	var currentLoadSize = 100;
-	var currentView = 0;
 	edit = function(e, itemData) {
 		viewModel.popupEditVisible(true);
 		productsStore.byKey(itemData.id).done(function(dataItem) {
@@ -110,7 +110,7 @@
 					if ( typeof AppMobi === 'object')
 						AppMobi.notification.hideBusyIndicator();
 					if (data.Flag !== true) {
-						DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+						DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
 						return;
 					}
 
@@ -145,19 +145,21 @@
 				return;
 			}
 			var tokenId = window.sessionStorage.getItem("MyTokenId");
-
+			var newPrice = Number(viewModel.editPrice().toString().replace(/,/g, ''));
+			var newWeight = Number(viewModel.editWeight().toString().replace(/,/g, ''));
 			return $.post("http://180.148.138.140/sellerTest2/api/mobile/UpdateProduct", {
 				TokenId : tokenId,
 				Id : viewModel.dataItem().id,
 				Name : viewModel.editName(),
-				Weight : viewModel.editWeight(),
-				Price : viewModel.editPrice(),
+				Weight : newWeight,
+				Price : newPrice,
 			}, "json").done(function(data) {
 				viewModel.loadPanelVisible(false);
-				AppMobi.notification.hideBusyIndicator();
+				if ( typeof AppMobi === 'object')
+					AppMobi.notification.hideBusyIndicator();
 				viewModel.popupEditVisible(false);
 				if (data.Flag !== true) {
-					DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+					DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
 					return;
 				}
 
@@ -203,35 +205,52 @@
 			AppMobi.notification.showBusyIndicator();
 		var myUserName = window.localStorage.getItem("UserName");
 		var tokenId = window.sessionStorage.getItem("MyTokenId");
+
+		$.post("http://180.148.138.140/sellerTest2/api/mobile/ListUpProduct", {
+			TokenId : tokenId,
+		}, "json").done(function(data) {
+			if (data.Flag === true) {
+				viewModel.score(data.Data.Score);
+				viewModel.autoscore(data.Data.AutoScore);
+			}
+		}).fail(function() {
+		});
+
 		var timeStamp = Number(window.localStorage.getItem(myUserName + "ProductsTimeStamp"));
 		if (timeStamp === null)
 			timeStamp = 0;
 
-		if (viewModel.searchString() !== '')
+		if (viewModel.searchString() !== "")
+			timeStamp = 0;
+		if (currentLoadStart > 0)
 			timeStamp = 0;
 		return $.post("http://180.148.138.140/sellerTest2/api/mobile/SearchProductByName", {
 			TokenId : tokenId,
 			Name : viewModel.searchString(),
 			From : currentLoadStart,
-			To : currentLoadStart + currentLoadSize - 1,
+			To : currentLoadStart + LOADSIZE - 1,
 			TimeStamp : timeStamp,
 		}, "json").done(function(data) {
 			viewModel.loadPanelVisible(false);
 			if ( typeof AppMobi === 'object')
 				AppMobi.notification.hideBusyIndicator();
 			if (data.Flag !== true) {
-				DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
 				return;
 			}
 
 			if (data.Data === null) {
+				doReload(true);
 				return;
 			}
-			if (viewModel.searchString() !== '')
-				window.localStorage.setItem(myUserName + "ProductsTimeStamp", data.TimeStamp);
+			if (viewModel.searchString() === "")
+				if (currentLoadStart === 0)
+					window.localStorage.setItem(myUserName + "ProductsTimeStamp", data.TimeStamp);
+
 			var result = $.map(data.Data, function(item) {
 				var UpProductDate = convertDate(item.UpProductDate);
-				UpProductDateDisplay = Globalize.format(UpProductDate, 'dd/MM/yyyy');
+				var today = new Date();
+				var UpProductDateDisplay = DateDiff.showDiff(today, UpProductDate);
 				var UpdatedDate = convertDate(item.UpdatedDate);
 				UpdatedDateDisplay = Globalize.format(UpdatedDate, 'dd/MM/yyyy');
 				var price = numberWithCommas(item.Price);
@@ -252,6 +271,8 @@
 					updatedDateDisplay : UpdatedDateDisplay,
 					stockAvailability : item.StockAvailability,
 					stockAvailabilityDisplay : item.StockAvailability ? 'Còn hàng' : 'Hết hàng',
+					noEdit : !item.CanEdit,
+					noUp : !item.CanUp,
 				};
 			});
 			for (var i = 0; i < result.length; i++) {
@@ -267,7 +288,6 @@
 			doReload(true);
 
 		}).fail(function(jqxhr, textStatus, error) {
-			var err = textStatus + ", " + jqxhr.responseText;
 			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
 			viewModel.loadPanelVisible(false);
 			AppMobi.notification.hideBusyIndicator();
@@ -291,8 +311,8 @@
 					viewModel.loadPanelVisible(false);
 					if ( typeof AppMobi === 'object')
 						AppMobi.notification.hideBusyIndicator();
-					if (data.Flag !== true) {
-						DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+					if (upData.Flag !== true) {
+						DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
 						return;
 					}
 					viewModel.loadPanelVisible(true);
@@ -310,7 +330,8 @@
 							return;
 						}
 						var UpProductDate = convertDate(data.Data.UpProductDate);
-						UpProductDateDisplay = Globalize.format(UpProductDate, 'dd/MM/yyyy');
+						var today = new Date();
+						var UpProductDateDisplay = DateDiff.showDiff(today, UpProductDate);
 
 						var UpdatedDate = convertDate(data.Data.UpdatedDate);
 						UpdatedDateDisplay = Globalize.format(UpdatedDate, 'dd/MM/yyyy');
@@ -320,6 +341,7 @@
 							dataItem.upProductDateDisplay = UpProductDateDisplay;
 							dataItem.updatedDate = UpdatedDate;
 							dataItem.updatedDateDisplay = UpdatedDateDisplay;
+							dataItem.displayUpProductDate = true;
 							productsStore.remove(id);
 							productsStore.insert(dataItem);
 						});
@@ -336,7 +358,8 @@
 	};
 
 	doReload = function(sortType) {
-		productsStore.load();
+		productsDataSource.filter("name", "contains", viewModel.searchString());
+		productsDataSource.pageIndex(0);
 		productsDataSource.sort([{
 			getter : 'upProductDate',
 			desc : sortType
@@ -344,20 +367,9 @@
 			getter : 'updatedDate',
 			desc : sortType
 		}]);
+		productsDataSource.load().done(function(results) {
+		});
 
-		// if (viewModel.searchString() !== '') {
-		// DevExpress.ui.notify("search by " + viewModel.searchString(), "info", 3000);
-		productsDataSource.filter("name", "contains", viewModel.searchString());
-		// }
-
-		productsDataSource.pageIndex(0);
-		productsDataSource.load();
-
-		var _items = productsDataSource._items;
-		if (_items !== undefined) {
-			var length = _items.length;
-			currentView = length;
-		}
 	};
 
 	loadImages = function() {
@@ -367,19 +379,34 @@
 		});
 	};
 
-	loadNext = function() {
-		var _items = productsDataSource._items;
-		if (_items !== undefined) {
-			var length = _items.length;
-			currentView = length;
-		}
-		currentView += 10;
-		if (currentView >= currentLoadStart + currentLoadSize - 1) {
-			currentLoadStart += currentLoadSize;
+	loadNextProducts = function() {
+		var page = productsDataSource._pageIndex;
+		var pageSize = productsDataSource._pageSize;
+		var currentView = (page + 2) * pageSize;
+		if (currentView >= currentLoadStart + LOADSIZE - 1) {
+			currentLoadStart += LOADSIZE;
 			doLoadProducts();
 		}
 		loadImages();
 	};
 
+	updatePriceFormat = function() {
+		var priceBox = $("#priceBox").dxTextBox("instance");
+		priceBox.endUpdate();
+		var price = priceBox.option('value');
+		price = price.toString().replace(/,/g, '');
+		var newprice = numberWithCommas(price);
+		priceBox.option('value', newprice);
+		// viewModel.editPrice(newPrice);
+	};
+
+	updateWeightFormat = function() {
+		var weightBox = $("#weightBox").dxTextBox("instance");
+		weightBox.endUpdate();
+		var weight = weightBox.option('value');
+		weight = weight.toString().replace(/,/g, '');
+		var newweight = numberWithCommas(weight);
+		weightBox.option('value', newweight);
+	};
 	return viewModel;
 };

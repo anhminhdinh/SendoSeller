@@ -5,48 +5,41 @@
 		<div id="chatidlist" data-bind="dxList:
 		{ dataSource: chatsDataSource,
 		autoPagingEnabled: true,
-		pageLoadingAction: function() { loadImages(); },
+		pageLoadingAction: function() { loadNextChats(); },
 		pullRefreshEnabled: true,
 		pullRefreshAction: function() { doLoadChatIdsData(); },
 		noDataText: 'Chưa có câu hỏi nào',
 		pulledDownText: 'Thả để tải lại...',
 		pullingDownText: 'Kéo để tải lại...',
 		nextButtonText: 'Tải tiếp ...',
-		pageLoadingText: 'Đang tải ...'  }">
-			<div data-options="dxTemplate : { name: 'item' } " data-bind="dxAction: '#chatdetails/{id}'">
+		pageLoadingText: 'Đang tải ...',
+		itemClickAction: function(e) { showChatDetails(e); }  }">
+			<div data-options="dxTemplate : { name: 'item' } ">
 				<table class="chats-list" style="width:100%">
 					<tbody>
 						<tr>
-							<td rowspan="3" valign=top><img class="product-thumbnail lazy" data-bind="attr: { src: thumbnail }"><img></td>
-							<td style="width: 100%; font-weight: bold; white-space: pre-wrap; word-wrap: break-word;" data-bind="text:name"></td>
+							<td colspan="3" style="width: 100%; font-weight: bold; white-space: pre-wrap; word-wrap: break-word;" data-bind="text:name"></td>
 						</tr>
 						<tr>
 							<td width="auto" class="transparent-button" data-bind="dxButton: {icon:'qa', text: totalComment}"></td>
+							<td width="100%" style="text-align:right; font-size: smaller;" data-bind="text: dateString"></td>
 						</tr>
+						<!-- <tr>
+						<td colspan="3" style="font-size: smaller;" data-bind="text: customerName"></td>
+						</tr> -->
+						<!-- ko ifnot:read -->
 						<tr>
-							<td><div class="left conversations-title" data-bind="text:msg" style="white-space: pre-wrap; word-wrap: break-word; font-size: smaller;"></div></td>
+							<td colspan="3" class="left conversations-title" data-bind="text:msg" style="white-space: pre-wrap; word-wrap: break-word; font-size: smaller;"></td>
 						</tr>
+						<!-- /ko -->
+						<!-- ko if:read -->
+						<tr>
+							<td colspan="3" class="left conversations-title" style="color: gray;" data-bind="text:msg" style="white-space: pre-wrap; word-wrap: break-word; font-size: smaller;"></td>
+						</tr>
+						<!-- /ko -->
 					</tbody>
 				</table>
 			</div>
 		</div>
-		<!-- <div>
-		<div class="conversations-content" data-bind="dxScrollView: {pullDownAction: doLoadData}">
-		<div>
-		<table class="conversations-list">
-		<tbody> -->
-		<!-- <!-- ko foreach: dataSource -->
-		<!-- <tr> -->
-		<!-- <td class="right conversations-date" data-bind="text: Globalize.format(date, 'dd MM-yy')"></td>
-		<td class="right conversations-name" data-bind="text: name"></td> -->
-		<!-- <td class="left conversations-title" data-bind="dxTextArea: { value:msg, readOnly: true, clickAction: '#chatdetails/{id}'}"></td> -->
-		<!-- <td class="left conversations-title" data-bind="text:msg, click: function() {textClicked(id);}"></td>
-		</tr> -->
-		<!-- <!-- /ko -->
-		<!-- </tbody>
-		</table>
-		</div>
-		</div>
-		</div> -->
 	</div>
 </div>
