@@ -1,4 +1,4 @@
-﻿MyApp['order-details'] = function(params) {
+﻿MyApp.orderdetails = function(params) {
 
 	var viewModel = {
 		title : ko.observable('Orders'),
@@ -54,6 +54,9 @@
 						viewModel.orderStatus("Đang hoãn");
 						break;
 				}
+				viewModel.shippingFee(numberWithCommas(dataItem.shippingFee));
+				viewModel.shippngSupport(numberWithCommas(dataItem.shippngSupport));
+				viewModel.voucher(numberWithCommas(dataItem.voucher));
 
 				viewModel.note(dataItem.note);
 				if ((dataItem.note === null) || (dataItem.note === undefined) || (dataItem.note === '')) {
@@ -98,6 +101,9 @@
 		orderStatus : ko.observable(false),
 		paymentMethod : ko.observable(''),
 		shippingMethod : ko.observable(''),
+		shippingFee : ko.observable('0'),
+		shippngSupport : ko.observable('0'),
+		voucher : ko.observable('0'),
 		canDelay : ko.observable(false),
 		canCancel : ko.observable(false),
 		canSplit : ko.observable(false),
@@ -132,8 +138,8 @@
 		type : "local",
 		name : myUserName + "OrdersStore",
 		key : "orderNumber",
-		flushInterval : 1000,
-		// immediate : true,
+		// flushInterval : 1000,
+		immediate : true,
 	});
 
 	deleted = function() {
@@ -155,6 +161,10 @@
 	};
 
 	processValueChange = function(text) {
+		var removeDorder = viewModel.dataItem().orderNumber;
+		listDataStore.remove(removeDorder);
+		MyApp.app.back();
+		return;
 		switch (text) {
 			case "Processing":
 				doSwitchProcessOrderByOrderID();
@@ -197,8 +207,10 @@
 		if ( typeof AppMobi === 'object')
 			AppMobi.notification.showBusyIndicator();
 		var tokenId = window.sessionStorage.getItem("MyTokenId");
-		var postOrderNumber = Number(viewModel.orderId);
-		return $.post("http://ban.sendo.vn/api/mobile/ProcessOrder", {
+		var postOrderNumber = Number(viewModel.orderId());
+		var domain = window.sessionStorage.getItem("domain");
+		var url = domain + "/api/mobile/ProcessOrder";
+		return $.post(url, {
 			TokenId : tokenId,
 			OrderId : postOrderNumber,
 			Action : "Cancel",
@@ -211,7 +223,8 @@
 				return;
 			}
 
-			listDataStore.remove(viewModel.dataItem().orderNumber);
+			var orderRemove = viewModel.orderNumber();
+			listDataStore.remove(orderRemove);
 			MyApp.app.back();
 		}).fail(function(jqxhr, textStatus, error) {
 			showLoading(false);
@@ -227,7 +240,7 @@
 		if ( typeof AppMobi === 'object')
 			AppMobi.notification.showBusyIndicator();
 		var tokenId = window.sessionStorage.getItem("MyTokenId");
-		var postOrderNumber = Number(viewModel.orderId);
+		var postOrderNumber = Number(viewModel.orderId());
 
 		var dataToSend = {
 			TokenId : tokenId,
@@ -235,7 +248,9 @@
 			Action : "Processing",
 		};
 		var jsonData = JSON.stringify(dataToSend);
-		return $.post("http://ban.sendo.vn/api/mobile/ProcessOrder", {
+		var domain = window.sessionStorage.getItem("domain");
+		var url = domain + "/api/mobile/ProcessOrder";
+		return $.post(url, {
 			TokenId : tokenId,
 			OrderNumber : viewModel.dataItem().orderNumber,
 			Action : "Processing",
@@ -247,8 +262,8 @@
 				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
 				return;
 			}
-			viewModel.dataItem().status = "Processing";
-			listDataStore.update(viewModel.dataItem().orderNumber, viewModel.dataItem());
+			var orderRemove = viewModel.orderNumber();
+			listDataStore.remove(orderRemove);
 			MyApp.app.back();
 		}).fail(function(jqxhr, textStatus, error) {
 			showLoading(false);
@@ -268,8 +283,10 @@
 			splitIDs.push(viewModel.productsToSplit()[i].id);
 		}
 		var tokenId = window.sessionStorage.getItem("MyTokenId");
-		var postOrderNumber = Number(viewModel.dataItem().orderId);
-		return $.post("http://180.148.138.140/sellerTest2/api/mobile/ProcessOrder", {
+		var postOrderNumber = Number(viewModel.orderId());
+		var domain = window.sessionStorage.getItem("domain");
+		var url = domain + "/api/mobile/ProcessOrder";
+		return $.post(url, {
 			TokenId : tokenId,
 			OrderId : postOrderNumber,
 			Action : "Splitting",
@@ -282,7 +299,8 @@
 				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
 				return;
 			}
-			listDataStore.remove(viewModel.dataItem().orderNumber);
+			var orderRemove = viewModel.orderNumber();
+			listDataStore.remove(orderRemove);
 			MyApp.app.back();
 			//TODO modify local data here
 		}).fail(function(jqxhr, textStatus, error) {
@@ -300,12 +318,15 @@
 			AppMobi.notification.showBusyIndicator();
 		var tokenId = window.sessionStorage.getItem("MyTokenId");
 		var newDelayDate = new Date(viewModel.dateBoxValue());
-		var postOrderNumber = Number(viewModel.orderId);
-		return $.post("http://ban.sendo.vn/api/mobile/ProcessOrder", {
+		var postOrderNumber = Number(viewModel.orderId());
+		var domain = window.sessionStorage.getItem("domain");
+		var url = domain + "/api/mobile/ProcessOrder";
+		var delayDate = Number(newDelayDate.getTime() / 1000);
+		return $.post(url, {
 			TokenId : tokenId,
 			OrderId : postOrderNumber,
-			Action : "Delay",
-			DelayDate : Globalize.format(newDelayDate, 'yyyy-MM-dd')
+			Action : "Delayed",
+			DelayDate : delayDate
 		}, "json").done(function(data, textStatus) {
 			hideDelayPopUp();
 			if ( typeof AppMobi === 'object')
@@ -314,8 +335,8 @@
 				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
 				return;
 			}
-			viewModel.dataItem().status = "Delayed";
-			listDataStore.update(viewModel.dataItem().orderNumber, viewModel.dataItem());
+			var orderRemove = viewModel.orderNumber();
+			listDataStore.remove(orderRemove);
 			MyApp.app.back();
 		}).fail(function(jqxhr, textStatus, error) {
 			hideDelayPopUp();

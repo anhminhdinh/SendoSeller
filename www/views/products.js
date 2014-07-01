@@ -8,12 +8,11 @@
 			if (window.sessionStorage.getItem("MyTokenId") === null) {
 				MyApp.app.navigate({
 					view : "user",
-					id : undefined
+					id : undefined,
 				}, {
 					root : true
 				});
 			} else {
-				// productsStore.clear();
 				doLoadProducts();
 			}
 		},
@@ -47,7 +46,7 @@
 		rowClick : function(e, itemData) {
 			MyApp.app.navigate({
 				view : 'product-details',
-				id : itemData.id
+				id : itemData.id,
 			});
 		},
 		selectedType : ko.observable('updatedDate'),
@@ -101,7 +100,9 @@
 				if ( typeof AppMobi === 'object')
 					AppMobi.notification.showBusyIndicator();
 				var tokenId = window.sessionStorage.getItem("MyTokenId");
-				return $.post("http://180.148.138.140/sellerTest2/api/mobile/UpdateProductStock", {
+				var domain = window.sessionStorage.getItem("domain");
+				var url = domain + "/api/mobile/UpdateProductStock";
+				return $.post(url, {
 					TokenId : tokenId,
 					Id : itemData.id,
 					StockAvailability : !itemData.stockAvailability,
@@ -147,7 +148,9 @@
 			var tokenId = window.sessionStorage.getItem("MyTokenId");
 			var newPrice = Number(viewModel.editPrice().toString().replace(/,/g, ''));
 			var newWeight = Number(viewModel.editWeight().toString().replace(/,/g, ''));
-			return $.post("http://180.148.138.140/sellerTest2/api/mobile/UpdateProduct", {
+			var domain = window.sessionStorage.getItem("domain");
+			var url = domain + "/api/mobile/UpdateProduct";
+			return $.post(url, {
 				TokenId : tokenId,
 				Id : viewModel.dataItem().id,
 				Name : viewModel.editName(),
@@ -205,8 +208,9 @@
 			AppMobi.notification.showBusyIndicator();
 		var myUserName = window.localStorage.getItem("UserName");
 		var tokenId = window.sessionStorage.getItem("MyTokenId");
-
-		$.post("http://180.148.138.140/sellerTest2/api/mobile/ListUpProduct", {
+		var domain = window.sessionStorage.getItem("domain");
+		var url = domain + "/api/mobile/ListUpProduct";
+		$.post(url, {
 			TokenId : tokenId,
 		}, "json").done(function(data) {
 			if (data.Flag === true) {
@@ -224,7 +228,9 @@
 			timeStamp = 0;
 		if (currentLoadStart > 0)
 			timeStamp = 0;
-		return $.post("http://180.148.138.140/sellerTest2/api/mobile/SearchProductByName", {
+		var domain = window.sessionStorage.getItem("domain");
+		var url = domain + "/api/mobile/SearchProductByName";
+		return $.post(url, {
 			TokenId : tokenId,
 			Name : viewModel.searchString(),
 			From : currentLoadStart,
@@ -303,8 +309,9 @@
 				if ( typeof AppMobi === 'object')
 					AppMobi.notification.showBusyIndicator();
 				var tokenId = window.sessionStorage.getItem("MyTokenId");
-
-				return $.post("http://180.148.138.140/sellerTest2/api/mobile/UpProduct", {
+				var domain = window.sessionStorage.getItem("domain");
+				var url = domain + "/api/mobile/UpProduct";
+				return $.post(url, {
 					TokenId : tokenId,
 					ProductId : id,
 				}, "json").done(function(upData, upTextStatus) {
@@ -318,7 +325,9 @@
 					viewModel.loadPanelVisible(true);
 					if ( typeof AppMobi === 'object')
 						AppMobi.notification.showBusyIndicator();
-					$.post("http://180.148.138.140/sellerTest2/api/mobile/ProductInfoById", {
+					var domain = window.sessionStorage.getItem("domain");
+					var url = domain + "/api/mobile/ProductInfoById";
+					$.post(url, {
 						TokenId : tokenId,
 						Id : id,
 					}, "json").done(function(data) {

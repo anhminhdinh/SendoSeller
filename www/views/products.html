@@ -38,13 +38,19 @@
 		nextButtonText: 'Tải tiếp ...',
 		pageLoadingText: 'Đang tải ...' }">
 			<div data-options="dxTemplate : { name: 'item' }">
-				<div class="products-info">
+				<div class="products-info" style="z-index: 1;">
 					<table class="product-table">
-
 						<tbody>
 							<tr>
-								<td width="100%" colspan="4" style="white-space: pre-wrap; word-wrap: break-word; text-align: left; font-weight: bold;" data-bind="text: name"></td>
+								<td width="100%" colspan="4" style="white-space: pre-wrap; word-wrap: break-word; text-align: left; font-weight: bold; font-size: smaller" data-bind="text: name"></td>
+								<td width="auto" valign="top" data-bind="dxButton: {icon:'edit', disabled: noEdit, clickAction: function(e) {edit(e, $data);}}"></td>
 							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="products-info">
+					<table class="product-table">
+						<tbody>
 							<tr>
 								<td rowspan="4" valign=top><img class="product-thumbnail lazy" data-bind="attr: { src: thumbnail }"><img></td>
 							</tr>
@@ -63,23 +69,20 @@
 							<!-- /ko -->
 						</tbody>
 					</table>
+					<table width="100%" style="margin-top: 10px;">
+						<tbody>
+							<tr>
+								<!-- ko if:stockAvailability -->
+								<td width="50%" class="default-button" data-bind="dxButton: {text:'BÁO HẾT HÀNG', clickAction: function(e) { changeStockStatus(e,$data); } }"></td>
+								<!-- /ko -->
+								<!-- ko ifnot:stockAvailability -->
+								<td width="50%" class="default-button" data-bind="dxButton: {text:'BÁO CÒN HÀNG', clickAction: function(e) { changeStockStatus(e,$data); } }"></td>
+								<!-- /ko -->
+								<td width="50%" class="default-button" data-bind="dxButton: {text:'UP TIN', disabled: noUp, clickAction: function() {upProduct(id);}}"></td>
+							</tr>
+						</tbody>
+					</table>
 				</div>
-				<table class="products-list" style="width:100%; margin-top: 10px;">
-					<tbody>
-						<tr>
-							<td style="float: left;" data-bind="dxButton: {icon:'edit', disabled: noEdit, clickAction: function(e) {edit(e, $data);}}"></td>
-							<td width="10px"></td>
-							<!-- ko if:stockAvailability -->
-							<td style="float: right;" data-bind="dxButton: {text:'Báo hết hàng', clickAction: function(e) { changeStockStatus(e,$data); } }"></td>
-							<!-- /ko -->
-							<!-- ko ifnot:stockAvailability -->
-							<td style="float: right;" data-bind="dxButton: {text:'Báo còn hàng', clickAction: function(e) { changeStockStatus(e,$data); } }"></td>
-							<!-- /ko -->
-							<td width="10px"></td>
-							<td style="float: right;" data-bind="dxButton: {text:'Up ngay', disabled: noUp, clickAction: function() {upProduct(id);}}"></td>
-						</tr>
-					</tbody>
-				</table>
 			</div>
 		</div>
 		<div data-bind="dxPopup:{visible:popupEditVisible, fullScreen:true, title:'Chỉnh sửa sản phẩm'}">

@@ -1,4 +1,4 @@
-﻿<div data-options="dxView : { name: 'order-details', title: 'Đơn hàng' } " >
+﻿<div data-options="dxView : { name: 'orderdetails', title: 'Đơn hàng' } " >
 	<!-- <div data-bind="dxCommand: { id: 'edit', icon: 'edit', action: showActionSheet }" ></div> -->
 	<div data-options="dxContent : { targetPlaceholder: 'content' } " >
 		<div data-bind="dxActionSheet: {
@@ -49,9 +49,27 @@
 					</div>
 					<div class="dx-field">
 						<div class="dx-field-label">
+							Voucher
+						</div>
+						<div class="dx-field-value product-price" data-bind="text: ': ' + voucher() + ' đ'" ></div>
+					</div>					
+					<div class="dx-field">
+						<div class="dx-field-label">
 							Vận chuyển
 						</div>
 						<div class="dx-field-value" data-bind="text: ': ' + shippingMethod()" ></div>
+					</div>
+					<div class="dx-field">
+						<div class="dx-field-label">
+							Phí vận chuyển
+						</div>
+						<div class="dx-field-value product-price" data-bind="text: ': ' + shippingFee() + ' đ'" ></div>
+					</div>
+					<div class="dx-field">
+						<div class="dx-field-label">
+							Sendo hỗ trợ
+						</div>
+						<div class="dx-field-value product-price" data-bind="text: ': ' + shippngSupport() + ' đ'" ></div>
 					</div>
 					<div class="dx-field">
 						<div class="dx-field-label">
@@ -93,7 +111,7 @@
 			<div style="padding: 10px;"></div>
 		</div>
 		<div data-bind="dxLoadPanel:{message: 'Đang xử lý...', visible: loadPanelVisible }"></div>
-		<div class="popup" data-bind="dxPopup:{visible:popupDelayVisible, fullScreen:false, title:'Delay'}">
+		<div class="popup" data-bind="dxPopup:{visible:popupDelayVisible, fullScreen:true, title:'Delay'}">
 			<div data-options="dxTemplate:{name: 'content'}">
 				<div class="dx-fieldset">
 					<div class="dx-field">
@@ -105,8 +123,8 @@
 					</div>
 				</div>
 				<div class="product-popup-footer">
-					<div class="button" data-bind="dxButton: { text: 'Hoãn', clickAction: function() {doDelayOrderByOrderID();}, icon:'clock' }"></div>
-					<div class="button" data-bind="dxButton: { text: 'Huỷ hoãn', clickAction: hideDelayPopUp, icon: 'close' }"></div>
+					<div class="default-button" data-bind="dxButton: { text: 'Hoãn', clickAction: function() {doDelayOrderByOrderID();}, icon:'clock' }"></div>
+					<div class="default-button" data-bind="dxButton: { text: 'Huỷ hoãn', clickAction: hideDelayPopUp, icon: 'close' }"></div>
 				</div>
 			</div>
 		</div>
@@ -134,7 +152,7 @@
 					</div>
 				</div>
 				<div id="popupSplitFooter" class="popup-split-footer" style="padding-bottom: 10px;">
-					<div class="default-button"  data-bind="dxButton: { text: 'Tách', clickAction: function() { doSplitOrder(); }, icon:'plus', disabled:cantSplitCurrentItem }"></div>
+					<div class="default-button"  data-bind="dxButton: { text: 'Tách', clickAction: function() { doSplitOrderByOrderID(); }, icon:'plus', disabled:cantSplitCurrentItem }"></div>
 					<div class="default-button"  data-bind="dxButton: { text: 'Huỷ tách', clickAction: hideSplitPopUp, icon:'close' }"></div>
 				</div>
 			</div>

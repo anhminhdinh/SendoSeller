@@ -53,7 +53,9 @@
 			viewModel.loadPanelVisible(true);
 			if ( typeof AppMobi === 'object')
 				AppMobi.notification.showBusyIndicator();
-			$.post("http://180.148.138.140/sellerTest2/api/mobile/login", {
+			var domain = window.sessionStorage.getItem("domain");
+			var url = domain + "/api/mobile/login";
+			return $.post(url, {
 				UserName : viewModel.username(),
 				Password : viewModel.pass()
 			}, "json").done(function(data) {
@@ -67,13 +69,30 @@
 				window.localStorage.setItem("UserName", viewModel.username());
 				if (viewModel.savePassword)
 					window.localStorage.setItem(viewModel.username() + "Password", viewModel.pass());
-				window.sessionStorage.setItem("MyTokenId", data.Data.TokenId);
+				if (data.Data.TokenId !== undefined)
+					window.sessionStorage.setItem("MyTokenId", data.Data.TokenId);
+				else
+					window.sessionStorage.setItem("MyTokenId", data.Data);
 				window.localStorage.setItem(viewModel.username() + "UserID", data.Data.FptId);
 				viewModel.toggleNavs(true);
 				MyApp.app.navigation[3].option('title', 'Đăng xuất');
+
+				var myUserName = window.localStorage.getItem("UserName");
+				ordersStore = new DevExpress.data.LocalStore({
+					type : "local",
+					name : myUserName + "OrdersStore",
+					key : "orderNumber",
+					// flushInterval : 1000,
+					immediate : true,
+				});
+				ordersStore.clear();
+				window.localStorage.setItem(myUserName + "OrdersTimeStampNew", 0);
+				window.localStorage.setItem(myUserName + "OrdersTimeStampProcessing", 0);
+				window.localStorage.setItem(myUserName + "OrdersTimeStampDelayed", 0);
+
 				MyApp.app.navigate({
 					view : "orders",
-					id : undefined
+					id : undefined,
 				}, {
 					root : true
 				});
@@ -92,7 +111,9 @@
 					viewModel.loadPanelVisible(true);
 					if ( typeof AppMobi === 'object')
 						AppMobi.notification.showBusyIndicator();
-					$.post("http://180.148.138.140/sellerTest2/api/mobile/logout", {
+					var domain = window.sessionStorage.getItem("domain");
+					var url = domain + "/api/mobile/logout";
+					return $.post(url, {
 						TokenId : window.sessionStorage.getItem("MyTokenId")
 					}, "json").done(function(data, textStatus) {
 						viewModel.loadPanelVisible(false);

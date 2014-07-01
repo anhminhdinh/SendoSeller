@@ -16,7 +16,9 @@
 			AppMobi.notification.showBusyIndicator();
 
 		var tokenId = window.sessionStorage.getItem("MyTokenId");
-		$.post("http://180.148.138.140/sellerTest2/api/mobile/ListCommentById", {
+		var domain = window.sessionStorage.getItem("domain");
+		var url = domain + "/api/mobile/ListCommentById";
+		return $.post(url, {
 			TokenId : tokenId,
 			Id : viewModel.id
 		}, function(data) {
@@ -66,7 +68,9 @@
 		if ( typeof AppMobi === 'object')
 			AppMobi.notification.showBusyIndicator();
 		var tokenId = window.sessionStorage.getItem("MyTokenId");
-		$.post("http://180.148.138.140/sellerTest2/api/mobile/SendComment", {
+		var domain = window.sessionStorage.getItem("domain");
+		var url = domain + "/api/mobile/SendComment";
+		return $.post(url, {
 			TokenId : tokenId,
 			Id : viewModel.id,
 			Message : viewModel.commentToPost()

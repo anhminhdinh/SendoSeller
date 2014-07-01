@@ -1,4 +1,4 @@
-﻿MyApp.orders = function(params) {
+﻿MyApp.orders = function(id, params) {
 	var LOADSIZE = 50;
 	var viewModel = {
 		viewShowing : function() {
@@ -10,8 +10,14 @@
 					root : true
 				});
 			} else {
-				// ordersStore.clear();
-				refresh();
+				if (window.sessionStorage.getItem("firstloadorder") === null) {
+					window.sessionStorage.setItem("firstloadorder", true);
+					ordersStore.clear();
+					doReloadPivot("New");
+					doReloadPivot("Processing");
+					doReloadPivot("Delayed");
+				}
+				refreshAll();
 			}
 		},
 		loadFrom : ko.observable(0),
@@ -26,6 +32,7 @@
 			loadNextImages();
 			var objPivot = $("#pivot").dxPivot("instance");
 			objPivot.option('selectedIndex', 0);
+			refreshPivot();
 		},
 		selectNewTab : function(input) {
 			var platform = DevExpress.devices.real().platform;
@@ -174,7 +181,9 @@
 			AppMobi.notification.showBusyIndicator();
 		var tokenId = window.sessionStorage.getItem("MyTokenId");
 		var postOrderNumber = Number(viewModel.dataItem().orderId);
-		return $.post("http://180.148.138.140/sellerTest2/api/mobile/ProcessOrder", {
+		var domain = window.sessionStorage.getItem("domain");
+		var url = domain + "/api/mobile/ProcessOrder";
+		return $.post(url, {
 			TokenId : tokenId,
 			OrderId : postOrderNumber,
 			Action : "Cancel",
@@ -188,7 +197,8 @@
 			}
 			var item = viewModel.dataItem();
 			var oldStatus = item.status;
-			ordersStore.remove(postOrderNumber);
+			var orderRemove = item.orderNumber;
+			ordersStore.remove(orderRemove);
 			doLoadDataByOrderStatus(oldStatus);
 			// doLoadDataByOrderStatus("Cancel");
 		}).fail(function(jqxhr, textStatus, error) {
@@ -205,7 +215,9 @@
 			AppMobi.notification.showBusyIndicator();
 		var tokenId = window.sessionStorage.getItem("MyTokenId");
 		var postOrderNumber = Number(viewModel.dataItem().orderId);
-		return $.post("http://180.148.138.140/sellerTest2/api/mobile/ProcessOrder", {
+		var domain = window.sessionStorage.getItem("domain");
+		var url = domain + "/api/mobile/ProcessOrder";
+		return $.post(url, {
 			TokenId : tokenId,
 			OrderId : postOrderNumber,
 			Action : "Processing",
@@ -219,7 +231,8 @@
 			}
 			var item = viewModel.dataItem();
 			var oldStatus = item.status;
-			ordersStore.remove(item.orderNumber);
+			var orderRemove = item.orderNumber;
+			ordersStore.remove(orderRemove);
 			doLoadDataByOrderStatus(oldStatus);
 			doLoadDataByOrderStatus("Processing");
 		}).fail(function(jqxhr, textStatus, error) {
@@ -245,7 +258,9 @@
 		}
 		var tokenId = window.sessionStorage.getItem("MyTokenId");
 		var postOrderNumber = Number(viewModel.dataItem().orderId);
-		return $.post("http://180.148.138.140/sellerTest2/api/mobile/ProcessOrder", {
+		var domain = window.sessionStorage.getItem("domain");
+		var url = domain + "/api/mobile/ProcessOrder";
+		return $.post(url, {
 			TokenId : tokenId,
 			OrderId : postOrderNumber,
 			Action : "Splitting",
@@ -260,7 +275,8 @@
 			}
 			var item = viewModel.dataItem();
 			var oldStatus = item.status;
-			ordersStore.remove(postOrderNumber);
+			var orderRemove = item.orderNumber;
+			ordersStore.remove(orderRemove);
 			doLoadDataByOrderStatus(oldStatus);
 		}).fail(function(jqxhr, textStatus, error) {
 			hideSplitPopUp();
@@ -278,11 +294,14 @@
 		var tokenId = window.sessionStorage.getItem("MyTokenId");
 		var newDelayDate = new Date(viewModel.dateBoxValue());
 		var postOrderNumber = Number(viewModel.dataItem().orderId);
-		return $.post("http://180.148.138.140/sellerTest2/api/mobile/ProcessOrder", {
+		var domain = window.sessionStorage.getItem("domain");
+		var url = domain + "/api/mobile/ProcessOrder";
+		var delayDate = Number(newDelayDate.getTime() / 1000);
+		return $.post(url, {
 			TokenId : tokenId,
 			OrderId : postOrderNumber,
-			Action : "Delay",
-			DelayDate : Globalize.format(newDelayDate, 'yyyy-MM-dd')
+			Action : "Delayed",
+			DelayDate : delayDate
 		}, "json").done(function(data, textStatus) {
 			hideDelayPopUp();
 			if ( typeof AppMobi === 'object')
@@ -293,7 +312,8 @@
 			}
 			var item = viewModel.dataItem();
 			var oldStatus = item.status;
-			ordersStore.remove(item.orderNumber);
+			var orderRemove = item.orderNumber;
+			ordersStore.remove(orderRemove);
 			doLoadDataByOrderStatus(oldStatus);
 			doLoadDataByOrderStatus("Delayed");
 		}).fail(function(jqxhr, textStatus, error) {
@@ -316,17 +336,22 @@
 	});
 
 	function groupByDate(data) {
-		var MS_PER_DAY = 24 * 60 * 60 * 1000, result = [], todayItems = [], thisWeekItems = [], otherItems = [];
+		var MS_PER_DAY = 24 * 60 * 60 * 1000, result = [], todayItems = [], yesterdayItems = [], thisWeekItems = [], otherItems = [];
 
 		// Fill intervals
 		$.each(data, function() {
-			var now = $.now();
+			var today = new Date();
+			var now = today.getTime();
 			var orderDate = new Date(this.orderDate);
 			var orderTime = orderDate.getTime();
 			var daysAgo = (now - orderTime) / MS_PER_DAY;
-
-			if (daysAgo < 1)
+			var sameDay = today.getFullYear() === orderDate.getFullYear();
+			sameDay &= today.getMonth() === orderDate.getMonth();
+			sameDay &= today.getDate() === orderDate.getDate();
+			if (sameDay)
 				todayItems.push(this);
+			else if (daysAgo < 1)
+				yesterdayItems.push(this);
 			else if (daysAgo < 7)
 				thisWeekItems.push(this);
 			else
@@ -338,6 +363,12 @@
 			result.push({
 				key : "Hôm nay",
 				items : todayItems
+			});
+
+		if (yesterdayItems.length)
+			result.push({
+				key : "Hôm qua",
+				items : yesterdayItems
 			});
 
 		if (thisWeekItems.length)
@@ -463,7 +494,9 @@
 		if (viewModel.loadFrom() > 0)
 			timeStamp = 0;
 
-		return $.post("http://180.148.138.140/sellerTest2/api/mobile/ListSalesOrderByStatus", {
+		var domain = window.sessionStorage.getItem("domain");
+		var url = domain + "/api/mobile/ListSalesOrderByStatus";
+		return $.post(url, {
 			TokenId : tokenId,
 			Status : status,
 			TimeStamp : timeStamp,
@@ -515,6 +548,9 @@
 					delayDate : itemDelayDate,
 					paymentMethod : item.PaymentMethod,
 					shippingMethod : item.ShippingType,
+					shippingFee : item.ShippingFee,
+					shippngSupport : item.SendoSupportFeeToBuyer,
+					voucher : item.VoucherValue,
 					orderDateDisplay : orderDateString,
 					delayDateDisplay : delayDateString,
 					buyerName : item.BuyerName,
@@ -556,23 +592,55 @@
 
 	showDetailsData = function(e) {
 		MyApp.app.navigate({
-			view : 'order-details',
-			id : e.itemData.orderNumber
+			view : 'orderdetails',
+			id : e.itemData.orderNumber,
 		});
 	};
 
 	showDetail = function() {
 		var orderId = viewModel.dataItem().orderNumber;
 		MyApp.app.navigate({
-			view : 'order-details',
-			id : orderId
+			view : 'orderdetails',
+			id : orderId,
 		});
 	};
 
-	refresh = function() {
+	refreshAll = function() {
 		doLoadDataByOrderStatus("New");
 		doLoadDataByOrderStatus("Delayed");
 		doLoadDataByOrderStatus("Processing");
+	};
+
+	refresh = function() {
+		var objPivot = $("#pivot").dxPivot("instance");
+		var currentIndex = objPivot.option('selectedIndex');
+		switch (currentIndex) {
+			case 0:
+				doLoadDataByOrderStatus("New");
+				break;
+			case 1:
+				doLoadDataByOrderStatus("Delayed");
+				break;
+			case 2:
+				doLoadDataByOrderStatus("Processing");
+				break;
+		}
+	};
+
+	refreshPivot = function() {
+		var objPivot = $("#pivot").dxPivot("instance");
+		var currentIndex = objPivot.option('selectedIndex');
+		switch (currentIndex) {
+			case 0:
+				doReloadPivot("New");
+				break;
+			case 1:
+				doReloadPivot("Delayed");
+				break;
+			case 2:
+				doReloadPivot("Processing");
+				break;
+		}
 	};
 
 	loadNextOrders = function(dataName) {

@@ -11,7 +11,6 @@
 					root : true
 				});
 			} else {
-				// chatIdsStore.clear();
 				doLoadChatIdsData();
 			}
 		},
@@ -65,7 +64,9 @@
 		var to = viewModel.loadFrom() + LOADSIZE - 1;
 		if (viewModel.loadFrom() > 0)
 			timeStamp = 0;
-		return $.post("http://180.148.138.140/sellerTest2/api/mobile/ListComment", {
+		var domain = window.sessionStorage.getItem("domain");
+		var url = domain + "/api/mobile/ListComment";
+		return $.post(url, {
 			TokenId : tokenId,
 			TimeStamp : timeStamp,
 			From : from,
