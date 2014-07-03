@@ -2,6 +2,7 @@
 	var LOADSIZE = 100;
 	var viewModel = {
 		// dataSource : ko.observableArray(),
+		totalscore : ko.observable(0),
 		score : ko.observable(0),
 		autoscore : ko.observable(0),
 		viewShowing : function() {
@@ -19,19 +20,22 @@
 		viewShown : function() {
 			var platform = DevExpress.devices.real().platform;
 			var isAndroid = platform === 'android' || platform === 'generic';
-			var topbar = $("#topbar");
-			var barHeight = topbar.height();
+			var topbar = $("#pvtopbar");
+			var topbarHeight = topbar.outerHeight(true);
+			var searchbar = $("#pvsearchbar");
+			var searchbarHeight = searchbar.outerHeight(true);
 			var contentview = $("#contentview");
-			var contentHeight = contentview.height();
+			var contentHeight = contentview.outerHeight(true);
 			var obj = null;
 			obj = $("#productsList");
-			var listHeight = contentHeight - barHeight;
+			var listHeight = contentHeight - topbarHeight - searchbarHeight;
 			obj.height(listHeight);
 			var list = obj.dxList("instance");
 			list.option('showNextButton', isAndroid);
 			list.option('pullRefreshEnabled', !isAndroid);
 			currentLoadStart = 0;
 			loadImages();
+			doReload();
 		},
 		loadPanelVisible : ko.observable(false),
 		searchString : ko.observable(''),
@@ -83,12 +87,22 @@
 	var currentLoadStart = 0;
 	edit = function(e, itemData) {
 		viewModel.popupEditVisible(true);
-		productsStore.byKey(itemData.id).done(function(dataItem) {
-			viewModel.dataItem(dataItem);
-			viewModel.editName(dataItem.name);
-			viewModel.editPrice(dataItem.price);
-			viewModel.editWeight(dataItem.weight);
-		});
+		if (viewModel.searchString() === '') {
+			productsStore.byKey(itemData.id).done(function(dataItem) {
+				viewModel.dataItem(dataItem);
+				viewModel.editName(dataItem.name);
+				viewModel.editPrice(dataItem.price);
+				viewModel.editWeight(dataItem.weight);
+			});
+		} else {
+			searchStore.byKey(itemData.id).done(function(dataItem) {
+				viewModel.dataItem(dataItem);
+				viewModel.editName(dataItem.name);
+				viewModel.editPrice(dataItem.price);
+				viewModel.editWeight(dataItem.weight);
+			});
+		}
+		$("#nameBox").dxTextBox("instance").focus();
 	};
 
 	changeStockStatus = function(e, itemData) {
@@ -114,14 +128,23 @@
 						DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
 						return;
 					}
-
-					productsStore.byKey(itemData.id).done(function(dataItem) {
-						dataItem.stockAvailability = !itemData.stockAvailability;
-						dataItem.stockAvailabilityDisplay = itemData.stockAvailability ? 'Còn hàng' : 'Hết hàng';
-						productsStore.remove(itemData.id);
-						productsStore.insert(dataItem);
-					});
-					doReload(true);
+					if (viewModel.searchString() === '') {
+						productsStore.byKey(itemData.id).done(function(dataItem) {
+							dataItem.stockAvailability = !itemData.stockAvailability;
+							dataItem.stockAvailabilityDisplay = itemData.stockAvailability ? 'Còn hàng' : 'Hết hàng';
+							productsStore.remove(itemData.id);
+							productsStore.insert(dataItem);
+						});
+						doReload(true);
+					} else {
+						searchStore.byKey(itemData.id).done(function(dataItem) {
+							dataItem.stockAvailability = !itemData.stockAvailability;
+							dataItem.stockAvailabilityDisplay = itemData.stockAvailability ? 'Còn hàng' : 'Hết hàng';
+							searchStore.remove(itemData.id);
+							searchStore.insert(dataItem);
+						});
+						doReloadSearch();
+					}
 					// doLoadDataByProductID();
 					//textStatus contains the status: success, error, etc
 				}).fail(function(jqxhr, textStatus, error) {
@@ -165,15 +188,26 @@
 					DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
 					return;
 				}
+				if (viewModel.searchString() === '') {
+					productsStore.byKey(viewModel.dataItem().id).done(function(dataItem) {
+						dataItem.name = viewModel.editName();
+						dataItem.price = viewModel.editPrice();
+						dataItem.weight = viewModel.editWeight();
+						productsStore.remove(dataItem.id);
+						productsStore.insert(dataItem);
+					});
+					doReload(true);
+				} else {
+					searchStore.byKey(viewModel.dataItem().id).done(function(dataItem) {
+						dataItem.name = viewModel.editName();
+						dataItem.price = viewModel.editPrice();
+						dataItem.weight = viewModel.editWeight();
+						searchStore.remove(dataItem.id);
+						searchStore.insert(dataItem);
+					});
+					doReloadSearch();
 
-				productsStore.byKey(viewModel.dataItem().id).done(function(dataItem) {
-					dataItem.name = viewModel.editName();
-					dataItem.price = viewModel.editPrice();
-					dataItem.weight = viewModel.editWeight();
-					productsStore.remove(dataItem.id);
-					productsStore.insert(dataItem);
-				});
-				doReload(true);
+				}
 			}).fail(function(jqxhr, textStatus, error) {
 				viewModel.loadPanelVisible(false);
 				if ( typeof AppMobi === 'object')
@@ -190,9 +224,30 @@
 		name : myUserName + "productsStore",
 		key : "id",
 	});
+	searchStore = new DevExpress.data.LocalStore({
+		name : myUserName + "searchStore",
+		key : "id",
+	});
 	productsDataSource = new DevExpress.data.DataSource({
 		store : productsStore,
 		sort : [{
+			getter : 'stockAvailability',
+			desc : true
+		}, {
+			getter : 'upProductDate',
+			desc : true
+		}, {
+			getter : 'updatedDate',
+			desc : true
+		}],
+		pageSize : 10
+	});
+	searchDataSource = new DevExpress.data.DataSource({
+		store : searchStore,
+		sort : [{
+			getter : 'stockAvailability',
+			desc : true
+		}, {
 			getter : 'upProductDate',
 			desc : true
 		}, {
@@ -216,6 +271,7 @@
 			if (data.Flag === true) {
 				viewModel.score(data.Data.Score);
 				viewModel.autoscore(data.Data.AutoScore);
+				viewModel.totalscore(viewModel.score() + viewModel.autoscore());
 			}
 		}).fail(function() {
 		});
@@ -245,8 +301,15 @@
 				return;
 			}
 
+			var listObj = $("#productsList");
+			var List = listObj.dxList('instance');
 			if (data.Data === null) {
-				doReload(true);
+				if (viewModel.searchString() === '') {
+					List.option('dataSource', productsDataSource);
+					doReload(true);
+				} else {
+					doReloadSearch();
+				}
 				return;
 			}
 			if (viewModel.searchString() === "")
@@ -281,17 +344,28 @@
 					noUp : !item.CanUp,
 				};
 			});
-			for (var i = 0; i < result.length; i++) {
-				productsStore.byKey(result[i].id).done(function(dataItem) {
-					if (dataItem !== undefined)
-						productsStore.update(result[i].id, result[i]);
-					else
+
+			if (viewModel.searchString() === '') {
+				for (var i = 0; i < result.length; i++) {
+					productsStore.byKey(result[i].id).done(function(dataItem) {
+						if (dataItem !== undefined)
+							productsStore.update(result[i].id, result[i]);
+						else
+							productsStore.insert(result[i]);
+					}).fail(function(error) {
 						productsStore.insert(result[i]);
-				}).fail(function(error) {
-					productsStore.insert(result[i]);
-				});
+					});
+				}
+				List.option('dataSource', productsDataSource);
+				doReload(true);
+			} else {
+				searchStore.clear();
+				for (var i = 0; i < result.length; i++) {
+					searchStore.insert(result[i]);
+				}
+				List.option('dataSource', searchDataSource);
+				doReloadSearch();
 			}
-			doReload(true);
 
 		}).fail(function(jqxhr, textStatus, error) {
 			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
@@ -345,16 +419,29 @@
 						var UpdatedDate = convertDate(data.Data.UpdatedDate);
 						UpdatedDateDisplay = Globalize.format(UpdatedDate, 'dd/MM/yyyy');
 
-						productsStore.byKey(id).done(function(dataItem) {
-							dataItem.upProductDate = UpProductDate;
-							dataItem.upProductDateDisplay = UpProductDateDisplay;
-							dataItem.updatedDate = UpdatedDate;
-							dataItem.updatedDateDisplay = UpdatedDateDisplay;
-							dataItem.displayUpProductDate = true;
-							productsStore.remove(id);
-							productsStore.insert(dataItem);
-						});
-						doReload(true);
+						if (viewModel.searchString() === '') {
+							productsStore.byKey(id).done(function(dataItem) {
+								dataItem.upProductDate = UpProductDate;
+								dataItem.upProductDateDisplay = UpProductDateDisplay;
+								dataItem.updatedDate = UpdatedDate;
+								dataItem.updatedDateDisplay = UpdatedDateDisplay;
+								dataItem.displayUpProductDate = true;
+								productsStore.remove(id);
+								productsStore.insert(dataItem);
+							});
+							doReload(true);
+						} else {
+							searchStore.byKey(id).done(function(dataItem) {
+								dataItem.upProductDate = UpProductDate;
+								dataItem.upProductDateDisplay = UpProductDateDisplay;
+								dataItem.updatedDate = UpdatedDate;
+								dataItem.updatedDateDisplay = UpdatedDateDisplay;
+								dataItem.displayUpProductDate = true;
+								searchStore.remove(id);
+								searchStore.insert(dataItem);
+							});
+							doReloadSearch();
+						}
 					});
 				}).fail(function(jqxhr, textStatus, error) {
 					viewModel.loadPanelVisible(false);
@@ -370,15 +457,33 @@
 		productsDataSource.filter("name", "contains", viewModel.searchString());
 		productsDataSource.pageIndex(0);
 		productsDataSource.sort([{
+			getter : 'stockAvailability',
+			desc : true
+		}, {
 			getter : 'upProductDate',
-			desc : sortType
+			desc : true
 		}, {
 			getter : 'updatedDate',
-			desc : sortType
+			desc : true
 		}]);
 		productsDataSource.load().done(function(results) {
 		});
+	};
 
+	doReloadSearch = function() {
+		searchDataSource.pageIndex(0);
+		searchDataSource.sort([{
+			getter : 'stockAvailability',
+			desc : true
+		}, {
+			getter : 'upProductDate',
+			desc : true
+		}, {
+			getter : 'updatedDate',
+			desc : true
+		}]);
+		searchDataSource.load().done(function(results) {
+		});
 	};
 
 	loadImages = function() {

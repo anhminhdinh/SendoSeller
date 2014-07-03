@@ -18,17 +18,17 @@
 	margin-left: 20px;
 	margin-right: 60px;
 	width: auto;
-	color: black;
+	color: #333333;
 	background-color: #E6E7EB;
-	border: 1px solid #d5d7d6;
-	box-shadow: 0px 1px rgba(255, 255, 255, 0.35) inset, 0px 1px 2px rgba(0, 0, 0, 0.15);	
+	/*border: 1px solid #d5d7d6;*/
+	box-shadow: 0px 1px rgba(255, 255, 255, 0.35) inset, 0px 1px 2px rgba(0, 0, 0, 0.15);
 }
 .conversations-title {
 	padding: 10px;
 	width: auto;
 	color: black;
 	background-color: #feea93;
-	box-shadow: 0px 1px rgba(255, 255, 255, 0.35) inset, 0px 1px 2px rgba(0, 0, 0, 0.15);	
+	box-shadow: 0px 1px rgba(255, 255, 255, 0.35) inset, 0px 1px 2px rgba(0, 0, 0, 0.15);
 }
 .conversations-message {
 	padding: 10px;
@@ -36,43 +36,47 @@
 	margin-right: 20px;
 	width: auto;
 	color: black;
-	background-color: #feea93;
-	box-shadow: 0px 1px rgba(255, 255, 255, 0.35) inset, 0px 1px 2px rgba(0, 0, 0, 0.15);	
+	background-color: #fffba0;
+	box-shadow: 0px 1px rgba(255, 255, 255, 0.35) inset, 0px 1px 2px rgba(0, 0, 0, 0.15);
 }
 .conversations-date {
 	text-align: right;
 	padding: 10px;
 	margin-right: 20px;
 	font-size: 10px;
-	color: #0395d0;
+	color: #fe6700;
 }
 .conversations-date-shop {
 	text-align: left;
 	padding: 10px;
 	margin-left: 20px;
 	font-size: 10px;
-	color: #0395d0;
+	color: #0097c9;
 }
 .conversations-content {
 	height: 100%;
-	padding-bottom: 84px;
+	padding-bottom: 50px;
 	box-sizing: border-box;
 }
 .conversations-comment {
 	position: absolute;
-	bottom: 0;
+	bottom: 5px;
 	width: 100%;
-	padding-right: 44px;
+	padding-right: 66px;
+	padding-left: 5px;
 	box-sizing: border-box;
 }
 .conversations-comment-button {
 	position: absolute;
-	bottom: 0;
-	right: 0;
+	bottom: 5px;
+	right: 5px;
 }
-.conversations-comment.dx-texteditor.dx-texteditor-empty.dx-widget.dx-state-hover-enabled.dx-textbox {
-	background-color: #adadad;
-}
+/*.conversations-comment.dx-texteditor.dx-texteditor-empty.dx-widget.dx-state-hover-enabled.dx-textbox {
+ background-color: #adadad;
+ }*/
 .conversations-comment.dx-texteditor.dx-texteditor-empty.dx-widget.dx-state-hover-enabled.dx-textbox.dx-texteditor-border.dx-texteditor-input {
 	color: white;
+}
+.chats-list {
+	background-color: white;
 }

@@ -1,4 +1,4 @@
-﻿<div data-options="dxView : { name: 'chats', title: 'Hỏi & đáp', secure: true } " >
+﻿<div data-options="dxView : { name: 'chats', title: 'HỎI & ĐÁP', secure: true } " >
 	<div data-bind="dxCommand: { id: 'refresh', icon: 'refresh', action: function() { doLoadChatIdsData(); } }" ></div>
 	<div data-options="dxContent : { targetPlaceholder: 'content' } " >
 		<div data-bind="dxLoadPanel:{message: '', visible: loadPanelVisible }"></div>
@@ -13,30 +13,40 @@
 		pullingDownText: 'Kéo để tải lại...',
 		nextButtonText: 'Tải tiếp ...',
 		pageLoadingText: 'Đang tải ...',
-		itemClickAction: function(e) { showChatDetails(e); }  }">
-			<div data-options="dxTemplate : { name: 'item' } ">
-				<table class="chats-list" style="width:100%">
+		itemClickAction: function(e) { showChatDetails(e); },
+		grouped: true,
+		groupTemplate: 'statesGroup',
+		}">
+			<div class="listItem" data-options="dxTemplate:{ name:'statesGroup' }">
+				<div style="display: inline-block">
+					<img src="images/chat.png"></img>
+				</div>
+				<div style="display: inline-block">
+					<div style="color:red; font-size: medium;" data-bind="text: key"></div>
+				</div>
+			</div>
+			<div data-options="dxTemplate : { name: 'item' } " style="padding: 0 10px; ">
+				<table class="chats-list" width="100%" style="border-spacing: 0 5px; border-collapse: separate;background-image: url('images/chervon.png'); background-repeat: no-repeat; background-position: right center;">
 					<tbody>
 						<tr>
-							<td colspan="3" style="width: 100%; font-weight: bold; white-space: pre-wrap; word-wrap: break-word;" data-bind="text:name"></td>
+							<td rowspan="3" valign="middle" align="center" width="90px" height="90px"><img class="product-thumbnail lazy" data-bind="attr: { src: thumbnail }"><img></td>
+							<td width="auto" style="color: #ee2d24; vertical-align: bottom;" data-bind="text:name"></td>
 						</tr>
 						<tr>
-							<td width="auto" class="transparent-button" data-bind="dxButton: {icon:'qa', text: totalComment}"></td>
-							<td width="100%" style="text-align:right; font-size: smaller;" data-bind="text: dateString"></td>
+							<!-- ko ifnot:read -->
+							<td data-bind="text:msg" style="font-size: smaller; vertical-align: top;"></td>
+							<!-- /ko -->
+							<!-- ko if:read -->
+							<td data-bind="text:msg" style="color: gray; font-size: smaller; vertical-align: top;"></td>
+							<!-- /ko -->
 						</tr>
+						<!-- <tr>
+						<td width="auto" class="transparent-button" data-bind="dxButton: {icon:'qa', text: totalComment}"></td>
+						<td style="text-align:right; font-size: smaller;" data-bind="text: dateString"></td>
+						</tr> -->
 						<!-- <tr>
 						<td colspan="3" style="font-size: smaller;" data-bind="text: customerName"></td>
 						</tr> -->
-						<!-- ko ifnot:read -->
-						<tr>
-							<td colspan="3" class="left conversations-title" data-bind="text:msg" style="white-space: pre-wrap; word-wrap: break-word; font-size: smaller;"></td>
-						</tr>
-						<!-- /ko -->
-						<!-- ko if:read -->
-						<tr>
-							<td colspan="3" class="left conversations-title" style="color: gray;" data-bind="text:msg" style="white-space: pre-wrap; word-wrap: break-word; font-size: smaller;"></td>
-						</tr>
-						<!-- /ko -->
 					</tbody>
 				</table>
 			</div>

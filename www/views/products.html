@@ -1,4 +1,4 @@
-﻿<div data-options="dxView : { name: 'products', title: 'Sản Phẩm', secure: true } " >
+﻿<div data-options="dxView : { name: 'products', title: 'DANH SÁCH SẢN PHẨM', secure: true } " >
 	<!-- <div data-bind="dxCommand: { id: 'sort', action: showSortOptions }" ></div> -->
 	<div data-bind="dxCommand: { id: 'refresh', icon: 'refresh', action: function() { doLoadProducts(); } }" ></div>
 	<div id="contentview" data-options="dxContent : { targetPlaceholder: 'content' } " >
@@ -8,25 +8,36 @@
 		title: 'Sắp xếp sản phẩm theo thời gian',
 		cancelText: 'Bỏ qua'
 		}"></div>
-		<div id="topbar">
-			<table class="products-list" style="width:100%">
+		<div style="display: block;">
+			<div id="pvtopbar" class="pv-topbar">
+				<div class="pv-block">
+					<span>Số lượt up còn lại: </span>
+					<span style="font-weight: bold;" data-bind="text: totalscore"></span>
+
+				</div>
+				<div class="pv-block">
+					<span>Tích lũy: </span><span style="font-weight: bold;" data-bind="text: score"></span>
+					<span>Tặng:</span>
+					<span style="font-weight: bold;" data-bind="text: autoscore"></span>
+					<!-- <div class="pv-button">Mua lượt up</div> -->
+				</div>
+
+			</div>
+			<table id="pvsearchbar" class="pv-search products-list" style="width:100%">
 				<tbody>
 					<tr>
+						<td data-bind="dxButton: {icon:'find', clickAction:doLoadProducts}"></td>
 						<td width="100%"><div id="searchBox"
 						data-bind="dxTextBox: {
+						showClearButton : true,
 						value: searchString,
 						placeholder: 'Tìm sản phẩm theo tên',
 						valueChangeAction: doLoadProducts}"></div></td>
-						<td data-bind="dxButton: {icon:'find', clickAction:doLoadProducts}"></td>
+
 					</tr>
 				</tbody>
 			</table>
-			<div>
-				<span>Số lượt up còn lại: Tích lũy: </span>
-				<span style="font-weight: bold;" data-bind="text: score"></span>
-				<span>Tặng: </span>
-				<span style="font-weight: bold;" data-bind="text: autoscore"></span>
-			</div>
+
 		</div>
 		<div id="productsList" data-bind="dxList: { dataSource: productsDataSource,
 		pullRefreshEnabled: true,
@@ -37,12 +48,12 @@
 		pullingDownText: 'Kéo để tải lại...',
 		nextButtonText: 'Tải tiếp ...',
 		pageLoadingText: 'Đang tải ...' }">
-			<div data-options="dxTemplate : { name: 'item' }">
-				<div class="products-info" style="z-index: 1;">
-					<table class="product-table">
+			<div class="pv-list-item"data-options="dxTemplate : { name: 'item' }">
+				<div class="products-info-header" style="z-index: 1000; position: relative;">
+					<table>
 						<tbody>
 							<tr>
-								<td width="100%" colspan="4" style="white-space: pre-wrap; word-wrap: break-word; text-align: left; font-weight: bold; font-size: smaller" data-bind="text: name"></td>
+								<td width="100%" colspan="4" style="white-space: pre-wrap; word-wrap: break-word; text-align: left; font-weight: bold; font-size: 16px" data-bind="text: name"></td>
 								<td width="auto" valign="top" data-bind="dxButton: {icon:'edit', disabled: noEdit, clickAction: function(e) {edit(e, $data);}}"></td>
 							</tr>
 						</tbody>
@@ -52,11 +63,11 @@
 					<table class="product-table">
 						<tbody>
 							<tr>
-								<td rowspan="4" valign=top><img class="product-thumbnail lazy" data-bind="attr: { src: thumbnail }"><img></td>
+								<td width="80px" rowspan="4" valign=top><img class="product-thumbnail lazy" data-bind="attr: { src: thumbnail }"><img></td>
 							</tr>
-							<tr>
+							<tr class="pv-product-price">
 								<!-- <td width="auto" class="transparent-button" data-bind="dxButton: {iconSrc: 'images/moneyicon.png'}"></td> -->
-								<td style="font-size: smaller;" class="product-price" data-bind="text: price + ' đ'"></td>
+								<td class="product-price" data-bind="text: price + ' đ'"></td>
 							</tr>
 							<tr>
 								<!-- <td width="auto" class="transparent-button" data-bind="dxButton: {iconSrc: 'images/weight.png'}"></td> -->
@@ -64,7 +75,7 @@
 							</tr>
 							<!-- ko if:displayUpProductDate -->
 							<tr>
-								<td style="font-size: smaller; width:100%; white-space: pre-wrap; word-wrap: break-word; text-align: left;" data-bind="text: 'Up gần nhất: ' + upProductDateDisplay"></td>
+								<td style="font-size: smaller; white-space: pre-wrap; word-wrap: break-word; text-align: left;" data-bind="text: 'Up gần nhất: ' + upProductDateDisplay"></td>
 							</tr>
 							<!-- /ko -->
 						</tbody>
@@ -73,12 +84,12 @@
 						<tbody>
 							<tr>
 								<!-- ko if:stockAvailability -->
-								<td width="50%" class="default-button" data-bind="dxButton: {text:'BÁO HẾT HÀNG', clickAction: function(e) { changeStockStatus(e,$data); } }"></td>
+								<td class="pv" width="50%" class="default-button" data-bind="dxButton: {text:'BÁO HẾT HÀNG', clickAction: function(e) { changeStockStatus(e,$data); } }"></td>
 								<!-- /ko -->
 								<!-- ko ifnot:stockAvailability -->
-								<td width="50%" class="default-button" data-bind="dxButton: {text:'BÁO CÒN HÀNG', clickAction: function(e) { changeStockStatus(e,$data); } }"></td>
+								<td class="pv" width="50%" class="default-button" data-bind="dxButton: {text:'BÁO CÒN HÀNG', clickAction: function(e) { changeStockStatus(e,$data); } }"></td>
 								<!-- /ko -->
-								<td width="50%" class="default-button" data-bind="dxButton: {text:'UP TIN', disabled: noUp, clickAction: function() {upProduct(id);}}"></td>
+								<td class="pv" width="50%" class="default-button" data-bind="dxButton: {text:'UP TIN', disabled: noUp, clickAction: function() {upProduct(id);}}"></td>
 							</tr>
 						</tbody>
 					</table>
@@ -92,17 +103,17 @@
 						<div class="dx-field-label">
 							Tên:
 						</div>
-						<div class="dx-field-value" data-bind="dxTextBox: { value: editName}"></div>
+						<div id="nameBox" class="dx-field-value" data-bind="dxTextBox: { value: editName}"></div>
 					</div>
 					<div class="dx-field">
 						<div class="dx-field-label">
-							Giá:
+							Giá (đ):
 						</div>
 						<div id="priceBox" class="dx-field-value" data-bind="dxTextBox: { value: editPrice, keyUpAction: updatePriceFormat, valueUpdateEvent: 'keyup'}"></div>
 					</div>
 					<div class="dx-field">
 						<div class="dx-field-label">
-							Khối lượng:
+							Khối lượng (g):
 						</div>
 						<div id="weightBox" class="dx-field-value" data-bind="dxTextBox: { value: editWeight, valueChangeAction: updateWeightFormat}"></div>
 					</div>
@@ -112,5 +123,6 @@
 			</div>
 		</div>
 		<div data-bind="dxLoadPanel:{message: '', visible: loadPanelVisible }"></div>
+		<!--loadPanelVisible-->
 	</div>
 </div>

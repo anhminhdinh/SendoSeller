@@ -1,7 +1,7 @@
 ﻿MyApp.orderdetails = function(params) {
 
 	var viewModel = {
-		title : ko.observable('Orders'),
+		//title : ko.observable('Orders'),
 		dropDownMenuData : [{
 			text : "Còn hàng",
 			clickAction : function() {
@@ -28,7 +28,7 @@
 			disabled : ko.observable(true),
 		}],
 		viewShown : function(e) {
-			this.title("Đơn hàng " + this.id);
+			//this.title("Đơn hàng " + this.id);
 			listDataStore.byKey(this.id).done(function(dataItem) {
 				viewModel.totalAmount(dataItem.totalAmount);
 				viewModel.orderId(dataItem.orderId);

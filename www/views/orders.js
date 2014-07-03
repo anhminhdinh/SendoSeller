@@ -108,7 +108,8 @@
 			ordersStore.byKey(orderNumber).done(function(dataItem) {
 				var idOrderNumber = "#" + orderNumber;
 				var actionSheet = $("#actionsheet").dxActionSheet("instance");
-				actionSheet.option('target', idOrderNumber);
+				// actionSheet.option('target', idOrderNumber);
+				actionSheet.option('target', "#bottom");
 				viewModel.dataItem(dataItem);
 				viewModel.products(dataItem.products);
 				viewModel.dropDownMenuData[0].disabled(!dataItem.canProcess);
@@ -427,7 +428,7 @@
 		dataName : "New",
 		listItems : newDataSource
 	}, {
-		title : "Đang giao",
+		title : "Đang xử lý",
 		dataName : "Processing",
 		listItems : processingDataSource
 	}, {

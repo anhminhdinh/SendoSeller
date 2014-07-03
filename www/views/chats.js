@@ -36,18 +36,37 @@
 		flushInterval : 1000,
 		// immediate: true,
 	});
+	function groupByData(data) {
+		var result = [], Items = [];
+
+		// Fill intervals
+		$.each(data, function() {
+			Items.push(this);
+		});
+
+		// Construct final result
+		if (Items.length)
+			result.push({
+				key : "Danh sách hỏi đáp",
+				items : Items
+			});
+
+		return result;
+	}
+
 	chatsDataSource = new DevExpress.data.DataSource({
 		store : chatIdsStore,
 		sort : [{
+			getter : 'read',
+			desc : false
+		}, {
 			getter : 'updatedDate',
 			desc : true
 		}, {
 			getter : 'createdDate',
 			desc : true
-		}, {
-			getter : 'read',
-			desc : true
 		}],
+		postProcess : groupByData,
 		pageSize : LOADSIZE
 	});
 
@@ -82,6 +101,20 @@
 			if (viewModel.loadFrom() === 0)
 				window.localStorage.setItem(myUserName + "ListCommentTimeStamp", data.TimeStamp);
 			if ((data.Data === undefined) || (data.Data.data === undefined) || (data.Data.data.length === 0)) {
+				chatsDataSource.pageIndex(0);
+				chatIdsStore.load().done(function() {
+					chatsDataSource.sort([{
+						getter : 'read',
+						desc : false
+					}, {
+						getter : 'updatedDate',
+						desc : true
+					}, {
+						getter : 'createdDate',
+						desc : true
+					}]);
+					chatsDataSource.load();
+				});
 				return;
 			}
 			var result = $.map(data.Data.data, function(item) {
@@ -117,17 +150,20 @@
 					chatIdsStore.insert(result[i]);
 				});
 			}
+			chatsDataSource.pageIndex(0);
 			chatIdsStore.load().done(function() {
 				chatsDataSource.sort([{
+					getter : 'read',
+					desc : false
+				}, {
 					getter : 'updatedDate',
 					desc : true
 				}, {
 					getter : 'createdDate',
 					desc : true
 				}]);
+				chatsDataSource.load();
 			});
-			chatsDataSource.pageIndex(0);
-			chatsDataSource.load();
 		}).fail(function(jqxhr, textStatus, error) {
 			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
 			viewModel.loadPanelVisible(false);
@@ -158,6 +194,7 @@
 		chatIdsStore.byKey(e.itemData.id).done(function(dataItem) {
 			dataItem.read = true;
 			chatIdsStore.update(e.itemData.id, dataItem);
+			chatsDataSource.load();
 		});
 		MyApp.app.navigate({
 			view : 'chatdetails',

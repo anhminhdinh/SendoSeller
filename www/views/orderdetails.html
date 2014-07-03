@@ -1,4 +1,4 @@
-﻿<div data-options="dxView : { name: 'orderdetails', title: 'Đơn hàng' } " >
+﻿<div data-options="dxView : { name: 'orderdetails', title:  'CHI TIẾT ĐƠN HÀNG' } " >
 	<!-- <div data-bind="dxCommand: { id: 'edit', icon: 'edit', action: showActionSheet }" ></div> -->
 	<div data-options="dxContent : { targetPlaceholder: 'content' } " >
 		<div data-bind="dxActionSheet: {
@@ -12,102 +12,118 @@
 		}"></div>
 		<div data-bind="dxScrollView:{}" style="padding: 10px; color: black;">
 			<div>
+				<div class="pv-title-item pv-bg-white">
+					<table>
+						<tbody>
+							<tr >
+								<td class="pv-order-code" width="auto" style="font-size: smaller;" data-bind="text:'#'+orderNumber()"></td>
+								<td width="100%" class="order-total-amount" data-bind="text:totalAmount() + ' đ'"></td>
+							</tr>
+					
+						</tbody>
+					</table>
+				</div>
 				<!-- ko foreach: products -->
-				<div class="products-info">
+				<div class="products-info" style="border-bottom: 1px solid #EFEFF4;">
 					<table class="product-table">
 						<tbody>
 							<tr>
-								<td rowspan="5"valign=top><img class="product-thumbnail" data-bind="attr: { src: thumbnail }"><img></td>
+								<td style="width: 80px;"rowspan="5"valign=top><img class="product-thumbnail" data-bind="attr: { src: thumbnail }"><img></td>
 							</tr>
 							<tr>
 								<td style="font-weight: bolder;white-space: pre-wrap; word-wrap: break-word;" data-bind="text: name"></td>
 							</tr>
-							<tr>
+							<tr class="pv-product-price">
+								<td class="product-price" data-bind="text:price + ' đ x ' + quantity"></td>
+							</tr>
+							<tr class="pv-product-description">
 								<td class="product-property" style="white-space: pre-wrap; word-wrap: break-word;" data-bind="text:description"></td>
 							</tr>
-							<tr>
+							<tr class="pv-product-property">
 								<td class="product-property" data-bind="text:weight + 'g'"></td>
-							</tr>
-							<tr>
-								<td class="product-price" data-bind="text:price + ' đ x ' + quantity"></td>
 							</tr>
 						</tbody>
 					</table>
 				</div>
 				<!-- /ko -->
 			</div>
-			<div style="text-align: right;margin: 10px;font-weight: bold;">
-				<span>Tổng tiền: </span><span class="order-total-amount" data-bind="text:totalAmount() + ' đ'"></span>
+			<div class="pv-title-item pv-bg-white">
+				<span> Thông tin đơn hàng</span>
 			</div>
-			<div class="order-info">
-				<div class="dx-fieldset" style="font-weight: bold;">
-					<div class="dx-field">
-						<div class="dx-field-label">
-							Thanh toán
+			<div class="pv-order-info">
+				<div class="order-info">
+					<div class="dx-fieldset" style="font-weight: bold; font-size: smaller">
+						<div class="dx-field">
+							<div class="dx-field-label">
+								Thanh toán
+							</div>
+							<div class="dx-field-value" style="color: #0847b9;" data-bind="text: ': ' + paymentMethod()" ></div>
 						</div>
-						<div class="dx-field-value" style="color: #0847b9;" data-bind="text: ': ' + paymentMethod()" ></div>
-					</div>
-					<div class="dx-field">
-						<div class="dx-field-label">
-							Voucher
+						<div class="dx-field">
+							<div class="dx-field-label">
+								Voucher
+							</div>
+							<div class="dx-field-value product-price" data-bind="text: ': ' + voucher() + ' đ'" ></div>
+						</div>					
+						<div class="dx-field">
+							<div class="dx-field-label">
+								Vận chuyển
+							</div>
+							<div class="dx-field-value" data-bind="text: ': ' + shippingMethod()" ></div>
 						</div>
-						<div class="dx-field-value product-price" data-bind="text: ': ' + voucher() + ' đ'" ></div>
-					</div>					
-					<div class="dx-field">
-						<div class="dx-field-label">
-							Vận chuyển
+						<div class="dx-field">
+							<div class="dx-field-label">
+								Phí vận chuyển
+							</div>
+							<div class="dx-field-value product-price" data-bind="text: ': ' + shippingFee() + ' đ'" ></div>
 						</div>
-						<div class="dx-field-value" data-bind="text: ': ' + shippingMethod()" ></div>
-					</div>
-					<div class="dx-field">
-						<div class="dx-field-label">
-							Phí vận chuyển
+						<div class="dx-field">
+							<div class="dx-field-label">
+								Sendo hỗ trợ
+							</div>
+							<div class="dx-field-value product-price" data-bind="text: ': ' + shippngSupport() + ' đ'" ></div>
 						</div>
-						<div class="dx-field-value product-price" data-bind="text: ': ' + shippingFee() + ' đ'" ></div>
-					</div>
-					<div class="dx-field">
-						<div class="dx-field-label">
-							Sendo hỗ trợ
+						<div class="dx-field">
+							<div class="dx-field-label">
+								Trạng thái
+							</div>
+							<div class="dx-field-value" data-bind="text: ': ' + orderStatus()" ></div>
 						</div>
-						<div class="dx-field-value product-price" data-bind="text: ': ' + shippngSupport() + ' đ'" ></div>
-					</div>
-					<div class="dx-field">
-						<div class="dx-field-label">
-							Trạng thái
+						<div class="dx-field">
+							<div class="dx-field-label">
+								Ngày đặt
+							</div>
+							<div class="dx-field-value" data-bind="text: ': ' + orderDateDisplay()" ></div>
 						</div>
-						<div class="dx-field-value" data-bind="text: ': ' + orderStatus()" ></div>
-					</div>
-					<div class="dx-field">
-						<div class="dx-field-label">
-							Ngày đặt
+						<div id="delayField" class="dx-field">
+							<div class="dx-field-label">
+								Ngày hoãn
+							</div>
+							<div class="dx-field-value" data-bind="text: ': ' + delayDateDisplay()" ></div>
 						</div>
-						<div class="dx-field-value" data-bind="text: ': ' + orderDateDisplay()" ></div>
-					</div>
-					<div id="delayField" class="dx-field">
-						<div class="dx-field-label">
-							Ngày hoãn
+						<div class="dx-field">
+							<div class="dx-field-label">
+								Người mua
+							</div>
+							<div class="dx-field-value" data-bind="text: ': ' + buyerName()"></div>
 						</div>
-						<div class="dx-field-value" data-bind="text: ': ' + delayDateDisplay()" ></div>
-					</div>
-					<div class="dx-field">
-						<div class="dx-field-label">
-							Người mua
+						<div class="dx-field">
+							<div class="dx-field-label">
+								Địa chỉ
+							</div>
+							<div class="dx-field-value" data-bind="text: ': ' + buyerAddress()" ></div>
 						</div>
-						<div class="dx-field-value" data-bind="text: ': ' + buyerName()"></div>
-					</div>
-					<div class="dx-field">
-						<div class="dx-field-label">
-							Địa chỉ
+						<div class="dx-field">
+							<div data-bind="dxButton: {icon:'tel', text:buyerPhone, clickAction:function() { window.location = 'tel:' + buyerPhone(); } }"></div>
 						</div>
-						<div class="dx-field-value" data-bind="text: ': ' + buyerAddress()" ></div>
-					</div>
-					<div class="dx-field">
-						<div data-bind="dxButton: {icon:'tel', text:buyerPhone, clickAction:function() { window.location = 'tel:' + buyerPhone(); } }"></div>
 					</div>
 				</div>
+
+				<div id="noteField" style="background: #e6e7eb; border-radius : 10px; padding: 10px; background-image: url('images/qa-icon.png'); background-repeat: no-repeat; background-position: right top;" data-bind="text:note" ></div>
+				<div style="text-align: center;padding: 10px 0px; width: 100%;" id="processbutton" class="default-button" data-bind="dxButton: {text:'XỬ LÝ ĐƠN HÀNG', clickAction: function() {showActionSheet();}}"></div>
 			</div>
-			<div id="noteField" style="background: #e6e7eb; border-radius : 10px; padding: 10px; background-image: url('images/qa-icon.png'); background-repeat: no-repeat; background-position: right top;" data-bind="text:note" ></div>
-			<div style="text-align: center;padding: 10px 0px; width: 100%;" id="processbutton" class="default-button" data-bind="dxButton: {text:'Xử lý đơn hàng', clickAction: function() {showActionSheet();}}"></div>
+			
+
 			<div style="padding: 10px;"></div>
 		</div>
 		<div data-bind="dxLoadPanel:{message: 'Đang xử lý...', visible: loadPanelVisible }"></div>
