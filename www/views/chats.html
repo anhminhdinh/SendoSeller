@@ -25,28 +25,21 @@
 					<div style="color:red; font-size: medium;" data-bind="text: key"></div>
 				</div>
 			</div>
-			<div data-options="dxTemplate : { name: 'item' } " style="padding: 0 10px; ">
-				<table class="chats-list" width="100%" style="border-spacing: 0 5px; border-collapse: separate;background-image: url('images/chervon.png'); background-repeat: no-repeat; background-position: right center;">
+			<div data-options="dxTemplate : { name: 'item' } " style="padding: 0 10px; background-image: url('images/chervon.png'); background-repeat: no-repeat; background-position: right center;">
+				<table class="chats-list" width="90%" style="border-spacing: 0 5px; border-collapse: separate;">
 					<tbody>
 						<tr>
-							<td rowspan="3" valign="middle" align="center" width="90px" height="90px"><img class="product-thumbnail lazy" data-bind="attr: { src: thumbnail }"><img></td>
-							<td width="auto" style="color: #ee2d24; vertical-align: bottom;" data-bind="text:name"></td>
+							<td rowspan="3" valign=center width="80px" height="90px"><span style="position: relative;"> <img class="product-thumbnail lazy" data-bind="attr: { src: thumbnail }"><img><div class="chat-badge" data-bind="text:totalComment"></div> </span></td>
+							<td style="color: #ee2d24; vertical-align: bottom; white-space: pre-wrap; word-wrap: break-word;" data-bind="text:productName"></td>
 						</tr>
 						<tr>
 							<!-- ko ifnot:read -->
-							<td data-bind="text:msg" style="font-size: smaller; vertical-align: top;"></td>
+							<td data-bind="text:msg" style="font-size: smaller; vertical-align: top; white-space: pre-wrap; word-wrap: break-word;"></td>
 							<!-- /ko -->
 							<!-- ko if:read -->
-							<td data-bind="text:msg" style="color: gray; font-size: smaller; vertical-align: top;"></td>
+							<td data-bind="text:msg" style="color: gray; font-size: smaller; vertical-align: top; white-space: pre-wrap; word-wrap: break-word;"></td>
 							<!-- /ko -->
 						</tr>
-						<!-- <tr>
-						<td width="auto" class="transparent-button" data-bind="dxButton: {icon:'qa', text: totalComment}"></td>
-						<td style="text-align:right; font-size: smaller;" data-bind="text: dateString"></td>
-						</tr> -->
-						<!-- <tr>
-						<td colspan="3" style="font-size: smaller;" data-bind="text: customerName"></td>
-						</tr> -->
 					</tbody>
 				</table>
 			</div>

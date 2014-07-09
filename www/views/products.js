@@ -14,7 +14,7 @@
 					root : true
 				});
 			} else {
-				doLoadProducts();
+				// doLoadProducts();
 			}
 		},
 		viewShown : function() {
@@ -166,6 +166,8 @@
 			if ( typeof AppMobi === 'object')
 				AppMobi.notification.showBusyIndicator();
 			if (!dialogResult) {
+				viewModel.loadPanelVisible(false);
+				AppMobi.notification.hideBusyIndicator();
 				return;
 			}
 			var tokenId = window.sessionStorage.getItem("MyTokenId");
@@ -280,15 +282,18 @@
 		if (timeStamp === null)
 			timeStamp = 0;
 
-		if (viewModel.searchString() !== "")
+		var searchString = viewModel.searchString(); 
+		if (searchString !== "")
 			timeStamp = 0;
+		else
+			searchString = "#";
 		if (currentLoadStart > 0)
 			timeStamp = 0;
 		var domain = window.sessionStorage.getItem("domain");
 		var url = domain + "/api/mobile/SearchProductByName";
 		return $.post(url, {
 			TokenId : tokenId,
-			Name : viewModel.searchString(),
+			Name : searchString,
 			From : currentLoadStart,
 			To : currentLoadStart + LOADSIZE - 1,
 			TimeStamp : timeStamp,
@@ -370,7 +375,8 @@
 		}).fail(function(jqxhr, textStatus, error) {
 			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
 			viewModel.loadPanelVisible(false);
-			AppMobi.notification.hideBusyIndicator();
+			if ( typeof AppMobi === 'object')
+				AppMobi.notification.hideBusyIndicator();
 		});
 
 	};

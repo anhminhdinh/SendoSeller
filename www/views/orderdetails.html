@@ -19,34 +19,36 @@
 								<td class="pv-order-code" width="auto" style="font-size: smaller;" data-bind="text:'#'+orderNumber()"></td>
 								<td width="100%" class="order-total-amount" data-bind="text:totalAmount() + ' đ'"></td>
 							</tr>
-					
+
 						</tbody>
 					</table>
 				</div>
-				<!-- ko foreach: products -->
-				<div class="products-info" style="border-bottom: 1px solid #EFEFF4;">
-					<table class="product-table">
-						<tbody>
-							<tr>
-								<td style="width: 80px;"rowspan="5"valign=top><img class="product-thumbnail" data-bind="attr: { src: thumbnail }"><img></td>
-							</tr>
-							<tr>
-								<td style="font-weight: bolder;white-space: pre-wrap; word-wrap: break-word;" data-bind="text: name"></td>
-							</tr>
-							<tr class="pv-product-price">
-								<td class="product-price" data-bind="text:price + ' đ x ' + quantity"></td>
-							</tr>
-							<tr class="pv-product-description">
-								<td class="product-property" style="white-space: pre-wrap; word-wrap: break-word;" data-bind="text:description"></td>
-							</tr>
-							<tr class="pv-product-property">
-								<td class="product-property" data-bind="text:weight + 'g'"></td>
-							</tr>
-						</tbody>
-					</table>
+				<div style="margin-bottom: 10px;">
+					<!-- ko foreach: products -->
+					<div class="products-info" style="border-bottom: 1px solid #EFEFF4;">
+						<table class="product-table">
+							<tbody>
+								<tr>
+									<td style="width: 80px;"rowspan="5"valign=top><img class="product-thumbnail" data-bind="attr: { src: thumbnail }"><img></td>
+								</tr>
+								<tr>
+									<td style="font-weight: bolder;white-space: pre-wrap; word-wrap: break-word;" data-bind="text: name"></td>
+								</tr>
+								<tr class="pv-product-price">
+									<td class="product-price" data-bind="text:price + ' đ x ' + quantity"></td>
+								</tr>
+								<tr class="pv-product-description">
+									<td class="product-property" style="white-space: pre-wrap; word-wrap: break-word;" data-bind="text:description"></td>
+								</tr>
+								<tr class="pv-product-property">
+									<td class="product-property" data-bind="text:weight + 'g'"></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<!-- /ko -->
 				</div>
-				<!-- /ko -->
-			</div>
+			</div >
 			<div class="pv-title-item pv-bg-white">
 				<span> Thông tin đơn hàng</span>
 			</div>
@@ -64,7 +66,7 @@
 								Voucher
 							</div>
 							<div class="dx-field-value product-price" data-bind="text: ': ' + voucher() + ' đ'" ></div>
-						</div>					
+						</div>
 						<div class="dx-field">
 							<div class="dx-field-label">
 								Vận chuyển
@@ -122,7 +124,6 @@
 				<div id="noteField" style="background: #e6e7eb; border-radius : 10px; padding: 10px; background-image: url('images/qa-icon.png'); background-repeat: no-repeat; background-position: right top;" data-bind="text:note" ></div>
 				<div style="text-align: center;padding: 10px 0px; width: 100%;" id="processbutton" class="default-button" data-bind="dxButton: {text:'XỬ LÝ ĐƠN HÀNG', clickAction: function() {showActionSheet();}}"></div>
 			</div>
-			
 
 			<div style="padding: 10px;"></div>
 		</div>

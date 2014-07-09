@@ -48,6 +48,7 @@
 .product-table {
 	border-spacing: 5px;
 	border-collapse: separate;
+	width: 100%;
 }
 .popup .popup-split-footer {
 	position: absolute;

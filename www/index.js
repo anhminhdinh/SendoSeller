@@ -3,9 +3,9 @@
 	var MyApp = window.MyApp = { };
 
 	// Uncomment the line below to disable platform-specific look and feel and to use the Generic theme for all devices
-	// DevExpress.devices.current({
-		// platform : "android"
-	// });
+	DevExpress.devices.current({
+		platform : "android"
+	});
 
 	$(function() {
 		MyApp.app = new DevExpress.framework.html.HtmlApplication({
@@ -157,8 +157,16 @@
 				return;
 			}
 			var msg = event.message || 'success';
-			if ( typeof AppMobi === 'object')
-				DevExpress.ui.notify('Đăng ký nhận tin nhắn nhanh từ Sendo thành công', 'success', 2000);
+			if ( typeof AppMobi === 'object') {
+				var tokenId = window.sessionStorage.getItem("MyTokenId");
+				var domain = window.sessionStorage.getItem("domain");
+				var url = domain + "/api/mobile/ApiAddAccount";
+				return $.post(url, {
+					TokenId : tokenId,
+				}, "json").done(function(data) {
+					DevExpress.ui.notify('Đăng ký nhận tin nhắn nhanh từ Sendo thành công', 'success', 2000);
+				});
+			}
 		};
 		document.addEventListener("appMobi.notification.push.enable", notificationsRegistered, false);
 
@@ -191,7 +199,9 @@
 							var newPage = 'orders';
 							var newPageDetail = 'orderdetails';
 							var newId = undefined;
-							if (msgObj.data !== null) {
+							if (msgObj.data === null || msgObj.data === undefined || msgObj.data === '') {
+								DevExpress.ui.dialog.alert(msgObj.msg, "Sendo.vn");
+							} else {
 								if (msgObj.data !== "info") {
 									if (msgObj.data.indexOf("newQuestion") === 0) {
 										titleStr = 'Xem câu hỏi mới!';
@@ -221,8 +231,7 @@
 										}
 									});
 								}
-							} else
-								DevExpress.ui.dialog.alert(msgObj.msg, "Sendo.vn");
+							}
 
 							// AppMobi.notification.alert(msgObj.msg, "Sendo.vn", "OK");
 							//Always mark the messages as read and delete them.
@@ -242,7 +251,10 @@
 			}
 		};
 		document.addEventListener("appMobi.notification.push.receive", receivedPush, false);
-
+		document.addEventListener("appMobi.device.resume", function(e) {
+			DevExpress.ui.notify('Chào mừng bạn trở lại với Sendo!', 'info', 2000);
+			// DevExpress.ui.dialog.alert("Chào mừng bạn trở lại với Sendo!", "Sendo.vn");
+		}, false);
 		MyApp.app.navigate();
 	});
 

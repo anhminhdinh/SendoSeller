@@ -47,14 +47,16 @@
 		pulledDownText: 'Thả để tải lại...',
 		pullingDownText: 'Kéo để tải lại...',
 		nextButtonText: 'Tải tiếp ...',
-		pageLoadingText: 'Đang tải ...' }">
+		pageLoadingText: 'Đang tải ...',
+		noDataText: 'Chưa có sản phẩm nào phù hợp',
+				 }">
 			<div class="pv-list-item"data-options="dxTemplate : { name: 'item' }">
-				<div class="products-info-header" style="z-index: 1000; position: relative;">
+				<div class="products-info-header" style="z-index: 1000; position: relative; margin-top: 10px;">
 					<table>
 						<tbody>
 							<tr>
-								<td width="100%" colspan="4" style="white-space: pre-wrap; word-wrap: break-word; text-align: left; font-weight: bold; font-size: 16px" data-bind="text: name"></td>
-								<td width="auto" valign="top" data-bind="dxButton: {icon:'edit', disabled: noEdit, clickAction: function(e) {edit(e, $data);}}"></td>
+								<td width="100%" colspan="4" style="white-space: pre-wrap; word-wrap: break-word; text-align: left; font-weight: bold; font-size: 16px; padding: 5px;" data-bind="text: name"></td>
+								<!-- <td width="auto" valign="top" class="transparent-button" data-bind="dxButton: {icon:'edit', disabled: noEdit, clickAction: function(e) {edit(e, $data);}}"></td> -->
 							</tr>
 						</tbody>
 					</table>

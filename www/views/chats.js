@@ -11,7 +11,10 @@
 					root : true
 				});
 			} else {
-				doLoadChatIdsData();
+				if (window.sessionStorage.getItem("firstloadchats") === null) {
+					window.sessionStorage.setItem("firstloadchats", true);
+					doLoadChatIdsData();
+				}
 			}
 		},
 		loadFrom : ko.observable(0),
@@ -119,7 +122,7 @@
 			}
 			var result = $.map(data.Data.data, function(item) {
 				var date = convertDate(item.Time);
-				var name = item.Customer_name.toUpperCase();
+				var name = item.Customer_name;
 				var message = item.Content;
 				var updatedDate = convertDate(item.Time_update);
 				var today = new Date();
@@ -128,7 +131,8 @@
 
 				return {
 					id : item.Id,
-					name : item.Product_Name,
+					name : name,
+					productName : item.Product_Name,
 					thumbnail : item.Product_thumb,
 					msg : message,
 					// isParent : item.IsParent,

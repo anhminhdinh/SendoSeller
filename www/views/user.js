@@ -46,6 +46,11 @@
 			MyApp.app.navigation[2].option('visible', onOff);
 		},
 		dologin : function() {
+			setTimeout(function() {
+				viewModel.doreallogin();
+			}, 500);
+		},
+		doreallogin : function() {
 			if (!validateEmail(viewModel.username())) {
 				DevExpress.ui.dialog.alert("Địa chỉ email không hợp lệ!", "Sendo.vn");
 				return;

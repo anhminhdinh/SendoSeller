@@ -1,6 +1,8 @@
 /*conversation*/
-.conversations-content .dx-scrollview-content:before, .conversations-content .dx-scrollview-content:after {
-	padding: 10px;
+.conversations-content {
+	margin: 0px 5px;
+	box-sizing: border-box;
+	background-color: white;
 }
 .conversations-list td.left, .orders-list td.left {
 	text-align: left;
@@ -14,14 +16,16 @@
 	width: 66px;
 }
 .conversations-message-shop {
+	position: relative;
 	padding: 10px;
 	margin-left: 20px;
 	margin-right: 60px;
+	margin-bottom: 10px;
 	width: auto;
 	color: #333333;
 	background-color: #E6E7EB;
 	/*border: 1px solid #d5d7d6;*/
-	box-shadow: 0px 1px rgba(255, 255, 255, 0.35) inset, 0px 1px 2px rgba(0, 0, 0, 0.15);
+	box-shadow: 0px 0px 2px #cfcfcf;
 }
 .conversations-title {
 	padding: 10px;
@@ -31,13 +35,15 @@
 	box-shadow: 0px 1px rgba(255, 255, 255, 0.35) inset, 0px 1px 2px rgba(0, 0, 0, 0.15);
 }
 .conversations-message {
+	position: relative;
 	padding: 10px;
 	margin-left: 60px;
 	margin-right: 20px;
+	margin-bottom: 10px;
 	width: auto;
 	color: black;
 	background-color: #fffba0;
-	box-shadow: 0px 1px rgba(255, 255, 255, 0.35) inset, 0px 1px 2px rgba(0, 0, 0, 0.15);
+	box-shadow: 0px 0px 2px #cfcfcf;
 }
 .conversations-date {
 	text-align: right;
@@ -54,9 +60,13 @@
 	color: #0097c9;
 }
 .conversations-content {
-	height: 100%;
-	padding-bottom: 50px;
-	box-sizing: border-box;
+}
+.conversation-comment-border {
+	background-color: #cfcfcf;
+	position: absolute;
+	bottom: 0px;
+	width: 100%;
+	height: 44px;
 }
 .conversations-comment {
 	position: absolute;
@@ -79,4 +89,42 @@
 }
 .chats-list {
 	background-color: white;
+}
+.chat-badge {
+	position: absolute;
+	left: 0;
+	top: 0;
+	border-radius: 10px;
+	min-width: 20px;
+	min-height: 20px;
+	text-align: center;
+	background-color: #ee2d24;
+	color: white;
+	padding: 0 5px;
+}
+.conversations-message-shop .notch {
+	position: absolute;
+	top: 10px;
+	left: -10px;
+	margin: 0;
+	border-top: 10px solid transparent;
+	border-left: 0;
+	border-right: 10px solid #E6E7EB;
+	border-bottom: 10px solid transparent;
+	padding: 0;
+	width: 0;
+	height: 0;
+}
+.conversations-message .notch {
+	position: absolute;
+	top: 10px;
+	right: -10px;
+	margin: 0;
+	border-top: 10px solid transparent;
+	border-left: 10px solid #fffba0;
+	border-right: 0;
+	border-bottom: 10px solid transparent;
+	padding: 0;
+	width: 0;
+	height: 0;
 }

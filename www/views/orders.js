@@ -1,5 +1,15 @@
 ﻿MyApp.orders = function(id, params) {
 	var LOADSIZE = 50;
+	var NEW_ORDER = "New", PROCESSING_ORDER = "Processing", DELAYED_ORDER = "Delayed", DELAYING_ORDER = "Delaying", SHIPPING_ORDER = "Shipping", SPLITTED_ORDER = "Splitted";
+	var myUserName = window.localStorage.getItem("UserName");
+
+	// ordersStore = new DevExpress.data.LocalStore({
+	// type : "local",
+	// name : myUserName + "OrdersStore",
+	// key : "orderNumber",
+	// flushInterval : 1000,
+	// // immediate : true,
+	// });
 	var viewModel = {
 		viewShowing : function() {
 			if (window.sessionStorage.getItem("MyTokenId") === null) {
@@ -12,12 +22,24 @@
 			} else {
 				if (window.sessionStorage.getItem("firstloadorder") === null) {
 					window.sessionStorage.setItem("firstloadorder", true);
-					ordersStore.clear();
-					doReloadPivot("New");
-					doReloadPivot("Processing");
-					doReloadPivot("Delayed");
+					viewModel.ordersStore.clear();
+					var myUserName = window.localStorage.getItem("UserName");
+					window.localStorage.removeItem(myUserName + "OrdersTimeStamp" + NEW_ORDER);
+					window.localStorage.removeItem(myUserName + "OrdersTimeStamp" + PROCESSING_ORDER);
+					window.localStorage.removeItem(myUserName + "OrdersTimeStamp" + DELAYED_ORDER);
+					window.localStorage.removeItem(myUserName + "OrdersTimeStamp" + DELAYING_ORDER);
+					window.localStorage.removeItem(myUserName + "OrdersTimeStamp" + SHIPPING_ORDER);
+					window.localStorage.removeItem(myUserName + "OrdersTimeStamp" + SPLITTED_ORDER);
+					// refreshAll();
+					doLoadDataByOrderStatus(NEW_ORDER);
+				} else {
+					doReloadPivot(NEW_ORDER);
+					// doReloadPivot(PROCESSING_ORDER);
+					// doReloadPivot(DELAYED_ORDER);
+					// doReloadPivot(DELAYING_ORDER);
+					// doReloadPivot(SHIPPING_ORDER);
+					// doReloadPivot(SPLITTED_ORDER);
 				}
-				refreshAll();
 			}
 		},
 		loadFrom : ko.observable(0),
@@ -38,17 +60,33 @@
 			var platform = DevExpress.devices.real().platform;
 			var isAndroid = platform === 'android' || platform === 'generic';
 			var obj = null;
+			var id = "#list";
+			var order = null;
 			switch (input.selectedIndex) {
 				case 0:
-					obj = $("#listNew");
+					order = NEW_ORDER;
 					break;
 				case 1:
-					obj = $("#listProcessing");
+					order = PROCESSING_ORDER;
 					break;
 				case 2:
-					obj = $("#listDelayed");
+					order = DELAYING_ORDER;
+					break;
+				case 3:
+					order = DELAYED_ORDER;
+					break;
+				case 4:
+					order = SPLITTED_ORDER;
+					break;
+				case 5:
+					order = SHIPPING_ORDER;
 					break;
 			}
+			if (window.sessionStorage.getItem("firstload" + order) === null) {
+				window.sessionStorage.setItem("firstload" + order, true);
+				doLoadDataByOrderStatus(order);
+			}
+			obj = $(id + order);
 			var list = obj.dxList("instance");
 			list.option('showNextButton', isAndroid);
 			list.option('pullRefreshEnabled', !isAndroid);
@@ -61,7 +99,7 @@
 		dropDownMenuData : [{
 			text : "Còn hàng",
 			clickAction : function() {
-				processActionSheet("Processing");
+				processActionSheet(PROCESSING_ORDER);
 			},
 			disabled : ko.observable(true),
 		}, {
@@ -105,7 +143,7 @@
 		loadPanelVisible : ko.observable(false),
 		showActionSheet : function(e) {
 			var orderNumber = e.model.orderNumber;
-			ordersStore.byKey(orderNumber).done(function(dataItem) {
+			viewModel.ordersStore.byKey(orderNumber).done(function(dataItem) {
 				var idOrderNumber = "#" + orderNumber;
 				var actionSheet = $("#actionsheet").dxActionSheet("instance");
 				// actionSheet.option('target', idOrderNumber);
@@ -121,6 +159,14 @@
 			});
 			e.jQueryEvent.stopPropagation();
 		},
+		// dataStore : ordersStore,
+		ordersStore : new DevExpress.data.LocalStore({
+			type : "local",
+			name : myUserName + "OrdersStore",
+			key : "orderNumber",
+			// flushInterval : 1000,
+			immediate : true,
+		}),
 	};
 
 	showLoading = function(show) {
@@ -142,38 +188,76 @@
 	};
 
 	doReloadPivot = function(status) {
-		switch (status) {
-			case "New":
-				newDataSource.filter("status", status);
-				newDataSource.pageIndex(0);
-				newDataSource.sort({
-					getter : 'orderDate',
-					desc : true
-				});
-				newDataSource.load().done(function(results) {
-				});
-				break;
-			case "Processing":
-				processingDataSource.filter("status", status);
-				processingDataSource.pageIndex(0);
-				processingDataSource.sort({
-					getter : 'orderDate',
-					desc : true
-				});
-				processingDataSource.load().done(function(results) {
-				});
-				break;
-			case "Delayed":
-				delayedDataSource.filter("status", status);
-				delayedDataSource.pageIndex(0);
-				delayedDataSource.sort({
-					getter : 'orderDate',
-					desc : true
-				});
-				delayedDataSource.load().done(function(results) {
-				});
-				break;
-		}
+		viewModel.ordersStore.load().done(function(result) {
+			switch (status) {
+				case NEW_ORDER:
+					newDataSource.filter("status", status);
+					newDataSource.pageIndex(0);
+					newDataSource.sort({
+						getter : 'orderDate',
+						desc : true
+					});
+					newDataSource.load().done(function(results) {
+						$("#list" + status).dxList("instance").option('dataSource', results);
+					});
+					break;
+				case PROCESSING_ORDER:
+					processingDataSource.filter("status", status);
+					processingDataSource.pageIndex(0);
+					processingDataSource.sort({
+						getter : 'orderDate',
+						desc : true
+					});
+					processingDataSource.load().done(function(results) {
+						$("#list" + status).dxList("instance").option('dataSource', results);
+					});
+					break;
+				case DELAYED_ORDER:
+					delayedDataSource.filter("status", status);
+					delayedDataSource.pageIndex(0);
+					delayedDataSource.sort({
+						getter : 'orderDate',
+						desc : true
+					});
+					delayedDataSource.load().done(function(results) {
+						$("#list" + status).dxList("instance").option('dataSource', results);
+					});
+					break;
+				case DELAYING_ORDER:
+					delayingDataSource.filter("status", status);
+					delayingDataSource.pageIndex(0);
+					delayingDataSource.sort({
+						getter : 'orderDate',
+						desc : true
+					});
+					delayingDataSource.load().done(function(results) {
+						$("#list" + status).dxList("instance").option('dataSource', results);
+					});
+					break;
+				case SHIPPING_ORDER:
+					shippingDataSource.filter("status", status);
+					shippingDataSource.pageIndex(0);
+					shippingDataSource.sort({
+						getter : 'orderDate',
+						desc : true
+					});
+					shippingDataSource.load().done(function(results) {
+						$("#list" + status).dxList("instance").option('dataSource', results);
+					});
+					break;
+				case SPLITTED_ORDER:
+					splittedDataSource.filter("status", status);
+					splittedDataSource.pageIndex(0);
+					splittedDataSource.sort({
+						getter : 'orderDate',
+						desc : true
+					});
+					splittedDataSource.load().done(function(results) {
+						$("#list" + status).dxList("instance").option('dataSource', results);
+					});
+					break;
+			}
+		});
 	};
 
 	doCancelOrder = function() {
@@ -199,7 +283,7 @@
 			var item = viewModel.dataItem();
 			var oldStatus = item.status;
 			var orderRemove = item.orderNumber;
-			ordersStore.remove(orderRemove);
+			viewModel.ordersStore.remove(orderRemove);
 			doLoadDataByOrderStatus(oldStatus);
 			// doLoadDataByOrderStatus("Cancel");
 		}).fail(function(jqxhr, textStatus, error) {
@@ -221,7 +305,7 @@
 		return $.post(url, {
 			TokenId : tokenId,
 			OrderId : postOrderNumber,
-			Action : "Processing",
+			Action : PROCESSING_ORDER,
 		}, "json").done(function(data, textStatus) {
 			showLoading(false);
 			if ( typeof AppMobi === 'object')
@@ -233,9 +317,9 @@
 			var item = viewModel.dataItem();
 			var oldStatus = item.status;
 			var orderRemove = item.orderNumber;
-			ordersStore.remove(orderRemove);
+			viewModel.ordersStore.remove(orderRemove);
 			doLoadDataByOrderStatus(oldStatus);
-			doLoadDataByOrderStatus("Processing");
+			doLoadDataByOrderStatus(PROCESSING_ORDER);
 		}).fail(function(jqxhr, textStatus, error) {
 			showLoading(false);
 			if ( typeof AppMobi === 'object')
@@ -277,8 +361,9 @@
 			var item = viewModel.dataItem();
 			var oldStatus = item.status;
 			var orderRemove = item.orderNumber;
-			ordersStore.remove(orderRemove);
+			viewModel.ordersStore.remove(orderRemove);
 			doLoadDataByOrderStatus(oldStatus);
+			doLoadDataByOrderStatus(SPLITTED_ORDER);
 		}).fail(function(jqxhr, textStatus, error) {
 			hideSplitPopUp();
 			if ( typeof AppMobi === 'object')
@@ -301,7 +386,7 @@
 		return $.post(url, {
 			TokenId : tokenId,
 			OrderId : postOrderNumber,
-			Action : "Delayed",
+			Action : DELAYED_ORDER,
 			DelayDate : delayDate
 		}, "json").done(function(data, textStatus) {
 			hideDelayPopUp();
@@ -314,9 +399,9 @@
 			var item = viewModel.dataItem();
 			var oldStatus = item.status;
 			var orderRemove = item.orderNumber;
-			ordersStore.remove(orderRemove);
+			viewModel.ordersStore.remove(orderRemove);
 			doLoadDataByOrderStatus(oldStatus);
-			doLoadDataByOrderStatus("Delayed");
+			doLoadDataByOrderStatus(DELAYING_ORDER);
 		}).fail(function(jqxhr, textStatus, error) {
 			if ( typeof AppMobi === 'object')
 				AppMobi.notification.hideBusyIndicator();
@@ -325,16 +410,6 @@
 		});
 
 	};
-
-	var myUserName = window.localStorage.getItem("UserName");
-
-	ordersStore = new DevExpress.data.LocalStore({
-		type : "local",
-		name : myUserName + "OrdersStore",
-		key : "orderNumber",
-		flushInterval : 1000,
-		// immediate : true,
-	});
 
 	function groupByDate(data) {
 		var MS_PER_DAY = 24 * 60 * 60 * 1000, result = [], todayItems = [], yesterdayItems = [], thisWeekItems = [], otherItems = [];
@@ -388,7 +463,7 @@
 	}
 
 	newDataSource = new DevExpress.data.DataSource({
-		store : ordersStore,
+		store : viewModel.ordersStore,
 		pageSize : 50,
 		sort : {
 			getter : 'orderDate',
@@ -396,11 +471,11 @@
 		},
 		// group : 'orderDate',
 		postProcess : groupByDate,
-		filter : ["status", "=", "New"],
+		filter : ["status", "=", NEW_ORDER],
 	});
 
 	processingDataSource = new DevExpress.data.DataSource({
-		store : ordersStore,
+		store : viewModel.ordersStore,
 		pageSize : 50,
 		sort : {
 			getter : 'orderDate',
@@ -408,11 +483,11 @@
 		},
 		// group : 'orderDate',
 		postProcess : groupByDate,
-		filter : ["status", "=", "Processing"]
+		filter : ["status", "=", PROCESSING_ORDER]
 	});
 
 	delayedDataSource = new DevExpress.data.DataSource({
-		store : ordersStore,
+		store : viewModel.ordersStore,
 		pageSize : 50,
 		sort : {
 			getter : 'orderDate',
@@ -420,26 +495,74 @@
 		},
 		// group : 'orderDate',
 		postProcess : groupByDate,
-		filter : ["status", "=", "Delayed"]
+		filter : ["status", "=", DELAYED_ORDER]
+	});
+
+	delayingDataSource = new DevExpress.data.DataSource({
+		store : viewModel.ordersStore,
+		pageSize : 50,
+		sort : {
+			getter : 'orderDate',
+			desc : true
+		},
+		// group : 'orderDate',
+		postProcess : groupByDate,
+		filter : ["status", "=", DELAYING_ORDER]
+	});
+
+	shippingDataSource = new DevExpress.data.DataSource({
+		store : viewModel.ordersStore,
+		pageSize : 50,
+		sort : {
+			getter : 'orderDate',
+			desc : true
+		},
+		// group : 'orderDate',
+		postProcess : groupByDate,
+		filter : ["status", "=", SHIPPING_ORDER]
+	});
+
+	splittedDataSource = new DevExpress.data.DataSource({
+		store : viewModel.ordersStore,
+		pageSize : 50,
+		sort : {
+			getter : 'orderDate',
+			desc : true
+		},
+		// group : 'orderDate',
+		postProcess : groupByDate,
+		filter : ["status", "=", SPLITTED_ORDER]
 	});
 
 	items = [{
 		title : "Mới",
-		dataName : "New",
+		dataName : NEW_ORDER,
 		listItems : newDataSource
 	}, {
 		title : "Đang xử lý",
-		dataName : "Processing",
+		dataName : PROCESSING_ORDER,
 		listItems : processingDataSource
 	}, {
+		title : "Đang chờ hoãn",
+		dataName : DELAYING_ORDER,
+		listItems : delayingDataSource
+	}, {
 		title : "Đang hoãn",
-		dataName : "Delayed",
+		dataName : DELAYED_ORDER,
 		listItems : delayedDataSource
+	}, {
+		title : "Đang chờ tách",
+		dataName : SPLITTED_ORDER,
+		listItems : splittedDataSource
+	}, {
+		title : "Đang vận chuyển",
+		dataName : SHIPPING_ORDER,
+		listItems : shippingDataSource
 	}];
 
 	processActionSheet = function(text) {
 		switch (text) {
-			case "Processing":
+			case PROCESSING_ORDER:
 				doProcessOrder();
 				break;
 			case "Delay":
@@ -465,7 +588,7 @@
 				$("#popupSplitList").dxList('instance').option('dataSource', viewModel.productsToSplit());
 				viewModel.cantSplitCurrentItem(true);
 				break;
-			case "New":
+			case NEW_ORDER:
 				doNewOrder();
 				break;
 			case "Cancel":
@@ -569,11 +692,11 @@
 			});
 
 			for (var i = 0; i < result.length; i++) {
-				ordersStore.byKey(result[i].orderNumber).done(function(dataItem) {
+				viewModel.ordersStore.byKey(result[i].orderNumber).done(function(dataItem) {
 					if (dataItem !== undefined)
-						ordersStore.update(result[i].orderNumber, result[i]);
+						viewModel.ordersStore.update(result[i].orderNumber, result[i]);
 					else
-						ordersStore.insert(result[i]);
+						viewModel.ordersStore.insert(result[i]);
 				});
 			}
 
@@ -607,9 +730,12 @@
 	};
 
 	refreshAll = function() {
-		doLoadDataByOrderStatus("New");
-		doLoadDataByOrderStatus("Delayed");
-		doLoadDataByOrderStatus("Processing");
+		doLoadDataByOrderStatus(NEW_ORDER);
+		doLoadDataByOrderStatus(DELAYED_ORDER);
+		doLoadDataByOrderStatus(PROCESSING_ORDER);
+		doLoadDataByOrderStatus(DELAYING_ORDER);
+		doLoadDataByOrderStatus(SHIPPING_ORDER);
+		doLoadDataByOrderStatus(SPLITTED_ORDER);
 	};
 
 	refresh = function() {
@@ -617,13 +743,22 @@
 		var currentIndex = objPivot.option('selectedIndex');
 		switch (currentIndex) {
 			case 0:
-				doLoadDataByOrderStatus("New");
+				doLoadDataByOrderStatus(NEW_ORDER);
 				break;
 			case 1:
-				doLoadDataByOrderStatus("Delayed");
+				doLoadDataByOrderStatus(PROCESSING_ORDER);
 				break;
 			case 2:
-				doLoadDataByOrderStatus("Processing");
+				doLoadDataByOrderStatus(DELAYING_ORDER);
+				break;
+			case 3:
+				doLoadDataByOrderStatus(DELAYED_ORDER);
+				break;
+			case 4:
+				doLoadDataByOrderStatus(SPLITTED_ORDER);
+				break;
+			case 5:
+				doLoadDataByOrderStatus(SHIPPING_ORDER);
 				break;
 		}
 	};
@@ -633,13 +768,22 @@
 		var currentIndex = objPivot.option('selectedIndex');
 		switch (currentIndex) {
 			case 0:
-				doReloadPivot("New");
+				doReloadPivot(NEW_ORDER);
 				break;
 			case 1:
-				doReloadPivot("Delayed");
+				doReloadPivot(PROCESSING_ORDERDELAYED_ORDER);
 				break;
 			case 2:
-				doReloadPivot("Processing");
+				doReloadPivot(DELAYING_ORDER);
+				break;
+			case 3:
+				doReloadPivot(DELAYED_ORDER);
+				break;
+			case 4:
+				doReloadPivot(SPLITTED_ORDER);
+				break;
+			case 5:
+				doReloadPivot(SHIPPING_ORDER);
 				break;
 		}
 	};
@@ -648,17 +792,29 @@
 		var page = 0;
 		var pageSize = 0;
 		switch (dataName) {
-			case "New":
+			case NEW_ORDER:
 				page = newDataSource._pageIndex;
 				pageSize = newDataSource._pageSize;
 				break;
-			case "Processing":
+			case PROCESSING_ORDER:
 				page = processingDataSource._pageIndex;
 				pageSize = processingDataSource._pageSize;
 				break;
-			case "Delayed":
+			case DELAYED_ORDER:
 				page = delayedDataSource._pageIndex;
 				pageSize = delayedDataSource._pageSize;
+				break;
+			case DELAYING_ORDER:
+				page = delayingDataSource._pageIndex;
+				pageSize = delayingDataSource._pageSize;
+				break;
+			case SPLITTED_ORDER:
+				page = splittedDataSource._pageIndex;
+				pageSize = splittedDataSource._pageSize;
+				break;
+			case SHIPPING_ORDER:
+				page = shippingDataSource._pageIndex;
+				pageSize = shippingDataSource._pageSize;
 				break;
 		}
 		var currentView = (page + 2) * pageSize;

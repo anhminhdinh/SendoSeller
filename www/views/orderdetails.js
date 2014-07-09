@@ -29,7 +29,7 @@
 		}],
 		viewShown : function(e) {
 			//this.title("Đơn hàng " + this.id);
-			listDataStore.byKey(this.id).done(function(dataItem) {
+			MyApp.orders().ordersStore.byKey(this.id).done(function(dataItem) {
 				viewModel.totalAmount(dataItem.totalAmount);
 				viewModel.orderId(dataItem.orderId);
 				viewModel.orderNumber(dataItem.orderNumber);
@@ -53,6 +53,15 @@
 					case "Delayed":
 						viewModel.orderStatus("Đang hoãn");
 						break;
+					case "Delaying":
+						viewModel.orderStatus("Đang chờ hoãn");
+						break;
+					case "Splitted":
+						viewModel.orderStatus("Đang chờ tách");
+						break;
+					case "Shipping":
+						viewModel.orderStatus("Đang vận chuyển");
+						break;
 				}
 				viewModel.shippingFee(numberWithCommas(dataItem.shippingFee));
 				viewModel.shippngSupport(numberWithCommas(dataItem.shippngSupport));
@@ -73,10 +82,8 @@
 				else
 					$("#delayField").show();
 				viewModel.dataItem(dataItem);
-				viewModel.loadPanelVisible(false);
 			}).fail(function(error) {
 				alert(JSON.stringify(error));
-				viewModel.loadPanelVisible(false);
 			});
 			viewModel.loadImages();
 		},
@@ -130,17 +137,17 @@
 		dateBoxValue : ko.observable(new Date()),
 		popupDelayVisible : ko.observable(false),
 		popupSplitVisible : ko.observable(false),
-		loadPanelVisible : ko.observable(true),
+		loadPanelVisible : ko.observable(false),
 	};
 
 	var myUserName = window.localStorage.getItem("UserName");
-	listDataStore = new DevExpress.data.LocalStore({
-		type : "local",
-		name : myUserName + "OrdersStore",
-		key : "orderNumber",
-		// flushInterval : 1000,
-		immediate : true,
-	});
+	// listDataStore = new DevExpress.data.LocalStore({
+	// type : "local",
+	// name : myUserName + "OrdersStore",
+	// key : "orderNumber",
+	// // flushInterval : 1000,
+	// immediate : true,
+	// });
 
 	deleted = function() {
 		viewModel.cantSplitCurrentItem(viewModel.productsToSplit().length === 0);
@@ -162,7 +169,9 @@
 
 	processValueChange = function(text) {
 		var removeDorder = viewModel.dataItem().orderNumber;
-		listDataStore.remove(removeDorder);
+		MyApp.orders().ordersStore.remove(removeDorder).fail(function(error) {
+			alert(error);
+		});
 		MyApp.app.back();
 		return;
 		switch (text) {
@@ -224,7 +233,7 @@
 			}
 
 			var orderRemove = viewModel.orderNumber();
-			listDataStore.remove(orderRemove);
+			MyApp.orders().ordersStore.remove(orderRemove);
 			MyApp.app.back();
 		}).fail(function(jqxhr, textStatus, error) {
 			showLoading(false);
@@ -235,7 +244,7 @@
 
 	};
 
-	doProcessOrderByOrderID = function() {
+	doSwitchProcessOrderByOrderID = function() {
 		showLoading(true);
 		if ( typeof AppMobi === 'object')
 			AppMobi.notification.showBusyIndicator();
@@ -263,7 +272,7 @@
 				return;
 			}
 			var orderRemove = viewModel.orderNumber();
-			listDataStore.remove(orderRemove);
+			MyApp.orders().ordersStore.remove(orderRemove);
 			MyApp.app.back();
 		}).fail(function(jqxhr, textStatus, error) {
 			showLoading(false);
@@ -300,7 +309,7 @@
 				return;
 			}
 			var orderRemove = viewModel.orderNumber();
-			listDataStore.remove(orderRemove);
+			MyApp.orders().ordersStore.remove(orderRemove);
 			MyApp.app.back();
 			//TODO modify local data here
 		}).fail(function(jqxhr, textStatus, error) {
@@ -336,7 +345,7 @@
 				return;
 			}
 			var orderRemove = viewModel.orderNumber();
-			listDataStore.remove(orderRemove);
+			MyApp.orders().ordersStore.remove(orderRemove);
 			MyApp.app.back();
 		}).fail(function(jqxhr, textStatus, error) {
 			hideDelayPopUp();

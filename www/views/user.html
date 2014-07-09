@@ -1,21 +1,21 @@
 <div data-options="dxView : { name: 'user', title: 'Đăng nhập' } " >
 	<div  data-options="dxContent : { targetPlaceholder: 'content' } " >
 		<div data-bind="dxLoadPanel:{message: '', visible: loadPanelVisible }"></div>
-		<div style="color: black;" data-bind="dxScrollView: {}">
-			<img class="user-photo" src="images/logo-sendo.png" />
-			<div align="center">
+		<div data-bind="dxScrollView: {}">
+			<!-- <img class="user-photo" src="images/logo-sendo.png" /> -->
+			<!-- <div align="center">
 				Ứng dụng quản trị dành cho người bán
-			</div>
+			</div> -->
 			<div style="padding: 10px; margin: 10px; background-color: #e6e7eb; border-radius: 5px;">
 				<!-- ko if:isLoggedOut -->
 				<div class="dx-fieldset">
 					<div class="dx-field">
 						<div id="nameBox" data-bind="
-						dxTextBox: { mode:'email', placeholder: 'Tên người dùng', value:username }"></div>
+						dxTextBox: { mode:'email', placeholder: 'Tên người dùng', showClearButton : true, value:username }"></div>
 					</div>
 					<div class="dx-field">
 						<div id="passBox" data-bind="
-						dxTextBox: { mode: 'password', placeholder: 'Mật khẩu', value:pass }"></div>
+						dxTextBox: { mode: 'password', placeholder: 'Mật khẩu', showClearButton : true, value:pass }"></div>
 					</div>
 					<div class="dx-field">
 						<div class="dx-field-label" style="width: 110px;" >

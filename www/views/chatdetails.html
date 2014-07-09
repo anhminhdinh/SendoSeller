@@ -1,12 +1,9 @@
 ﻿<div data-options="dxView : { name: 'chatdetails', title: 'Hỏi & đáp', secure: true } " >
 	<div data-bind="dxCommand: { id: 'refresh', icon: 'refresh', action: function() { doLoadChatDetailData(); } }" ></div>
-	<div data-options="dxContent : { targetPlaceholder: 'content' } " >
+	<div id="content" data-options="dxContent : { targetPlaceholder: 'content' } " >
 		<div data-bind="dxLoadPanel:{message: '', visible: loadPanelVisible }"></div>
-		<div id="chatScroll" class="conversations-content" data-bind="dxScrollView: {
-		pullDownAction: function() {doLoadChatDetailData();},
-		pulledDownText: 'Thả để tải lại...',
-		pullingDownText: 'Kéo để tải lại...' }">
-			<div style="color: #ee2d24; box-shadow: 0px 2px 2px #efeff4; padding: 0 10px">
+		<div>
+			<div id="chatinfo" style="color: #ee2d24; box-shadow: 0px 0px 4px #efeff4; background-color: white; padding: 0 10px 5px 5px; margin: 0 5px;">
 				<div style="display: inline-block">
 					<img src="images/chat.png"></img>
 				</div>
@@ -14,6 +11,26 @@
 					Nội dung trao đổi
 				</div>
 			</div>
+			<div id="productinfo" class="product-chat-info" style="border: 1px dashed #cfcfcf; margin: 0px 5px;padding :10px 5px; background-color: white">
+				<table>
+					<tbody>
+						<tr>
+							<td style="width: 80px;"rowspan="3"valign=top><img class="product-thumbnail" data-bind="attr: { src: thumbnail }"><img></td>
+						</tr>
+						<tr>
+							<td style="font-weight: bolder;white-space: pre-wrap; word-wrap: break-word;" data-bind="text: productname"></td>
+						</tr>
+						<tr class="pv-product-price">
+							<td class="product-price" data-bind="text:productprice() + ' đ'"></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<div id="chatScroll" class="conversations-content" data-bind="dxScrollView: {
+		pullDownAction: function() {doLoadChatDetailData();},
+		pulledDownText: 'Thả để tải lại...',
+		pullingDownText: 'Kéo để tải lại...' }">
 			<!-- ko foreach: chatDetailDataSource -->
 			<!-- ko if:isShop -->
 			<div class="conversations-date-shop" data-bind="text: date"></div>
@@ -22,13 +39,20 @@
 			<div class="conversations-date" data-bind="text: date"></div>
 			<!-- /ko -->
 			<!-- ko if:isShop -->
-			<div class="conversations-message-shop" data-bind="text:msg, attr: {'id':name}"></div>
+			<div class="conversations-message-shop">
+				<span data-bind="text:msg"></span>
+				<b class="notch"></b>
+			</div>
 			<!-- /ko -->
 			<!-- ko ifnot:isShop -->
-			<div class="conversations-message" data-bind="text:msg, attr: {'id':name}"></div>
+			<div class="conversations-message">
+				<span data-bind="text:msg"></span>
+				<b class="notch"></b>
+			</div>
 			<!-- /ko -->
 			<!-- /ko -->
 		</div>
+		<div id="chatcomment" class="conversation-comment-border"></div>
 		<div class="conversations-comment" data-bind="dxTextBox:{value:commentToPost, placeholder:'Trả lời khách hàng' }"></div>
 		<div class="conversations-comment-button default-button" data-bind="dxButton: { clickAction: postComment, icon: 'send' }"></div>
 	</div>

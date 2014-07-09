@@ -10,6 +10,7 @@ function convertDate(inputDateString) {
 
 function registerPush() {
 	if ( typeof AppMobi === 'object') {
+		DevExpress.ui.notify('Đăng ký tin nhắn nhanh từ Sendo', 'info', 2000);
 		var myUserName = window.localStorage.getItem("UserName");
 		var didAddPushUser = window.localStorage.getItem(myUserName + "didAddPushUser");
 		if (didAddPushUser === null) {
