@@ -168,12 +168,6 @@
 	};
 
 	processValueChange = function(text) {
-		var removeDorder = viewModel.dataItem().orderNumber;
-		MyApp.orders().ordersStore.remove(removeDorder).fail(function(error) {
-			alert(error);
-		});
-		MyApp.app.back();
-		return;
 		switch (text) {
 			case "Processing":
 				doSwitchProcessOrderByOrderID();

@@ -12,7 +12,8 @@
 		productname : ko.observable(''),
 		productprice : ko.observable(''),
 		viewShown : function() {
-			$("#chatScroll").height($("#content").height() - $("#chatinfo").outerHeight() - $("#productinfo").outerHeight() - $("#chatcomment").outerHeight());
+			// $("#chatScroll").height($("#content").height() - $("#chatinfo").outerHeight(true) - $("#productinfo").outerHeight(true) - $("#chatcomment").outerHeight(true) - 10);
+			$("#chatScroll").height($("#content").height() - $("#chattopbar").outerHeight(true) - $("#chatcomment").outerHeight(true));
 		}
 	};
 	doLoadChatDetailData = function(showloading) {

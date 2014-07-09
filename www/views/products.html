@@ -1,6 +1,6 @@
 ﻿<div data-options="dxView : { name: 'products', title: 'DANH SÁCH SẢN PHẨM', secure: true } " >
 	<!-- <div data-bind="dxCommand: { id: 'sort', action: showSortOptions }" ></div> -->
-	<div data-bind="dxCommand: { id: 'refresh', icon: 'refresh', action: function() { doLoadProducts(); } }" ></div>
+	<!-- <div data-bind="dxCommand: { id: 'refresh', icon: 'refresh', action: function() { doLoadProducts(); } }" ></div> -->
 	<div id="contentview" data-options="dxContent : { targetPlaceholder: 'content' } " >
 		<div data-bind="dxActionSheet: {
 		dataSource: dropDownMenuData,
@@ -32,7 +32,8 @@
 						showClearButton : true,
 						value: searchString,
 						placeholder: 'Tìm sản phẩm theo tên',
-						valueChangeAction: doLoadProducts}"></div></td>
+						<!-- valueChangeAction: doLoadProducts -->
+						}"></div></td>
 
 					</tr>
 				</tbody>

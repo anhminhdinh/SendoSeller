@@ -2,8 +2,8 @@
 	<div data-bind="dxCommand: { id: 'refresh', icon: 'refresh', action: function() { doLoadChatDetailData(); } }" ></div>
 	<div id="content" data-options="dxContent : { targetPlaceholder: 'content' } " >
 		<div data-bind="dxLoadPanel:{message: '', visible: loadPanelVisible }"></div>
-		<div>
-			<div id="chatinfo" style="color: #ee2d24; box-shadow: 0px 0px 4px #efeff4; background-color: white; padding: 0 10px 5px 5px; margin: 0 5px;">
+		<div id="chattopbar" style="margin: 0 2%; margin-top:10px; background-color: white;overflow:hidden">
+			<div id="chatinfo">
 				<div style="display: inline-block">
 					<img src="images/chat.png"></img>
 				</div>
@@ -11,7 +11,7 @@
 					Nội dung trao đổi
 				</div>
 			</div>
-			<div id="productinfo" class="product-chat-info" style="border: 1px dashed #cfcfcf; margin: 0px 5px;padding :10px 5px; background-color: white">
+			<div id="productinfo" class="product-chat-info">
 				<table>
 					<tbody>
 						<tr>

@@ -128,10 +128,31 @@
 	width: 0;
 	height: 0;
 }
-.pv-mid{
-	position: absolute; 
-	top:50%;
-	margin-top:-30px;
+
+/*
+ Thêm 9/7
+ */
+.pv-mid {
+	position: absolute;
+	top: 50%;
+	margin-top: -30px;
 	left: 50%;
 	margin-left: -30px;
+}
+#chatinfo {
+	position: relative;
+	color: #ee2d24;
+	background-color: white;
+	padding: 10px;
+	box-shadow: 0px 2px 5px #CFCFCF;
+	z-index: 1;
+}
+#productinfo {
+	margin: 10px;
+	border: 1px dashed #cfcfcf;
+	padding: 10px 5px;
+	background-color: white
+}
+#chatScroll {
+	margin: 0 2%;
 }
