@@ -56,7 +56,7 @@
 						<tbody>
 							<tr>
 								<td width="100%" colspan="4" style="white-space: pre-wrap; word-wrap: break-word; text-align: left; font-weight: bold; font-size: 16px; padding: 5px;" data-bind="text: name"></td>
-								<!-- <td width="auto" valign="top" class="transparent-button" data-bind="dxButton: {icon:'edit', disabled: noEdit, clickAction: function(e) {edit(e, $data);}}"></td> -->
+								<td width="auto" valign="top" class="transparent-button" data-bind="dxButton: {icon:'edit', disabled: noEdit, clickAction: function(e) {edit(e, $data);}}"></td>
 							</tr>
 						</tbody>
 					</table>
@@ -102,22 +102,22 @@
 			<div data-options="dxTemplate:{name: 'content'}">
 				<div class="dx-fieldset">
 					<div class="dx-field">
-						<div class="dx-field-label">
+						<div>
 							Tên:
 						</div>
-						<div id="nameBox" class="dx-field-value" data-bind="dxTextBox: { value: editName}"></div>
+						<div style="background-color: #E6E7EB;" id="nameBox" data-bind="dxTextBox: { value: editName, showClearButton: true}"></div>
 					</div>
 					<div class="dx-field">
-						<div class="dx-field-label">
+						<div>
 							Giá (đ):
 						</div>
-						<div id="priceBox" class="dx-field-value" data-bind="dxTextBox: { value: editPrice, keyUpAction: updatePriceFormat, valueUpdateEvent: 'keyup'}"></div>
+						<div style="background-color: #E6E7EB;" id="priceBox" data-bind="dxTextBox: { value: editPrice, keyUpAction: updatePriceFormat, valueUpdateEvent: 'keyup', showClearButton: true}"></div>
 					</div>
 					<div class="dx-field">
-						<div class="dx-field-label">
+						<div>
 							Khối lượng (g):
 						</div>
-						<div id="weightBox" class="dx-field-value" data-bind="dxTextBox: { value: editWeight, valueChangeAction: updateWeightFormat}"></div>
+						<div style="background-color: #E6E7EB;" id="weightBox" data-bind="dxTextBox: { value: editWeight, valueChangeAction: updateWeightFormat, valueUpdateEvent: 'keyup', showClearButton: true}"></div>
 					</div>
 				</div>
 				<div class="default-button" data-bind="dxButton: { text: 'Sửa', clickAction: changeProductProperties, icon:'edit' }"></div>

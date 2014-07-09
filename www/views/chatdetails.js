@@ -60,9 +60,9 @@
 				};
 			});
 			viewModel.chatDetailDataSource(result);
-			var chatScroll = $("#chatScroll").dxScrollView("instance");
-			var scrollHeight = chatScroll.scrollHeight();
-			$("#chatScroll").dxScrollView("instance").scrollTo(scrollHeight);
+			// var chatScroll = $("#chatScroll").dxScrollView("instance");
+			// var scrollHeight = chatScroll.scrollHeight();
+			// $("#chatScroll").dxScrollView("instance").scrollTo(scrollHeight);
 
 		}, "json").fail(function(jqxhr, textStatus, error) {
 			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
@@ -88,9 +88,9 @@
 			isParent : false,
 			isShop : true
 		});
-		var chatScroll = $("#chatScroll").dxScrollView("instance");
-		var scrollHeight = chatScroll.scrollHeight();
-		$("#chatScroll").dxScrollView("instance").scrollTo(scrollHeight);
+		// var chatScroll = $("#chatScroll").dxScrollView("instance");
+		// var scrollHeight = chatScroll.scrollHeight();
+		// $("#chatScroll").dxScrollView("instance").scrollTo(scrollHeight);
 		// viewModel.loadPanelVisible(true);
 		if ( typeof AppMobi === 'object')
 			AppMobi.notification.showBusyIndicator();
