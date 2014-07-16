@@ -81,20 +81,6 @@
 				window.localStorage.setItem(viewModel.username() + "UserID", data.Data.FptId);
 				viewModel.toggleNavs(true);
 				MyApp.app.navigation[3].option('title', 'Đăng xuất');
-
-				var myUserName = window.localStorage.getItem("UserName");
-				ordersStore = new DevExpress.data.LocalStore({
-					type : "local",
-					name : myUserName + "OrdersStore",
-					key : "orderNumber",
-					// flushInterval : 1000,
-					immediate : true,
-				});
-				ordersStore.clear();
-				window.localStorage.setItem(myUserName + "OrdersTimeStampNew", 0);
-				window.localStorage.setItem(myUserName + "OrdersTimeStampProcessing", 0);
-				window.localStorage.setItem(myUserName + "OrdersTimeStampDelayed", 0);
-
 				MyApp.app.navigate({
 					view : "orders",
 					id : undefined,
@@ -128,7 +114,8 @@
 							DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
 							return;
 						}
-						window.localStorage.removeItem("MyTokenId");
+						window.sessionStorage.removeItem("MyTokenId");
+						window.sessionStorage.removeItem("firstloadorder");
 						viewModel.isLoggedOut(true);
 						viewModel.toggleNavs(false);
 						MyApp.app.navigation[3].option('title', 'Đăng nhập');

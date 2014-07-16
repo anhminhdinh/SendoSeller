@@ -32,7 +32,7 @@
 			obj.height(listHeight);
 			var list = obj.dxList("instance");
 			list.option('showNextButton', isAndroid);
-			list.option('pullRefreshEnabled', !isAndroid);
+			// list.option('pullRefreshEnabled', !isAndroid);
 			currentLoadStart = 0;
 			loadImages();
 			doReload();
@@ -62,19 +62,6 @@
 			this.actionSheetVisible(true);
 		},
 		actionSheetVisible : ko.observable(false),
-		dropDownMenuData : [{
-			text : "Mới nhất",
-			clickAction : function() {
-				// viewModel.selectedType("updatedDate");
-				doReload(true);
-			}
-		}, {
-			text : "Cũ nhất",
-			clickAction : function() {
-				// viewModel.selectedType("upProductDate");
-				doReload(false);
-			}
-		}],
 		dataItem : ko.observable(),
 		popupEditVisible : ko.observable(false),
 		editName : ko.observable(''),
@@ -87,21 +74,12 @@
 	var currentLoadStart = 0;
 	edit = function(e, itemData) {
 		viewModel.popupEditVisible(true);
-		if (viewModel.searchString() === '') {
-			productsStore.byKey(itemData.id).done(function(dataItem) {
-				viewModel.dataItem(dataItem);
-				viewModel.editName(dataItem.name);
-				viewModel.editPrice(dataItem.price);
-				viewModel.editWeight(dataItem.weight);
-			});
-		} else {
-			searchStore.byKey(itemData.id).done(function(dataItem) {
-				viewModel.dataItem(dataItem);
-				viewModel.editName(dataItem.name);
-				viewModel.editPrice(dataItem.price);
-				viewModel.editWeight(dataItem.weight);
-			});
-		}
+		productsStore.byKey(itemData.id).done(function(dataItem) {
+			viewModel.dataItem(dataItem);
+			viewModel.editName(dataItem.name);
+			viewModel.editPrice(dataItem.price);
+			viewModel.editWeight(dataItem.weight);
+		});
 		$("#nameBox").dxTextBox("instance").focus();
 	};
 
@@ -128,23 +106,13 @@
 						DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
 						return;
 					}
-					if (viewModel.searchString() === '') {
-						productsStore.byKey(itemData.id).done(function(dataItem) {
-							dataItem.stockAvailability = !itemData.stockAvailability;
-							dataItem.stockAvailabilityDisplay = itemData.stockAvailability ? 'Còn hàng' : 'Hết hàng';
-							productsStore.remove(itemData.id);
-							productsStore.insert(dataItem);
-						});
-						doReload(true);
-					} else {
-						searchStore.byKey(itemData.id).done(function(dataItem) {
-							dataItem.stockAvailability = !itemData.stockAvailability;
-							dataItem.stockAvailabilityDisplay = itemData.stockAvailability ? 'Còn hàng' : 'Hết hàng';
-							searchStore.remove(itemData.id);
-							searchStore.insert(dataItem);
-						});
-						doReloadSearch();
-					}
+					productsStore.byKey(itemData.id).done(function(dataItem) {
+						dataItem.stockAvailability = !itemData.stockAvailability;
+						dataItem.stockAvailabilityDisplay = itemData.stockAvailability ? 'Còn hàng' : 'Hết hàng';
+						productsStore.remove(itemData.id);
+						productsStore.insert(dataItem);
+					});
+					doReload(true);
 					// doLoadDataByProductID();
 					//textStatus contains the status: success, error, etc
 				}).fail(function(jqxhr, textStatus, error) {
@@ -190,26 +158,14 @@
 					DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
 					return;
 				}
-				if (viewModel.searchString() === '') {
-					productsStore.byKey(viewModel.dataItem().id).done(function(dataItem) {
-						dataItem.name = viewModel.editName();
-						dataItem.price = viewModel.editPrice();
-						dataItem.weight = viewModel.editWeight();
-						productsStore.remove(dataItem.id);
-						productsStore.insert(dataItem);
-					});
-					doReload(true);
-				} else {
-					searchStore.byKey(viewModel.dataItem().id).done(function(dataItem) {
-						dataItem.name = viewModel.editName();
-						dataItem.price = viewModel.editPrice();
-						dataItem.weight = viewModel.editWeight();
-						searchStore.remove(dataItem.id);
-						searchStore.insert(dataItem);
-					});
-					doReloadSearch();
-
-				}
+				productsStore.byKey(viewModel.dataItem().id).done(function(dataItem) {
+					dataItem.name = viewModel.editName();
+					dataItem.price = viewModel.editPrice();
+					dataItem.weight = viewModel.editWeight();
+					productsStore.remove(dataItem.id);
+					productsStore.insert(dataItem);
+				});
+				doReload(true);
 			}).fail(function(jqxhr, textStatus, error) {
 				viewModel.loadPanelVisible(false);
 				if ( typeof AppMobi === 'object')
@@ -220,14 +176,9 @@
 
 		});
 	};
-
-	var myUserName = window.localStorage.getItem("UserName");
-	productsStore = new DevExpress.data.LocalStore({
-		name : myUserName + "productsStore",
-		key : "id",
-	});
-	searchStore = new DevExpress.data.LocalStore({
-		name : myUserName + "searchStore",
+	var dataArray = [];
+	var productsStore = new DevExpress.data.ArrayStore({
+		data : dataArray,
 		key : "id",
 	});
 	productsDataSource = new DevExpress.data.DataSource({
@@ -236,24 +187,10 @@
 			getter : 'stockAvailability',
 			desc : true
 		}, {
-			getter : 'upProductDate',
-			desc : true
-		}, {
 			getter : 'updatedDate',
-			desc : true
-		}],
-		pageSize : 10
-	});
-	searchDataSource = new DevExpress.data.DataSource({
-		store : searchStore,
-		sort : [{
-			getter : 'stockAvailability',
 			desc : true
 		}, {
 			getter : 'upProductDate',
-			desc : true
-		}, {
-			getter : 'updatedDate',
 			desc : true
 		}],
 		pageSize : 10
@@ -278,17 +215,9 @@
 		}).fail(function() {
 		});
 
-		var timeStamp = Number(window.localStorage.getItem(myUserName + "ProductsTimeStamp"));
-		if (timeStamp === null)
-			timeStamp = 0;
-
-		var searchString = viewModel.searchString(); 
-		if (searchString !== "")
-			timeStamp = 0;
-		else
+		var searchString = viewModel.searchString();
+		if (searchString === "")
 			searchString = "#";
-		if (currentLoadStart > 0)
-			timeStamp = 0;
 		var domain = window.sessionStorage.getItem("domain");
 		var url = domain + "/api/mobile/SearchProductByName";
 		return $.post(url, {
@@ -296,7 +225,7 @@
 			Name : searchString,
 			From : currentLoadStart,
 			To : currentLoadStart + LOADSIZE - 1,
-			TimeStamp : timeStamp,
+			TimeStamp : 0,
 		}, "json").done(function(data) {
 			viewModel.loadPanelVisible(false);
 			if ( typeof AppMobi === 'object')
@@ -309,12 +238,8 @@
 			var listObj = $("#productsList");
 			var List = listObj.dxList('instance');
 			if (data.Data === null) {
-				if (viewModel.searchString() === '') {
-					List.option('dataSource', productsDataSource);
-					doReload(true);
-				} else {
-					doReloadSearch();
-				}
+				List.option('dataSource', productsDataSource);
+				doReload(true);
 				return;
 			}
 			if (viewModel.searchString() === "")
@@ -346,31 +271,21 @@
 					stockAvailability : item.StockAvailability,
 					stockAvailabilityDisplay : item.StockAvailability ? 'Còn hàng' : 'Hết hàng',
 					noEdit : !item.CanEdit,
-					noUp : !item.CanUp,
+					noUp : !item.CanUp || !item.StockAvailability,
 				};
 			});
-
-			if (viewModel.searchString() === '') {
-				for (var i = 0; i < result.length; i++) {
-					productsStore.byKey(result[i].id).done(function(dataItem) {
-						if (dataItem !== undefined)
-							productsStore.update(result[i].id, result[i]);
-						else
-							productsStore.insert(result[i]);
-					}).fail(function(error) {
+			productsStore.clear();
+			for (var i = 0; i < result.length; i++) {
+				productsStore.byKey(result[i].id).done(function(dataItem) {
+					if (dataItem !== undefined)
+						productsStore.update(result[i].id, result[i]);
+					else
 						productsStore.insert(result[i]);
-					});
-				}
-				List.option('dataSource', productsDataSource);
-				doReload(true);
-			} else {
-				searchStore.clear();
-				for (var i = 0; i < result.length; i++) {
-					searchStore.insert(result[i]);
-				}
-				List.option('dataSource', searchDataSource);
-				doReloadSearch();
+				}).fail(function(error) {
+					productsStore.insert(result[i]);
+				});
 			}
+			doReload(true);
 
 		}).fail(function(jqxhr, textStatus, error) {
 			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
@@ -425,29 +340,16 @@
 						var UpdatedDate = convertDate(data.Data.UpdatedDate);
 						UpdatedDateDisplay = Globalize.format(UpdatedDate, 'dd/MM/yyyy');
 
-						if (viewModel.searchString() === '') {
-							productsStore.byKey(id).done(function(dataItem) {
-								dataItem.upProductDate = UpProductDate;
-								dataItem.upProductDateDisplay = UpProductDateDisplay;
-								dataItem.updatedDate = UpdatedDate;
-								dataItem.updatedDateDisplay = UpdatedDateDisplay;
-								dataItem.displayUpProductDate = true;
-								productsStore.remove(id);
-								productsStore.insert(dataItem);
-							});
-							doReload(true);
-						} else {
-							searchStore.byKey(id).done(function(dataItem) {
-								dataItem.upProductDate = UpProductDate;
-								dataItem.upProductDateDisplay = UpProductDateDisplay;
-								dataItem.updatedDate = UpdatedDate;
-								dataItem.updatedDateDisplay = UpdatedDateDisplay;
-								dataItem.displayUpProductDate = true;
-								searchStore.remove(id);
-								searchStore.insert(dataItem);
-							});
-							doReloadSearch();
-						}
+						productsStore.byKey(id).done(function(dataItem) {
+							dataItem.upProductDate = UpProductDate;
+							dataItem.upProductDateDisplay = UpProductDateDisplay;
+							dataItem.updatedDate = UpdatedDate;
+							dataItem.updatedDateDisplay = UpdatedDateDisplay;
+							dataItem.displayUpProductDate = true;
+							productsStore.remove(id);
+							productsStore.insert(dataItem);
+						});
+						doReload(true);
 					});
 				}).fail(function(jqxhr, textStatus, error) {
 					viewModel.loadPanelVisible(false);
@@ -466,29 +368,16 @@
 			getter : 'stockAvailability',
 			desc : true
 		}, {
-			getter : 'upProductDate',
+			getter : 'updatedDate',
 			desc : true
 		}, {
-			getter : 'updatedDate',
+			getter : 'upProductDate',
 			desc : true
 		}]);
 		productsDataSource.load().done(function(results) {
-		});
-	};
-
-	doReloadSearch = function() {
-		searchDataSource.pageIndex(0);
-		searchDataSource.sort([{
-			getter : 'stockAvailability',
-			desc : true
-		}, {
-			getter : 'upProductDate',
-			desc : true
-		}, {
-			getter : 'updatedDate',
-			desc : true
-		}]);
-		searchDataSource.load().done(function(results) {
+			var listObj = $("#productsList");
+			var List = listObj.dxList('instance');
+			List.option('dataSource', results);
 		});
 	};
 

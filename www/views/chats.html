@@ -1,5 +1,5 @@
 ﻿<div data-options="dxView : { name: 'chats', title: 'HỎI & ĐÁP', secure: true } " >
-	<div data-bind="dxCommand: { id: 'refresh', icon: 'refresh', action: function() { doLoadChatIdsData(); } }" ></div>
+	<div data-bind="dxCommand: { id: 'refresh', icon: 'refresh', action: function() { doLoadChatIdsData(); }, visible: showRefresh }" ></div>
 	<div data-options="dxContent : { targetPlaceholder: 'content' } " >
 		<div data-bind="dxLoadPanel:{message: '', visible: loadPanelVisible }"></div>
 		<div id="chatidlist" data-bind="dxList:
@@ -13,6 +13,7 @@
 		pullingDownText: 'Kéo để tải lại...',
 		nextButtonText: 'Tải tiếp ...',
 		pageLoadingText: 'Đang tải ...',
+		refreshingText: 'Đang tải ...',
 		itemClickAction: function(e) { showChatDetails(e); },
 		grouped: true,
 		groupTemplate: 'statesGroup',

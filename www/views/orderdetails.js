@@ -1,35 +1,18 @@
 ﻿MyApp.orderdetails = function(params) {
+	var myUserName = window.localStorage.getItem("UserName");
 
 	var viewModel = {
 		//title : ko.observable('Orders'),
-		dropDownMenuData : [{
-			text : "Còn hàng",
-			clickAction : function() {
-				processValueChange("Processing");
-			},
-			disabled : ko.observable(true),
-		}, {
-			text : "Hoãn đơn hàng",
-			clickAction : function() {
-				processValueChange("Delay");
-			},
-			disabled : ko.observable(true),
-		}, {
-			text : "Tách đơn hàng",
-			clickAction : function() {
-				processValueChange("Split");
-			},
-			disabled : ko.observable(true),
-		}, {
-			text : "Hết hàng",
-			clickAction : function() {
-				processValueChange("Cancel");
-			},
-			disabled : ko.observable(true),
-		}],
+		ordersStore : new DevExpress.data.LocalStore({
+			type : "local",
+			name : myUserName + "OrdersStore",
+			key : "orderNumber",
+			// flushInterval : 1000,
+			immediate : true,
+		}),
 		viewShown : function(e) {
 			//this.title("Đơn hàng " + this.id);
-			MyApp.orders().ordersStore.byKey(this.id).done(function(dataItem) {
+			viewModel.ordersStore.byKey(this.id).done(function(dataItem) {
 				viewModel.totalAmount(dataItem.totalAmount);
 				viewModel.orderId(dataItem.orderId);
 				viewModel.orderNumber(dataItem.orderNumber);
@@ -123,231 +106,254 @@
 		disabled : ko.observable(false),
 		selectedType : ko.observable(''),
 		actionSheetVisible : ko.observable(false),
-		showActionSheet : function() {
-			var canProcess = !viewModel.canProcess();
-			var canDelay = !viewModel.canDelay();
-			var canSplit = !viewModel.canSplit();
-			var canCancel = !viewModel.canCancel();
-			viewModel.dropDownMenuData[0].disabled(canProcess);
-			viewModel.dropDownMenuData[1].disabled(canDelay);
-			viewModel.dropDownMenuData[2].disabled(canSplit);
-			viewModel.dropDownMenuData[3].disabled(canCancel);
-			viewModel.actionSheetVisible(true);
-		},
 		dateBoxValue : ko.observable(new Date()),
 		popupDelayVisible : ko.observable(false),
 		popupSplitVisible : ko.observable(false),
 		loadPanelVisible : ko.observable(false),
-	};
+		deleted : function() {
+			viewModel.cantSplitCurrentItem(viewModel.productsToSplit().length === 0);
+		},
 
-	var myUserName = window.localStorage.getItem("UserName");
-	// listDataStore = new DevExpress.data.LocalStore({
-	// type : "local",
-	// name : myUserName + "OrdersStore",
-	// key : "orderNumber",
-	// // flushInterval : 1000,
-	// immediate : true,
-	// });
+		showLoading : function(show) {
+			viewModel.loadPanelVisible(show);
+		},
 
-	deleted = function() {
-		viewModel.cantSplitCurrentItem(viewModel.productsToSplit().length === 0);
-	};
+		showSplitPopUp : function() {
+			viewModel.productsToSplit().length = 0;
+			for (var i = 0; i < viewModel.products().length; i++) {
+				var product = {
+					name : viewModel.products()[i].name,
+					id : viewModel.products()[i].id,
+					thumbnail : viewModel.products()[i].thumbnail,
+					selected : ko.observable(false),
+				};
+				viewModel.productsToSplit().push(product);
+			}
 
-	showLoading = function(show) {
-		viewModel.loadPanelVisible(show);
-	};
+			viewModel.popupSplitVisible(true);
+			var splitObj = $("#popupSplitList");
+			var splitList = splitObj.dxList('instance');
+			splitList.option('dataSource', viewModel.productsToSplit());
 
-	hideSplitPopUp = function() {
-		viewModel.loadPanelVisible(false);
-		viewModel.popupSplitVisible(false);
-	};
+			var totalHeight = $("#popupSplitContent").height();
+			var footerHeight = $("#popupSplitFooter").height();
+			$("popupSplitList").height(totalHeight - footerHeight);
+			viewModel.cantSplitCurrentItem(true);
+		},
 
-	hideDelayPopUp = function() {
-		viewModel.loadPanelVisible(false);
-		viewModel.popupDelayVisible(false);
-	};
+		hideDetailSplitPopUp : function() {
+			viewModel.loadPanelVisible(false);
+			viewModel.popupSplitVisible(false);
+		},
 
-	processValueChange = function(text) {
-		switch (text) {
-			case "Processing":
-				doSwitchProcessOrderByOrderID();
-				break;
-			case "Delay":
-				viewModel.popupDelayVisible(true);
-				break;
-			case "Split":
-				viewModel.productsToSplit().length = 0;
-				for (var i = 0; i < viewModel.products().length; i++) {
-					var product = {
-						name : viewModel.products()[i].name,
-						id : viewModel.products()[i].id,
-						thumbnail : viewModel.products()[i].thumbnail,
-					};
-					viewModel.productsToSplit().push(product);
+		hideDetailDelayPopUp : function() {
+			viewModel.loadPanelVisible(false);
+			viewModel.popupDelayVisible(false);
+		},
+
+		showDelayPopUp : function() {
+			viewModel.popupDelayVisible(true);
+		},
+
+		processValueChange : function(text) {
+			switch (text) {
+				case "Processing":
+					viewModel.doSwitchProcessOrderByOrderID();
+					break;
+				case "Delay":
+					viewModel.showDelayPopUp();
+					break;
+				case "Split":
+					viewModel.showSplitPopUp();
+					break;
+				case "New":
+					viewModel.doNewOrderByOrderID();
+					break;
+				case "Cancel":
+					viewModel.doCancelOrderByOrderID();
+					break;
+			}
+		},
+
+		doCancelOrderByOrderID : function() {
+			var result = DevExpress.ui.dialog.confirm("Bạn có chắc muốn báo hết hàng?", "Sendo");
+			result.done(function(dialogResult) {
+				if (dialogResult) {
+					viewModel.showLoading(true);
+					if ( typeof AppMobi === 'object')
+						AppMobi.notification.showBusyIndicator();
+					var tokenId = window.sessionStorage.getItem("MyTokenId");
+					var postOrderNumber = Number(viewModel.orderId());
+					var domain = window.sessionStorage.getItem("domain");
+					var url = domain + "/api/mobile/ProcessOrder";
+					return $.post(url, {
+						TokenId : tokenId,
+						OrderId : postOrderNumber,
+						Action : "Cancel",
+					}, "json").done(function(data, textStatus) {
+						viewModel.showLoading(false);
+						if ( typeof AppMobi === 'object')
+							AppMobi.notification.hideBusyIndicator();
+						if (data.Flag != true) {
+							DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
+							return;
+						}
+
+						var orderRemove = viewModel.orderNumber();
+						viewModel.ordersStore.remove(orderRemove);
+						window.sessionStorage.removeItem("firstloadorder");
+						MyApp.app.back();
+						DevExpress.ui.notify('Huỷ đơn hàng thành công', 'success', 2000);
+					}).fail(function(jqxhr, textStatus, error) {
+						viewModel.showLoading(false);
+						if ( typeof AppMobi === 'object')
+							AppMobi.notification.hideBusyIndicator();
+						DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+					});
 				}
+			});
+		},
 
-				viewModel.popupSplitVisible(true);
-				var splitObj = $("#popupSplitList");
-				var splitList = splitObj.dxList('instance');
-				splitList.option('dataSource', viewModel.productsToSplit());
+		doSwitchProcessOrderByOrderID : function() {
+			var result = DevExpress.ui.dialog.confirm("Bạn đã chắc chắn là còn hàng?", "Sendo");
+			result.done(function(dialogResult) {
+				if (dialogResult) {
+					viewModel.showLoading(true);
+					if ( typeof AppMobi === 'object')
+						AppMobi.notification.showBusyIndicator();
+					var tokenId = window.sessionStorage.getItem("MyTokenId");
+					var postOrderNumber = Number(viewModel.orderId());
 
-				var totalHeight = $("#popupSplitContent").height();
-				var footerHeight = $("#popupSplitFooter").height();
-				$("popupSplitList").height(totalHeight - footerHeight);
-				viewModel.cantSplitCurrentItem(true);
-				break;
-			case "New":
-				doNewOrderByOrderID();
-				break;
-			case "Cancel":
-				doCancelOrderByOrderID();
-				break;
-		}
-	};
+					var dataToSend = {
+						TokenId : tokenId,
+						OrderId : postOrderNumber,
+						Action : "Processing",
+					};
+					var jsonData = JSON.stringify(dataToSend);
+					var domain = window.sessionStorage.getItem("domain");
+					var url = domain + "/api/mobile/ProcessOrder";
+					return $.post(url, {
+						TokenId : tokenId,
+						OrderNumber : viewModel.dataItem().orderNumber,
+						Action : "Processing",
+					}, "json").done(function(data, textStatus) {
+						viewModel.showLoading(false);
+						if ( typeof AppMobi === 'object')
+							AppMobi.notification.hideBusyIndicator();
+						if (data.Flag != true) {
+							DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
+							return;
+						}
+						var orderRemove = viewModel.orderNumber();
+						viewModel.ordersStore.remove(orderRemove);
+						window.sessionStorage.removeItem("firstloadorder");
+						MyApp.app.back();
+						DevExpress.ui.notify('Xử lý đơn hàng thành công', 'success', 2000);
+					}).fail(function(jqxhr, textStatus, error) {
+						viewModel.showLoading(false);
+						if ( typeof AppMobi === 'object')
+							AppMobi.notification.hideBusyIndicator();
+						DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+					});
+				}
+			});
+		},
 
-	doCancelOrderByOrderID = function() {
-		showLoading(true);
-		if ( typeof AppMobi === 'object')
-			AppMobi.notification.showBusyIndicator();
-		var tokenId = window.sessionStorage.getItem("MyTokenId");
-		var postOrderNumber = Number(viewModel.orderId());
-		var domain = window.sessionStorage.getItem("domain");
-		var url = domain + "/api/mobile/ProcessOrder";
-		return $.post(url, {
-			TokenId : tokenId,
-			OrderId : postOrderNumber,
-			Action : "Cancel",
-		}, "json").done(function(data, textStatus) {
-			showLoading(false);
-			if ( typeof AppMobi === 'object')
-				AppMobi.notification.hideBusyIndicator();
-			if (data.Flag != true) {
-				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
-				return;
+		doSplitOrderByOrderID : function() {
+			var result = DevExpress.ui.dialog.confirm("Bạn đã chắc chắn muốn hoãn một phần đơn hàng?", "Sendo");
+			result.done(function(dialogResult) {
+				if (dialogResult) {
+					viewModel.showLoading(true);
+					if ( typeof AppMobi === 'object')
+						AppMobi.notification.showBusyIndicator();
+					var splitIDs = [];
+					for (var i = 0; i < viewModel.productsToSplit().length; i++) {
+						splitIDs.push(viewModel.productsToSplit()[i].id);
+					}
+					var tokenId = window.sessionStorage.getItem("MyTokenId");
+					var postOrderNumber = Number(viewModel.orderId());
+					var domain = window.sessionStorage.getItem("domain");
+					var url = domain + "/api/mobile/ProcessOrder";
+					return $.post(url, {
+						TokenId : tokenId,
+						OrderId : postOrderNumber,
+						Action : "Splitting",
+						ProductSplits : splitIDs
+					}, "json").done(function(data, textStatus) {
+						viewModel.hideDetailSplitPopUp();
+						if ( typeof AppMobi === 'object')
+							AppMobi.notification.hideBusyIndicator();
+						if (data.Flag != true) {
+							DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
+							return;
+						}
+						var orderRemove = viewModel.orderNumber();
+						viewModel.ordersStore.remove(orderRemove);
+						window.sessionStorage.removeItem("firstloadorder");
+						MyApp.app.back();
+						DevExpress.ui.notify('Hoãn một phần đơn hàng thành công', 'success', 2000);
+					}).fail(function(jqxhr, textStatus, error) {
+						viewModel.hideDetailSplitPopUp();
+						if ( typeof AppMobi === 'object')
+							AppMobi.notification.hideBusyIndicator();
+						DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+					});
+				}
+			});
+		},
+
+		doDelayOrderByOrderID : function() {
+			var result = DevExpress.ui.dialog.confirm("Bạn đã chắc chắn muốn hoãn đơn hàng?", "Sendo");
+			result.done(function(dialogResult) {
+				if (dialogResult) {
+					viewModel.showLoading(true);
+					if ( typeof AppMobi === 'object')
+						AppMobi.notification.showBusyIndicator();
+					var tokenId = window.sessionStorage.getItem("MyTokenId");
+					var newDelayDate = new Date(viewModel.dateBoxValue());
+					var postOrderNumber = Number(viewModel.orderId());
+					var domain = window.sessionStorage.getItem("domain");
+					var url = domain + "/api/mobile/ProcessOrder";
+					var delayDate = Number(newDelayDate.getTime() / 1000);
+					return $.post(url, {
+						TokenId : tokenId,
+						OrderId : postOrderNumber,
+						Action : "Delayed",
+						DelayDate : delayDate
+					}, "json").done(function(data, textStatus) {
+						viewModel.hideDetailDelayPopUp();
+						if ( typeof AppMobi === 'object')
+							AppMobi.notification.hideBusyIndicator();
+						if (data.Flag != true) {
+							DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
+							return;
+						}
+						var orderRemove = viewModel.orderNumber();
+						viewModel.ordersStore.remove(orderRemove);
+						window.sessionStorage.removeItem("firstloadorder");
+						MyApp.app.back();
+						DevExpress.ui.notify('Hoãn đơn hàng thành công', 'success', 2000);
+					}).fail(function(jqxhr, textStatus, error) {
+						viewModel.hideDetailDelayPopUp();
+						if ( typeof AppMobi === 'object')
+							AppMobi.notification.hideBusyIndicator();
+						DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+					});
+				}
+			});
+		},
+
+		splitDetailCheckChanged : function() {
+			var len = viewModel.productsToSplit().length;
+			for ( i = 0; i < len; i++) {
+				var product = viewModel.productsToSplit()[i];
+				if (product.selected() === true) {
+					viewModel.cantSplitCurrentItem(false);
+					return;
+				}
 			}
-
-			var orderRemove = viewModel.orderNumber();
-			MyApp.orders().ordersStore.remove(orderRemove);
-			MyApp.app.back();
-		}).fail(function(jqxhr, textStatus, error) {
-			showLoading(false);
-			if ( typeof AppMobi === 'object')
-				AppMobi.notification.hideBusyIndicator();
-			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
-		});
-
-	};
-
-	doSwitchProcessOrderByOrderID = function() {
-		showLoading(true);
-		if ( typeof AppMobi === 'object')
-			AppMobi.notification.showBusyIndicator();
-		var tokenId = window.sessionStorage.getItem("MyTokenId");
-		var postOrderNumber = Number(viewModel.orderId());
-
-		var dataToSend = {
-			TokenId : tokenId,
-			OrderId : postOrderNumber,
-			Action : "Processing",
-		};
-		var jsonData = JSON.stringify(dataToSend);
-		var domain = window.sessionStorage.getItem("domain");
-		var url = domain + "/api/mobile/ProcessOrder";
-		return $.post(url, {
-			TokenId : tokenId,
-			OrderNumber : viewModel.dataItem().orderNumber,
-			Action : "Processing",
-		}, "json").done(function(data, textStatus) {
-			showLoading(false);
-			if ( typeof AppMobi === 'object')
-				AppMobi.notification.hideBusyIndicator();
-			if (data.Flag != true) {
-				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
-				return;
-			}
-			var orderRemove = viewModel.orderNumber();
-			MyApp.orders().ordersStore.remove(orderRemove);
-			MyApp.app.back();
-		}).fail(function(jqxhr, textStatus, error) {
-			showLoading(false);
-			if ( typeof AppMobi === 'object')
-				AppMobi.notification.hideBusyIndicator();
-			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
-		});
-
-	};
-
-	doSplitOrderByOrderID = function() {
-		showLoading(true);
-		if ( typeof AppMobi === 'object')
-			AppMobi.notification.showBusyIndicator();
-		var splitIDs = [];
-		for (var i = 0; i < viewModel.productsToSplit().length; i++) {
-			splitIDs.push(viewModel.productsToSplit()[i].id);
-		}
-		var tokenId = window.sessionStorage.getItem("MyTokenId");
-		var postOrderNumber = Number(viewModel.orderId());
-		var domain = window.sessionStorage.getItem("domain");
-		var url = domain + "/api/mobile/ProcessOrder";
-		return $.post(url, {
-			TokenId : tokenId,
-			OrderId : postOrderNumber,
-			Action : "Splitting",
-			ProductSplits : splitIDs
-		}, "json").done(function(data, textStatus) {
-			hideSplitPopUp();
-			if ( typeof AppMobi === 'object')
-				AppMobi.notification.hideBusyIndicator();
-			if (data.Flag != true) {
-				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
-				return;
-			}
-			var orderRemove = viewModel.orderNumber();
-			MyApp.orders().ordersStore.remove(orderRemove);
-			MyApp.app.back();
-			//TODO modify local data here
-		}).fail(function(jqxhr, textStatus, error) {
-			hideSplitPopUp();
-			if ( typeof AppMobi === 'object')
-				AppMobi.notification.hideBusyIndicator();
-			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
-		});
-
-	};
-
-	doDelayOrderByOrderID = function() {
-		showLoading(true);
-		if ( typeof AppMobi === 'object')
-			AppMobi.notification.showBusyIndicator();
-		var tokenId = window.sessionStorage.getItem("MyTokenId");
-		var newDelayDate = new Date(viewModel.dateBoxValue());
-		var postOrderNumber = Number(viewModel.orderId());
-		var domain = window.sessionStorage.getItem("domain");
-		var url = domain + "/api/mobile/ProcessOrder";
-		var delayDate = Number(newDelayDate.getTime() / 1000);
-		return $.post(url, {
-			TokenId : tokenId,
-			OrderId : postOrderNumber,
-			Action : "Delayed",
-			DelayDate : delayDate
-		}, "json").done(function(data, textStatus) {
-			hideDelayPopUp();
-			if ( typeof AppMobi === 'object')
-				AppMobi.notification.hideBusyIndicator();
-			if (data.Flag != true) {
-				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
-				return;
-			}
-			var orderRemove = viewModel.orderNumber();
-			MyApp.orders().ordersStore.remove(orderRemove);
-			MyApp.app.back();
-		}).fail(function(jqxhr, textStatus, error) {
-			hideDelayPopUp();
-			if ( typeof AppMobi === 'object')
-				AppMobi.notification.hideBusyIndicator();
-			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
-		});
-
+			viewModel.cantSplitCurrentItem(true);
+		},
 	};
 
 	return viewModel;

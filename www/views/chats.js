@@ -18,14 +18,16 @@
 			}
 		},
 		loadFrom : ko.observable(0),
+		isAndroid : ko.observable(false),
+		showRefresh : ko.observable(false),
 		viewShown : function() {
 			var platform = DevExpress.devices.real().platform;
-			var isAndroid = platform === 'android' || platform === 'generic';
+			viewModel.isAndroid(platform === 'android' || platform === 'generic');
 			var obj = null;
 			obj = $("#chatidlist");
 			var list = obj.dxList("instance");
-			list.option('showNextButton', isAndroid);
-			list.option('pullRefreshEnabled', !isAndroid);
+			list.option('showNextButton', viewModel.isAndroid());
+			// list.option('pullRefreshEnabled', !isAndroid);
 			// list.option('autoPagingEnabled', !isAndroid);
 			loadChatsImages();
 		},
@@ -103,6 +105,7 @@
 			}
 			if (viewModel.loadFrom() === 0)
 				window.localStorage.setItem(myUserName + "ListCommentTimeStamp", data.TimeStamp);
+			viewModel.showRefresh(data.Data === null || data.Data.length === 0 || viewModel.isAndroid());
 			if ((data.Data === undefined) || (data.Data.data === undefined) || (data.Data.data.length === 0)) {
 				chatsDataSource.pageIndex(0);
 				chatIdsStore.load().done(function() {

@@ -128,7 +128,9 @@
 	width: 0;
 	height: 0;
 }
-
+.conversations-comment .dx-texteditor-input {
+	background-color: white;
+}
 /*
  Thêm 9/7
  */

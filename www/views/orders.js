@@ -22,81 +22,42 @@
 			} else {
 				if (window.sessionStorage.getItem("firstloadorder") === null) {
 					window.sessionStorage.setItem("firstloadorder", true);
-					viewModel.ordersStore.clear();
-					var myUserName = window.localStorage.getItem("UserName");
-					window.localStorage.removeItem(myUserName + "OrdersTimeStamp" + NEW_ORDER);
-					window.localStorage.removeItem(myUserName + "OrdersTimeStamp" + PROCESSING_ORDER);
-					window.localStorage.removeItem(myUserName + "OrdersTimeStamp" + DELAYED_ORDER);
-					window.localStorage.removeItem(myUserName + "OrdersTimeStamp" + DELAYING_ORDER);
-					window.localStorage.removeItem(myUserName + "OrdersTimeStamp" + SHIPPING_ORDER);
-					window.localStorage.removeItem(myUserName + "OrdersTimeStamp" + SPLITTED_ORDER);
-					// refreshAll();
-					doLoadDataByOrderStatus(NEW_ORDER);
+					doLoadDataByOrderStatus(viewModel.selectedOrder());
 				} else {
-					doReloadPivot(NEW_ORDER);
-					// doReloadPivot(PROCESSING_ORDER);
-					// doReloadPivot(DELAYED_ORDER);
-					// doReloadPivot(DELAYING_ORDER);
-					// doReloadPivot(SHIPPING_ORDER);
-					// doReloadPivot(SPLITTED_ORDER);
+					refreshList(viewModel.selectedOrder());
 				}
 			}
 		},
 		loadFrom : ko.observable(0),
+		isAndroid : ko.observable(false),
+		showRefresh : ko.observable(false),
 		viewShown : function() {
 			var platform = DevExpress.devices.real().platform;
-			var isAndroid = platform === 'android' || platform === 'generic';
+			viewModel.isAndroid(platform === 'android' || platform === 'generic');
 			var obj = null;
-			obj = $("#listNew");
+			obj = $("#ordersList");
 			var list = obj.dxList("instance");
-			list.option('showNextButton', isAndroid);
-			list.option('pullRefreshEnabled', !isAndroid);
+			list.option('showNextButton', viewModel.isAndroid());
+			// list.option('pullRefreshEnabled', !isAndroid);
+			var contentObj = $("#content");
+			var contentHeight = contentObj.height();
+			var typeBar = $("#typeBar");
+			var typeBarHeight = typeBar.outerHeight();
+			obj.height(contentHeight - typeBarHeight);
 			loadNextImages();
-			var objPivot = $("#pivot").dxPivot("instance");
-			objPivot.option('selectedIndex', 0);
-			refreshPivot();
+			// refreshList(NEW_ORDER);
 		},
-		selectNewTab : function(input) {
-			var platform = DevExpress.devices.real().platform;
-			var isAndroid = platform === 'android' || platform === 'generic';
-			var obj = null;
-			var id = "#list";
-			var order = null;
-			switch (input.selectedIndex) {
-				case 0:
-					order = NEW_ORDER;
-					break;
-				case 1:
-					order = PROCESSING_ORDER;
-					break;
-				case 2:
-					order = DELAYING_ORDER;
-					break;
-				case 3:
-					order = DELAYED_ORDER;
-					break;
-				case 4:
-					order = SPLITTED_ORDER;
-					break;
-				case 5:
-					order = SHIPPING_ORDER;
-					break;
-			}
-			if (window.sessionStorage.getItem("firstload" + order) === null) {
-				window.sessionStorage.setItem("firstload" + order, true);
-				doLoadDataByOrderStatus(order);
-			}
-			obj = $(id + order);
-			var list = obj.dxList("instance");
-			list.option('showNextButton', isAndroid);
-			list.option('pullRefreshEnabled', !isAndroid);
-			// list.option('autoPagingEnabled', !isAndroid);
+		selectedOrder : ko.observable(NEW_ORDER),
+		selectedOrderName : ko.observable('Đơn hàng mới'),
+		selectNewOrder : function(orderType) {
+			viewModel.selectedOrder(orderType);
+			doLoadDataByOrderStatus(orderType);
 		},
 		username : ko.observable(),
 		pass : ko.observable(),
 
 		actionSheetVisible : ko.observable(false),
-		dropDownMenuData : [{
+		actionSheetData : [{
 			text : "Còn hàng",
 			clickAction : function() {
 				processActionSheet(PROCESSING_ORDER);
@@ -133,6 +94,37 @@
 			},
 			// disabled : ko.observable(false),
 		}],
+		switchOrdersData : [{
+			text : "Đơn hàng mới",
+			clickAction : function() {
+				viewModel.selectNewOrder(NEW_ORDER);
+			}
+		}, {
+			text : "Đơn hàng đang xử lý",
+			clickAction : function() {
+				viewModel.selectNewOrder(PROCESSING_ORDER);
+			}
+		}, {
+			text : "Đơn hàng yêu cầu hoãn",
+			clickAction : function() {
+				viewModel.selectNewOrder(DELAYING_ORDER);
+			}
+		}, {
+			text : "Đơn hàng đang hoãn",
+			clickAction : function() {
+				viewModel.selectNewOrder(DELAYED_ORDER);
+			}
+		}, {
+			text : "Đơn hàng đang vận chuyển",
+			clickAction : function() {
+				viewModel.selectNewOrder(SHIPPING_ORDER);
+			}
+		}, {
+			text : "Đơn hàng chờ tách",
+			clickAction : function() {
+				viewModel.selectNewOrder(SPLITTED_ORDER);
+			}
+		}],
 		products : ko.observableArray([]),
 		productsToSplit : ko.observableArray([]),
 		cantSplitCurrentItem : ko.observable(false),
@@ -147,17 +139,27 @@
 				var idOrderNumber = "#" + orderNumber;
 				var actionSheet = $("#actionsheet").dxActionSheet("instance");
 				// actionSheet.option('target', idOrderNumber);
-				actionSheet.option('target', "#bottom");
+				// actionSheet.option('target', "#bottom");
+				var ObjPopOver = actionSheet._popup;
+				ObjPopOver.option('shading', true);
+
 				viewModel.dataItem(dataItem);
 				viewModel.products(dataItem.products);
-				viewModel.dropDownMenuData[0].disabled(!dataItem.canProcess);
-				viewModel.dropDownMenuData[1].disabled(!dataItem.canDelay);
-				viewModel.dropDownMenuData[2].disabled(!dataItem.canSplit);
-				viewModel.dropDownMenuData[3].disabled(!dataItem.canCancel);
-				viewModel.dropDownMenuData[4].disabled(dataItem.buyerPhone === null);
+				viewModel.actionSheetData[0].disabled(!dataItem.canProcess);
+				viewModel.actionSheetData[1].disabled(!dataItem.canDelay);
+				viewModel.actionSheetData[2].disabled(!dataItem.canSplit);
+				viewModel.actionSheetData[3].disabled(!dataItem.canCancel);
+				viewModel.actionSheetData[4].disabled(dataItem.buyerPhone === null);
 				viewModel.actionSheetVisible(true);
 			});
 			e.jQueryEvent.stopPropagation();
+		},
+		switchOrdersVisible : ko.observable(false),
+		showOrders : function() {
+			var ordersSheet = $("#swicthOrdersSheet").dxActionSheet("instance");
+			var ordersSheetPopOver = ordersSheet._popup;
+			ordersSheetPopOver.option('shading', true);
+			viewModel.switchOrdersVisible(true);
 		},
 		// dataStore : ordersStore,
 		ordersStore : new DevExpress.data.LocalStore({
@@ -187,7 +189,34 @@
 		viewModel.popupDelayVisible(false);
 	};
 
-	doReloadPivot = function(status) {
+	refreshList = function(status) {
+		var typeBar = $("#typeBar");
+		switch (status) {
+			case NEW_ORDER:
+				viewModel.selectedOrderName('Đơn hàng mới (chưa xử lý)');
+				typeBar.css("backgroundColor", "#04a89f");
+				break;
+			case PROCESSING_ORDER:
+				viewModel.selectedOrderName('Đơn hàng đang xử lý');
+				typeBar.css("backgroundColor", "#00b5d0");
+				break;
+			case DELAYING_ORDER:
+				viewModel.selectedOrderName('Đơn hàng yêu cầu hoãn');
+				typeBar.css("backgroundColor", "#595959");
+				break;
+			case DELAYED_ORDER:
+				viewModel.selectedOrderName('Đơn hàng đang hoãn');
+				typeBar.css("backgroundColor", "#999999");
+				break;
+			case SHIPPING_ORDER:
+				viewModel.selectedOrderName('Đơn hàng đang vận chuyển');
+				typeBar.css("backgroundColor", "#006599");
+				break;
+			case SPLITTED_ORDER:
+				viewModel.selectedOrderName('Đơn hàng đang chờ tách');
+				typeBar.css("backgroundColor", "#cd6e02");
+				break;
+		}
 		viewModel.ordersStore.load().done(function(result) {
 			switch (status) {
 				case NEW_ORDER:
@@ -198,7 +227,7 @@
 						desc : true
 					});
 					newDataSource.load().done(function(results) {
-						$("#list" + status).dxList("instance").option('dataSource', results);
+						$("#ordersList").dxList("instance").option('dataSource', results);
 					});
 					break;
 				case PROCESSING_ORDER:
@@ -209,7 +238,7 @@
 						desc : true
 					});
 					processingDataSource.load().done(function(results) {
-						$("#list" + status).dxList("instance").option('dataSource', results);
+						$("#ordersList").dxList("instance").option('dataSource', results);
 					});
 					break;
 				case DELAYED_ORDER:
@@ -220,7 +249,7 @@
 						desc : true
 					});
 					delayedDataSource.load().done(function(results) {
-						$("#list" + status).dxList("instance").option('dataSource', results);
+						$("#ordersList").dxList("instance").option('dataSource', results);
 					});
 					break;
 				case DELAYING_ORDER:
@@ -231,7 +260,7 @@
 						desc : true
 					});
 					delayingDataSource.load().done(function(results) {
-						$("#list" + status).dxList("instance").option('dataSource', results);
+						$("#ordersList").dxList("instance").option('dataSource', results);
 					});
 					break;
 				case SHIPPING_ORDER:
@@ -242,7 +271,7 @@
 						desc : true
 					});
 					shippingDataSource.load().done(function(results) {
-						$("#list" + status).dxList("instance").option('dataSource', results);
+						$("#ordersList").dxList("instance").option('dataSource', results);
 					});
 					break;
 				case SPLITTED_ORDER:
@@ -253,7 +282,7 @@
 						desc : true
 					});
 					splittedDataSource.load().done(function(results) {
-						$("#list" + status).dxList("instance").option('dataSource', results);
+						$("#ordersList").dxList("instance").option('dataSource', results);
 					});
 					break;
 			}
@@ -261,154 +290,172 @@
 	};
 
 	doCancelOrder = function() {
-		showLoading(true);
-		if ( typeof AppMobi === 'object')
-			AppMobi.notification.showBusyIndicator();
-		var tokenId = window.sessionStorage.getItem("MyTokenId");
-		var postOrderNumber = Number(viewModel.dataItem().orderId);
-		var domain = window.sessionStorage.getItem("domain");
-		var url = domain + "/api/mobile/ProcessOrder";
-		return $.post(url, {
-			TokenId : tokenId,
-			OrderId : postOrderNumber,
-			Action : "Cancel",
-		}, "json").done(function(data) {
-			showLoading(false);
-			if ( typeof AppMobi === 'object')
-				AppMobi.notification.hideBusyIndicator();
-			if (data.Flag !== true) {
-				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
-				return;
+		var result = DevExpress.ui.dialog.confirm("Bạn có chắc muốn báo hết hàng?", "Sendo");
+		result.done(function(dialogResult) {
+			if (dialogResult) {
+				showLoading(true);
+				if ( typeof AppMobi === 'object')
+					AppMobi.notification.showBusyIndicator();
+				var tokenId = window.sessionStorage.getItem("MyTokenId");
+				var postOrderNumber = Number(viewModel.dataItem().orderId);
+				var domain = window.sessionStorage.getItem("domain");
+				var url = domain + "/api/mobile/ProcessOrder";
+				return $.post(url, {
+					TokenId : tokenId,
+					OrderId : postOrderNumber,
+					Action : "Cancel",
+				}, "json").done(function(data) {
+					showLoading(false);
+					if ( typeof AppMobi === 'object')
+						AppMobi.notification.hideBusyIndicator();
+					if (data.Flag !== true) {
+						DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
+						return;
+					}
+					var item = viewModel.dataItem();
+					var oldStatus = item.status;
+					var orderRemove = item.orderNumber;
+					viewModel.ordersStore.remove(orderRemove);
+					DevExpress.ui.notify('Huỷ đơn hàng thành công', 'success', 2000);
+					doLoadDataByOrderStatus(oldStatus);
+				}).fail(function(jqxhr, textStatus, error) {
+					showLoading(false);
+					if ( typeof AppMobi === 'object')
+						AppMobi.notification.hideBusyIndicator();
+					DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+				});
 			}
-			var item = viewModel.dataItem();
-			var oldStatus = item.status;
-			var orderRemove = item.orderNumber;
-			viewModel.ordersStore.remove(orderRemove);
-			doLoadDataByOrderStatus(oldStatus);
-			// doLoadDataByOrderStatus("Cancel");
-		}).fail(function(jqxhr, textStatus, error) {
-			showLoading(false);
-			if ( typeof AppMobi === 'object')
-				AppMobi.notification.hideBusyIndicator();
-			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
 		});
 	};
 
 	doProcessOrder = function() {
-		showLoading(true);
-		if ( typeof AppMobi === 'object')
-			AppMobi.notification.showBusyIndicator();
-		var tokenId = window.sessionStorage.getItem("MyTokenId");
-		var postOrderNumber = Number(viewModel.dataItem().orderId);
-		var domain = window.sessionStorage.getItem("domain");
-		var url = domain + "/api/mobile/ProcessOrder";
-		return $.post(url, {
-			TokenId : tokenId,
-			OrderId : postOrderNumber,
-			Action : PROCESSING_ORDER,
-		}, "json").done(function(data, textStatus) {
-			showLoading(false);
-			if ( typeof AppMobi === 'object')
-				AppMobi.notification.hideBusyIndicator();
-			if (data.Flag !== true) {
-				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
-				return;
+		var result = DevExpress.ui.dialog.confirm("Bạn đã chắc chắn là còn hàng?", "Sendo");
+		result.done(function(dialogResult) {
+			if (dialogResult) {
+				showLoading(true);
+				if ( typeof AppMobi === 'object')
+					AppMobi.notification.showBusyIndicator();
+				var tokenId = window.sessionStorage.getItem("MyTokenId");
+				var postOrderNumber = Number(viewModel.dataItem().orderId);
+				var domain = window.sessionStorage.getItem("domain");
+				var url = domain + "/api/mobile/ProcessOrder";
+				return $.post(url, {
+					TokenId : tokenId,
+					OrderId : postOrderNumber,
+					Action : PROCESSING_ORDER,
+				}, "json").done(function(data, textStatus) {
+					showLoading(false);
+					if ( typeof AppMobi === 'object')
+						AppMobi.notification.hideBusyIndicator();
+					if (data.Flag !== true) {
+						DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
+						return;
+					}
+					var item = viewModel.dataItem();
+					var oldStatus = item.status;
+					var orderRemove = item.orderNumber;
+					viewModel.ordersStore.remove(orderRemove);
+					DevExpress.ui.notify('Xử lý đơn hàng thành công', 'success', 2000);
+					doLoadDataByOrderStatus(oldStatus);
+				}).fail(function(jqxhr, textStatus, error) {
+					showLoading(false);
+					if ( typeof AppMobi === 'object')
+						AppMobi.notification.hideBusyIndicator();
+					DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+				});
 			}
-			var item = viewModel.dataItem();
-			var oldStatus = item.status;
-			var orderRemove = item.orderNumber;
-			viewModel.ordersStore.remove(orderRemove);
-			doLoadDataByOrderStatus(oldStatus);
-			doLoadDataByOrderStatus(PROCESSING_ORDER);
-		}).fail(function(jqxhr, textStatus, error) {
-			showLoading(false);
-			if ( typeof AppMobi === 'object')
-				AppMobi.notification.hideBusyIndicator();
-			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
 		});
-
 	};
 
 	doSplitOrder = function() {
-		showLoading(true);
-		if ( typeof AppMobi === 'object')
-			AppMobi.notification.showBusyIndicator();
-		var splitIDs = [];
-		for (var i = 0; i < viewModel.productsToSplit().length; i++) {
-			// var product = {
-			// Id : viewModel.productsToSplit()[i].id
-			// };
-			// splitIDs.push(product);
-			splitIDs.push(viewModel.productsToSplit()[i].id);
-		}
-		var tokenId = window.sessionStorage.getItem("MyTokenId");
-		var postOrderNumber = Number(viewModel.dataItem().orderId);
-		var domain = window.sessionStorage.getItem("domain");
-		var url = domain + "/api/mobile/ProcessOrder";
-		return $.post(url, {
-			TokenId : tokenId,
-			OrderId : postOrderNumber,
-			Action : "Splitting",
-			ProductSplits : splitIDs
-		}, "json").done(function(data) {
-			hideSplitPopUp();
-			if ( typeof AppMobi === 'object')
-				AppMobi.notification.hideBusyIndicator();
-			if (data.Flag !== true) {
-				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
-				return;
+		var result = DevExpress.ui.dialog.confirm("Bạn đã chắc chắn muốn hoãn một phần đơn hàng?", "Sendo");
+		result.done(function(dialogResult) {
+			if (dialogResult) {
+				showLoading(true);
+				if ( typeof AppMobi === 'object')
+					AppMobi.notification.showBusyIndicator();
+				var splitIDs = [];
+				for (var i = 0; i < viewModel.productsToSplit().length; i++) {
+					// var product = {
+					// Id : viewModel.productsToSplit()[i].id
+					// };
+					// splitIDs.push(product);
+					if (viewModel.productsToSplit()[i].selected() === true)
+						splitIDs.push(viewModel.productsToSplit()[i].id);
+				}
+				var tokenId = window.sessionStorage.getItem("MyTokenId");
+				var postOrderNumber = Number(viewModel.dataItem().orderId);
+				var domain = window.sessionStorage.getItem("domain");
+				var url = domain + "/api/mobile/ProcessOrder";
+				return $.post(url, {
+					TokenId : tokenId,
+					OrderId : postOrderNumber,
+					Action : "Splitting",
+					ProductSplits : splitIDs
+				}, "json").done(function(data) {
+					hideSplitPopUp();
+					if ( typeof AppMobi === 'object')
+						AppMobi.notification.hideBusyIndicator();
+					if (data.Flag !== true) {
+						DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
+						return;
+					}
+					var item = viewModel.dataItem();
+					var oldStatus = item.status;
+					var orderRemove = item.orderNumber;
+					viewModel.ordersStore.remove(orderRemove);
+					DevExpress.ui.notify('Hoãn một phần đơn hàng thành công', 'success', 2000);
+					doLoadDataByOrderStatus(oldStatus);
+				}).fail(function(jqxhr, textStatus, error) {
+					hideSplitPopUp();
+					if ( typeof AppMobi === 'object')
+						AppMobi.notification.hideBusyIndicator();
+					DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+				});
 			}
-			var item = viewModel.dataItem();
-			var oldStatus = item.status;
-			var orderRemove = item.orderNumber;
-			viewModel.ordersStore.remove(orderRemove);
-			doLoadDataByOrderStatus(oldStatus);
-			doLoadDataByOrderStatus(SPLITTED_ORDER);
-		}).fail(function(jqxhr, textStatus, error) {
-			hideSplitPopUp();
-			if ( typeof AppMobi === 'object')
-				AppMobi.notification.hideBusyIndicator();
-			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
 		});
-
 	};
 
 	doDelayOrder = function() {
-		showLoading(true);
-		if ( typeof AppMobi === 'object')
-			AppMobi.notification.showBusyIndicator();
-		var tokenId = window.sessionStorage.getItem("MyTokenId");
-		var newDelayDate = new Date(viewModel.dateBoxValue());
-		var postOrderNumber = Number(viewModel.dataItem().orderId);
-		var domain = window.sessionStorage.getItem("domain");
-		var url = domain + "/api/mobile/ProcessOrder";
-		var delayDate = Number(newDelayDate.getTime() / 1000);
-		return $.post(url, {
-			TokenId : tokenId,
-			OrderId : postOrderNumber,
-			Action : DELAYED_ORDER,
-			DelayDate : delayDate
-		}, "json").done(function(data, textStatus) {
-			hideDelayPopUp();
-			if ( typeof AppMobi === 'object')
-				AppMobi.notification.hideBusyIndicator();
-			if (data.Flag !== true) {
-				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
-				return;
+		var result = DevExpress.ui.dialog.confirm("Bạn đã chắc chắn muốn hoãn đơn hàng?", "Sendo");
+		result.done(function(dialogResult) {
+			if (dialogResult) {
+				showLoading(true);
+				if ( typeof AppMobi === 'object')
+					AppMobi.notification.showBusyIndicator();
+				var tokenId = window.sessionStorage.getItem("MyTokenId");
+				var newDelayDate = new Date(viewModel.dateBoxValue());
+				var postOrderNumber = Number(viewModel.dataItem().orderId);
+				var domain = window.sessionStorage.getItem("domain");
+				var url = domain + "/api/mobile/ProcessOrder";
+				var delayDate = Number(newDelayDate.getTime() / 1000);
+				return $.post(url, {
+					TokenId : tokenId,
+					OrderId : postOrderNumber,
+					Action : DELAYED_ORDER,
+					DelayDate : delayDate
+				}, "json").done(function(data, textStatus) {
+					hideDelayPopUp();
+					if ( typeof AppMobi === 'object')
+						AppMobi.notification.hideBusyIndicator();
+					if (data.Flag !== true) {
+						DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
+						return;
+					}
+					var item = viewModel.dataItem();
+					var oldStatus = item.status;
+					var orderRemove = item.orderNumber;
+					viewModel.ordersStore.remove(orderRemove);
+					DevExpress.ui.notify('Hoãn đơn hàng thành công', 'success', 2000);
+					doLoadDataByOrderStatus(oldStatus);
+				}).fail(function(jqxhr, textStatus, error) {
+					if ( typeof AppMobi === 'object')
+						AppMobi.notification.hideBusyIndicator();
+					hideDelayPopUp();
+					DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+				});
 			}
-			var item = viewModel.dataItem();
-			var oldStatus = item.status;
-			var orderRemove = item.orderNumber;
-			viewModel.ordersStore.remove(orderRemove);
-			doLoadDataByOrderStatus(oldStatus);
-			doLoadDataByOrderStatus(DELAYING_ORDER);
-		}).fail(function(jqxhr, textStatus, error) {
-			if ( typeof AppMobi === 'object')
-				AppMobi.notification.hideBusyIndicator();
-			hideDelayPopUp();
-			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
 		});
-
 	};
 
 	function groupByDate(data) {
@@ -534,32 +581,6 @@
 		filter : ["status", "=", SPLITTED_ORDER]
 	});
 
-	items = [{
-		title : "Mới",
-		dataName : NEW_ORDER,
-		listItems : newDataSource
-	}, {
-		title : "Đang xử lý",
-		dataName : PROCESSING_ORDER,
-		listItems : processingDataSource
-	}, {
-		title : "Đang chờ hoãn",
-		dataName : DELAYING_ORDER,
-		listItems : delayingDataSource
-	}, {
-		title : "Đang hoãn",
-		dataName : DELAYED_ORDER,
-		listItems : delayedDataSource
-	}, {
-		title : "Đang chờ tách",
-		dataName : SPLITTED_ORDER,
-		listItems : splittedDataSource
-	}, {
-		title : "Đang vận chuyển",
-		dataName : SHIPPING_ORDER,
-		listItems : shippingDataSource
-	}];
-
 	processActionSheet = function(text) {
 		switch (text) {
 			case PROCESSING_ORDER:
@@ -575,7 +596,8 @@
 						name : viewModel.products()[i].name,
 						id : viewModel.products()[i].id,
 						thumbnail : viewModel.products()[i].thumbnail,
-						stockAvailability : viewModel.products()[i].stockAvailabilityDisplay
+						stockAvailability : viewModel.products()[i].stockAvailabilityDisplay,
+						selected : ko.observable(false),
 					};
 					viewModel.productsToSplit().push(product);
 				}
@@ -604,26 +626,28 @@
 	};
 
 	doLoadDataByOrderStatus = function(status) {
-		// DevExpress.ui.notify("loading data", "info", 1000);
+		viewModel.ordersStore.clear();
+
+		DevExpress.ui.notify("Đang tải dữ liệu", "info", 100);
 		viewModel.loadPanelVisible(true);
 		if ( typeof AppMobi === 'object')
 			AppMobi.notification.showBusyIndicator();
 		var tokenId = window.sessionStorage.getItem("MyTokenId");
 		var myUserName = window.localStorage.getItem("UserName");
-		var timeStamp = Number(window.localStorage.getItem(myUserName + "OrdersTimeStamp" + status));
-		if (timeStamp === null)
-			timeStamp = 0;
+		// var timeStamp = Number(window.sessionStorage.getItem(myUserName + "OrdersTimeStamp" + status));
+		// if (timeStamp === null)
+		// timeStamp = 0;
 		var from = viewModel.loadFrom();
 		var to = viewModel.loadFrom() + LOADSIZE - 1;
-		if (viewModel.loadFrom() > 0)
-			timeStamp = 0;
+		// if (viewModel.loadFrom() > 0)
+		// timeStamp = 0;
 
 		var domain = window.sessionStorage.getItem("domain");
 		var url = domain + "/api/mobile/ListSalesOrderByStatus";
 		return $.post(url, {
 			TokenId : tokenId,
 			Status : status,
-			TimeStamp : timeStamp,
+			TimeStamp : 0,
 			From : from,
 			To : to
 		}, "json").done(function(data, textStatus) {
@@ -634,16 +658,18 @@
 				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
 				return;
 			}
+
+			viewModel.showRefresh(data.Data === null || data.Data.length === 0 || viewModel.isAndroid());
+
 			if ((data.Data === null) || (data.Data.length === 0)) {
-				doReloadPivot(status);
+				refreshList(status);
 				return;
 			}
-			if (viewModel.loadFrom() === 0)
-				window.localStorage.setItem(myUserName + "OrdersTimeStamp" + status, data.TimeStamp);
+			// if (viewModel.loadFrom() === 0)
+			// window.sessionStorage.setItem(myUserName + "OrdersTimeStamp" + status, data.TimeStamp);
 			var result = $.map(data.Data, function(item) {
 				var itemOrderDate = convertDate(item.OrderDate);
 				var today = new Date();
-				// var orderDateString = Globalize.format(itemOrderDate, 'dd/MM/yyyy');
 				var orderDateString = DateDiff.showDiff(today, itemOrderDate);
 				var itemDelayDate = convertDate(item.DelayDate);
 
@@ -699,8 +725,10 @@
 						viewModel.ordersStore.insert(result[i]);
 				});
 			}
-
-			doReloadPivot(status);
+			var listStatus = status;
+			if ( typeof listStatus === 'function')
+				listStatus = status();
+			refreshList(listStatus);
 		}).fail(function(jqxhr, textStatus, error) {
 			viewModel.loadPanelVisible(false);
 			if ( typeof AppMobi === 'object')
@@ -712,6 +740,18 @@
 
 	itemDeleted = function() {
 		viewModel.cantSplitCurrentItem(viewModel.productsToSplit().length === 0);
+	};
+
+	splitCheckChanged = function() {
+		var len = viewModel.productsToSplit().length;
+		for ( i = 0; i < len; i++) {
+			var product = viewModel.productsToSplit()[i];
+			if (product.selected() === true) {
+				viewModel.cantSplitCurrentItem(false);
+				return;
+			}
+		}
+		viewModel.cantSplitCurrentItem(true);
 	};
 
 	showDetailsData = function(e) {
@@ -729,69 +769,14 @@
 		});
 	};
 
-	refreshAll = function() {
-		doLoadDataByOrderStatus(NEW_ORDER);
-		doLoadDataByOrderStatus(DELAYED_ORDER);
-		doLoadDataByOrderStatus(PROCESSING_ORDER);
-		doLoadDataByOrderStatus(DELAYING_ORDER);
-		doLoadDataByOrderStatus(SHIPPING_ORDER);
-		doLoadDataByOrderStatus(SPLITTED_ORDER);
-	};
-
 	refresh = function() {
-		var objPivot = $("#pivot").dxPivot("instance");
-		var currentIndex = objPivot.option('selectedIndex');
-		switch (currentIndex) {
-			case 0:
-				doLoadDataByOrderStatus(NEW_ORDER);
-				break;
-			case 1:
-				doLoadDataByOrderStatus(PROCESSING_ORDER);
-				break;
-			case 2:
-				doLoadDataByOrderStatus(DELAYING_ORDER);
-				break;
-			case 3:
-				doLoadDataByOrderStatus(DELAYED_ORDER);
-				break;
-			case 4:
-				doLoadDataByOrderStatus(SPLITTED_ORDER);
-				break;
-			case 5:
-				doLoadDataByOrderStatus(SHIPPING_ORDER);
-				break;
-		}
+		doLoadDataByOrderStatus(viewModel.selectedOrder);
 	};
 
-	refreshPivot = function() {
-		var objPivot = $("#pivot").dxPivot("instance");
-		var currentIndex = objPivot.option('selectedIndex');
-		switch (currentIndex) {
-			case 0:
-				doReloadPivot(NEW_ORDER);
-				break;
-			case 1:
-				doReloadPivot(PROCESSING_ORDERDELAYED_ORDER);
-				break;
-			case 2:
-				doReloadPivot(DELAYING_ORDER);
-				break;
-			case 3:
-				doReloadPivot(DELAYED_ORDER);
-				break;
-			case 4:
-				doReloadPivot(SPLITTED_ORDER);
-				break;
-			case 5:
-				doReloadPivot(SHIPPING_ORDER);
-				break;
-		}
-	};
-
-	loadNextOrders = function(dataName) {
+	loadNextOrders = function() {
 		var page = 0;
 		var pageSize = 0;
-		switch (dataName) {
+		switch (viewModel.selectedOrder) {
 			case NEW_ORDER:
 				page = newDataSource._pageIndex;
 				pageSize = newDataSource._pageSize;

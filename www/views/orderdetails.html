@@ -1,15 +1,5 @@
 ﻿<div data-options="dxView : { name: 'orderdetails', title:  'CHI TIẾT ĐƠN HÀNG' } " >
-	<!-- <div data-bind="dxCommand: { id: 'edit', icon: 'edit', action: showActionSheet }" ></div> -->
 	<div data-options="dxContent : { targetPlaceholder: 'content' } " >
-		<div data-bind="dxActionSheet: {
-		dataSource: dropDownMenuData,
-		visible: actionSheetVisible,
-		showTitle : false,
-		<!-- title: 'Xử lý đơn hàng', -->
-		cancelText: 'Bỏ qua',
-		usePopover : true,
-		target : '#processbutton'
-		}"></div>
 		<div data-bind="dxScrollView:{}" style="padding: 10px; color: black;">
 			<div>
 				<div class="pv-title-item pv-bg-white">
@@ -122,7 +112,18 @@
 				</div>
 
 				<div id="noteField" style="background: #e6e7eb; border-radius : 10px; padding: 10px; background-image: url('images/qa-icon.png'); background-repeat: no-repeat; background-position: right top;" data-bind="text:note" ></div>
-				<div style="text-align: center;padding: 10px 0px; width: 100%;" id="processbutton" class="default-button" data-bind="dxButton: {text:'XỬ LÝ ĐƠN HÀNG', clickAction: function() {showActionSheet();}}"></div>
+				<!-- ko if:canCancel -->
+				<div style="text-align: center;padding: 10px 0px; width: 100%;" id="cancelbutton" class="default-button" data-bind="dxButton: {text:'HẾT HÀNG', clickAction: function() {doCancelOrderByOrderID();}}"></div>
+				<!-- /ko -->
+				<!-- ko if:canProcess -->
+				<div style="text-align: center;padding: 10px 0px; width: 100%;" id="processbutton" class="default-button" data-bind="dxButton: {text:'CÒN HÀNG', clickAction: function() {doSwitchProcessOrderByOrderID();}}"></div>
+				<!-- /ko -->
+				<!-- ko if:canDelay -->
+				<div style="text-align: center;padding: 10px 0px; width: 100%;" id="delaybutton" class="default-button" data-bind="dxButton: {text:'HOÃN ĐƠN HÀNG', clickAction: function() {showDelayPopUp();}}"></div>
+				<!-- /ko -->
+				<!-- ko if:canSplit -->
+				<div style="text-align: center;padding: 10px 0px; width: 100%;" id="splitbutton" class="default-button" data-bind="dxButton: {text:'TÁCH ĐƠN HÀNG', clickAction: function() {showSplitPopUp();}}"></div>
+				<!-- /ko -->
 			</div>
 
 			<div style="padding: 10px;"></div>
@@ -140,28 +141,22 @@
 					</div>
 				</div>
 				<div class="product-popup-footer">
-					<div class="default-button" data-bind="dxButton: { text: 'Hoãn', clickAction: function() {doDelayOrderByOrderID();}, icon:'clock' }"></div>
-					<div class="default-button" data-bind="dxButton: { text: 'Huỷ hoãn', clickAction: hideDelayPopUp, icon: 'close' }"></div>
+					<div class="default-button" data-bind="dxButton: { text: 'Hoãn', clickAction: function() {viewModel.doDelayOrderByOrderID();}, icon:'clock' }"></div>
+					<div class="default-button" data-bind="dxButton: { text: 'Huỷ hoãn', clickAction: function() {viewModel.hideDetailDelayPopUp();}, icon: 'close' }"></div>
 				</div>
 			</div>
 		</div>
-		<div class="popup" data-bind="dxPopup:{visible:popupSplitVisible, fullScreen:true, title:'Tách đơn hàng'}">
+		<div class="popup" data-bind="dxPopup:{visible:popupSplitVisible, fullScreen:true, title:'Chọn sản phẩm còn hàng'}">
 			<div id="popupSplitContent" data-options="dxTemplate:{name: 'content'}">
 				<div id="popupSplitList" data-bind="dxList: {dataSource: productsToSplit,
-				editEnabled: true,
-				editConfig: {
-				deleteEnabled: true,
-				deleteType: 'toggle'
-				},
-				itemDeleteAction: deleted,
 				}">
 					<div data-options="dxTemplate:{ name:'item' }">
-						<div class="products-info">
-							<table class="product-table">
+						<div>
+							<table>
 								<tbody>
 									<tr>
-										<td valign=top><img class="product-thumbnail lazy" data-bind="attr: { src: thumbnail }"><img></td>
-										<td style="font-weight: bolder;white-space: pre-wrap; word-wrap: break-word;" data-bind="text: name"></td>
+										<td width="100%" style="font-weight: bolder;white-space: pre-wrap; word-wrap: break-word;" data-bind="text: name"></td>
+										<td data-bind="dxCheckBox: {checked:selected, valueChangeAction: function() {viewModel.splitDetailCheckChanged();}}"></td>
 									</tr>
 								</tbody>
 							</table>
@@ -169,8 +164,8 @@
 					</div>
 				</div>
 				<div id="popupSplitFooter" class="popup-split-footer" style="padding-bottom: 10px;">
-					<div class="default-button"  data-bind="dxButton: { text: 'Tách', clickAction: function() { doSplitOrderByOrderID(); }, icon:'plus', disabled:cantSplitCurrentItem }"></div>
-					<div class="default-button"  data-bind="dxButton: { text: 'Huỷ tách', clickAction: hideSplitPopUp, icon:'close' }"></div>
+					<div class="default-button"  data-bind="dxButton: { text: 'Tách', clickAction: function() { viewModel.doSplitOrderByOrderID(); }, icon:'plus', disabled:cantSplitCurrentItem }"></div>
+					<div class="default-button"  data-bind="dxButton: { text: 'Huỷ tách', clickAction: function() {viewModel.hideDetailSplitPopUp() }, icon:'close' }"></div>
 				</div>
 			</div>
 		</div>

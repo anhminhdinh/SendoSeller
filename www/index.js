@@ -1,6 +1,5 @@
-﻿(function() {"use strict";
-
-	var MyApp = window.MyApp = { };
+﻿window.MyApp = window.MyApp || { };
+(function() {"use strict";
 
 	// Uncomment the line below to disable platform-specific look and feel and to use the Generic theme for all devices
 	DevExpress.devices.current({
@@ -37,56 +36,8 @@
 				action : "#about",
 				icon : "info"
 			}],
-			commandMapping : {
-				"ios-header-toolbar" : {
-					commands : [{
-						id : "sort",
-						location : 'after',
-						showText : true
-					}, {
-						id : "edit",
-						location : 'after',
-						showText : false
-					}, {
-						id : "refresh",
-						location : 'after',
-						showText : false
-					}]
-				},
-				"android-header-toolbar" : {
-					commands : [{
-						id : "sort",
-						location : 'after',
-						text : 'Sắp xếp ',
-						showText : true
-					}, {
-						id : "edit",
-						location : 'after',
-						showText : false
-					}, {
-						id : "refresh",
-						location : 'after',
-						showText : false
-					}]
-				},
-				"generic-header-toolbar" : {
-					commands : [{
-						id : "sort",
-						location : 'after',
-						text : 'Sắp xếp ',
-						showText : true
-					}, {
-						id : "edit",
-						location : 'after',
-						showText : false
-					}, {
-						id : "refresh",
-						location : 'after',
-						showText : false
-					}]
-				}
+			commandMapping : commandMapping
 
-			}
 		});
 
 		jQuery.support.cors = true;
@@ -174,65 +125,21 @@
 			//Get the notifications object
 			var myNotifications = null;
 			var len = 0;
-			try {
-				myNotifications = AppMobi.notification.getNotificationList();
-				len = myNotifications.length;
-			} catch (e) {
-				DevExpress.ui.notify('Tin nhắn nhanh từ Sendo không hợp lệ ' + e.message, 'error', 2000);
-			}
+			myNotifications = AppMobi.notification.getNotificationList();
+			len = myNotifications.length;
 			//It may contain more than one message, so iterate over them
+			var pushes = [];
 			if (len > 0) {
 				for (var i = 0; i < len; i++) {
 					//Get message object
 					var msgObj = null;
-					try {
-						msgObj = AppMobi.notification.getNotificationData(myNotifications[i]);
-					} catch (e) {
-						DevExpress.ui.notify('Tin nhắn nhanh từ Sendo không hợp lệ ' + e.message, 'error', 2000);
-					}
+					msgObj = AppMobi.notification.getNotificationData(myNotifications[i]);
 
 					try {
 						if ( typeof msgObj == "object" && msgObj.id == myNotifications[i]) {
 							//Display the message now.
 							//You can do this however you like - it doesn't have to be an alert.
-							var titleStr = 'Xem đơn hàng mới!';
-							var newPage = 'orders';
-							var newPageDetail = 'orderdetails';
-							var newId = undefined;
-							if (msgObj.data === null || msgObj.data === undefined || msgObj.data === '') {
-								DevExpress.ui.dialog.alert(msgObj.msg, "Sendo.vn");
-							} else {
-								if (msgObj.data !== "info") {
-									if (msgObj.data.indexOf("newQuestion") === 0) {
-										titleStr = 'Xem câu hỏi mới!';
-										newPage = 'chats';
-										newPageDetail = 'chatdetails';
-										newId = msgObj.data.replace("newQuestion", '');
-										newId = newId.replace("_", '');
-									} else if (msgObj.data.indexOf("newOrder") === 0) {
-										newPage = 'orders';
-										newPageDetail = 'orderdetails';
-										newId = msgObj.data.replace("newOrder", '');
-										newId = newId.replace("_", '');
-									}
-									var result = DevExpress.ui.dialog.confirm(msgObj.msg, titleStr);
-									result.done(function(dialogResult) {
-										if (dialogResult) {
-											MyApp.app.navigate({
-												view : newPage,
-												id : undefined
-											}, {
-												root : true
-											});
-											MyApp.app.navigate({
-												view : newPageDetail,
-												id : newId
-											});
-										}
-									});
-								}
-							}
-
+							pushes.push(msgObj.msg);
 							// AppMobi.notification.alert(msgObj.msg, "Sendo.vn", "OK");
 							//Always mark the messages as read and delete them.
 							//If you dont, your users will get them over and over again.
@@ -240,7 +147,7 @@
 							AppMobi.notification.deletePushNotifications(msgObj.id);
 							//here we have added return statement to show only first valid message, you can manage it accordingly if you want to read all messages
 						}
-						DevExpress.ui.notify('Tin nhắn nhanh từ Sendo không hợp lệ', 'error', 2000);
+						// DevExpress.ui.notify('Tin nhắn nhanh từ Sendo không hợp lệ', 'error', 2000);
 					} catch(e) {
 						DevExpress.ui.notify('Tin nhắn nhanh từ Sendo không hợp lệ ' + e.message, 'error', 2000);
 						//Always mark the messages as read and delete them.
@@ -248,6 +155,9 @@
 						AppMobi.notification.deletePushNotifications(msgObj.id);
 					}
 				}
+			}
+			for ( i = 0; i < pushes.length; i++) {
+				DevExpress.ui.dialog.alert(pushes[i], "Sendo.vn");
 			}
 		};
 		document.addEventListener("appMobi.notification.push.receive", receivedPush, false);

@@ -4,7 +4,10 @@
 		chatDetailDataSource : ko.observableArray(),
 		id : params.id,
 		loadPanelVisible : ko.observable(false),
+		isAndroid : ko.observable(false),
 		viewShowing : function() {
+			var platform = DevExpress.devices.real().platform;
+			viewModel.isAndroid(platform === 'android' || platform === 'generic');			
 			doLoadChatDetailData(true);
 		},
 		commentToPost : ko.observable(''),
@@ -89,9 +92,9 @@
 			isParent : false,
 			isShop : true
 		});
-		// var chatScroll = $("#chatScroll").dxScrollView("instance");
-		// var scrollHeight = chatScroll.scrollHeight();
-		// $("#chatScroll").dxScrollView("instance").scrollTo(scrollHeight);
+		var chatScroll = $("#chatScroll").dxScrollView("instance");
+		var scrollHeight = chatScroll.scrollHeight();
+		$("#chatScroll").dxScrollView("instance").scrollTo(scrollHeight);
 		// viewModel.loadPanelVisible(true);
 		if ( typeof AppMobi === 'object')
 			AppMobi.notification.showBusyIndicator();
