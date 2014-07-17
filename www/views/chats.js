@@ -2,7 +2,32 @@
 	var LOADSIZE = 100;
 	var viewModel = {
 		// dataSource : ko.observableArray(),
+		chatIdsStore : ko.observable(),
+		chatsDataSource : ko.observable(), 
 		viewShowing : function() {
+			var myUserName = window.localStorage.getItem("UserName");
+			viewModel.chatIdsStore(new DevExpress.data.LocalStore({
+				name : myUserName + "chatIdsStore",
+				key : "id",
+				// flushInterval : 1000,
+				immediate: true,
+			}));
+			viewModel.chatsDataSource(new DevExpress.data.DataSource({
+				store : viewModel.chatIdsStore(),
+				sort : [{
+					getter : 'read',
+					desc : false
+				}, {
+					getter : 'updatedDate',
+					desc : true
+				}, {
+					getter : 'createdDate',
+					desc : true
+				}],
+				postProcess : groupByData,
+				pageSize : LOADSIZE
+			}));
+
 			if (window.sessionStorage.getItem("MyTokenId") === null) {
 				MyApp.app.navigate({
 					view : "user",
@@ -34,13 +59,6 @@
 		loadPanelVisible : ko.observable(false),
 	};
 
-	var myUserName = window.localStorage.getItem("UserName");
-	var chatIdsStore = new DevExpress.data.LocalStore({
-		name : myUserName + "chatIdsStore",
-		key : "id",
-		flushInterval : 1000,
-		// immediate: true,
-	});
 	function groupByData(data) {
 		var result = [], Items = [];
 
@@ -58,22 +76,6 @@
 
 		return result;
 	}
-
-	chatsDataSource = new DevExpress.data.DataSource({
-		store : chatIdsStore,
-		sort : [{
-			getter : 'read',
-			desc : false
-		}, {
-			getter : 'updatedDate',
-			desc : true
-		}, {
-			getter : 'createdDate',
-			desc : true
-		}],
-		postProcess : groupByData,
-		pageSize : LOADSIZE
-	});
 
 	doLoadChatIdsData = function() {
 		viewModel.loadPanelVisible(true);
@@ -107,9 +109,9 @@
 				window.localStorage.setItem(myUserName + "ListCommentTimeStamp", data.TimeStamp);
 			viewModel.showRefresh(data.Data === null || data.Data.length === 0 || viewModel.isAndroid());
 			if ((data.Data === undefined) || (data.Data.data === undefined) || (data.Data.data.length === 0)) {
-				chatsDataSource.pageIndex(0);
-				chatIdsStore.load().done(function() {
-					chatsDataSource.sort([{
+				viewModel.chatsDataSource().pageIndex(0);
+				viewModel.chatIdsStore().load().done(function() {
+					viewModel.chatsDataSource().sort([{
 						getter : 'read',
 						desc : false
 					}, {
@@ -119,7 +121,7 @@
 						getter : 'createdDate',
 						desc : true
 					}]);
-					chatsDataSource.load();
+					viewModel.chatsDataSource().load();
 				});
 				return;
 			}
@@ -148,18 +150,18 @@
 				};
 			});
 			for (var i = 0; i < result.length; i++) {
-				chatIdsStore.byKey(result[i].id).done(function(dataItem) {
+				viewModel.chatIdsStore().byKey(result[i].id).done(function(dataItem) {
 					if (dataItem !== undefined)
-						chatIdsStore.update(result[i].id, result[i]);
+						viewModel.chatIdsStore().update(result[i].id, result[i]);
 					else
-						chatIdsStore.insert(result[i]);
+						viewModel.chatIdsStore().insert(result[i]);
 				}).fail(function(error) {
-					chatIdsStore.insert(result[i]);
+					viewModel.chatIdsStore().insert(result[i]);
 				});
 			}
-			chatsDataSource.pageIndex(0);
-			chatIdsStore.load().done(function() {
-				chatsDataSource.sort([{
+			viewModel.chatsDataSource().pageIndex(0);
+			viewModel.chatIdsStore().load().done(function() {
+				viewModel.chatsDataSource().sort([{
 					getter : 'read',
 					desc : false
 				}, {
@@ -169,7 +171,7 @@
 					getter : 'createdDate',
 					desc : true
 				}]);
-				chatsDataSource.load();
+				viewModel.chatsDataSource().load();
 			});
 		}).fail(function(jqxhr, textStatus, error) {
 			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
@@ -180,8 +182,8 @@
 	};
 
 	loadNextChats = function() {
-		var page = chatsDataSource._pageIndex;
-		var pageSize = chatsDataSource._pageSize;
+		var page = viewModel.chatsDataSource()._pageIndex;
+		var pageSize = viewModel.chatsDataSource()._pageSize;
 		var currentView = (page + 2) * pageSize;
 		if (currentView >= viewModel.loadFrom() + LOADSIZE - 1) {
 			doLoadChatIdsData();
@@ -198,10 +200,10 @@
 	};
 
 	showChatDetails = function(e) {
-		chatIdsStore.byKey(e.itemData.id).done(function(dataItem) {
+		viewModel.chatIdsStore().byKey(e.itemData.id).done(function(dataItem) {
 			dataItem.read = true;
-			chatIdsStore.update(e.itemData.id, dataItem);
-			chatsDataSource.load();
+			viewModel.chatIdsStore().update(e.itemData.id, dataItem);
+			viewModel.chatsDataSource().load();
 		});
 		MyApp.app.navigate({
 			view : 'chatdetails',

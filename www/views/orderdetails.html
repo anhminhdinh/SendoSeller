@@ -141,8 +141,8 @@
 					</div>
 				</div>
 				<div class="product-popup-footer">
-					<div class="default-button" data-bind="dxButton: { text: 'Hoãn', clickAction: function() {viewModel.doDelayOrderByOrderID();}, icon:'clock' }"></div>
-					<div class="default-button" data-bind="dxButton: { text: 'Huỷ hoãn', clickAction: function() {viewModel.hideDetailDelayPopUp();}, icon: 'close' }"></div>
+					<div class="default-button" data-bind="dxButton: { text: 'Hoãn', clickAction: function() { doDelayOrderByOrderID(); }, icon:'clock' }"></div>
+					<div class="default-button" data-bind="dxButton: { text: 'Huỷ hoãn', clickAction: function() { hideDetailDelayPopUp(); }, icon: 'close' }"></div>
 				</div>
 			</div>
 		</div>
@@ -156,7 +156,7 @@
 								<tbody>
 									<tr>
 										<td width="100%" style="font-weight: bolder;white-space: pre-wrap; word-wrap: break-word;" data-bind="text: name"></td>
-										<td data-bind="dxCheckBox: {checked:selected, valueChangeAction: function() {viewModel.splitDetailCheckChanged();}}"></td>
+										<td data-bind="dxCheckBox: {checked:selected, valueChangeAction: function() {splitDetailCheckChanged();}}"></td>
 									</tr>
 								</tbody>
 							</table>
@@ -164,8 +164,8 @@
 					</div>
 				</div>
 				<div id="popupSplitFooter" class="popup-split-footer" style="padding-bottom: 10px;">
-					<div class="default-button"  data-bind="dxButton: { text: 'Tách', clickAction: function() { viewModel.doSplitOrderByOrderID(); }, icon:'plus', disabled:cantSplitCurrentItem }"></div>
-					<div class="default-button"  data-bind="dxButton: { text: 'Huỷ tách', clickAction: function() {viewModel.hideDetailSplitPopUp() }, icon:'close' }"></div>
+					<div class="default-button"  data-bind="dxButton: { text: 'Tách', clickAction: function() { doSplitOrderByOrderID(); }, icon:'plus', disabled:cantSplitCurrentItem }"></div>
+					<div class="default-button"  data-bind="dxButton: { text: 'Huỷ tách', clickAction: function() {hideDetailSplitPopUp() }, icon:'close' }"></div>
 				</div>
 			</div>
 		</div>

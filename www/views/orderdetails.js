@@ -31,7 +31,7 @@
 						viewModel.orderStatus("Mới");
 						break;
 					case "Processing":
-						viewModel.orderStatus("Đang giao hàng");
+						viewModel.orderStatus("Đang xử lý");
 						break;
 					case "Delayed":
 						viewModel.orderStatus("Đang hoãn");
@@ -153,26 +153,6 @@
 
 		showDelayPopUp : function() {
 			viewModel.popupDelayVisible(true);
-		},
-
-		processValueChange : function(text) {
-			switch (text) {
-				case "Processing":
-					viewModel.doSwitchProcessOrderByOrderID();
-					break;
-				case "Delay":
-					viewModel.showDelayPopUp();
-					break;
-				case "Split":
-					viewModel.showSplitPopUp();
-					break;
-				case "New":
-					viewModel.doNewOrderByOrderID();
-					break;
-				case "Cancel":
-					viewModel.doCancelOrderByOrderID();
-					break;
-			}
 		},
 
 		doCancelOrderByOrderID : function() {

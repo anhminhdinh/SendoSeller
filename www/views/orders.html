@@ -22,11 +22,11 @@
 		itemClickAction: function(e) { showDetailsData(e); },
 		groupTemplate: 'statesGroup',
 		}">
-			<div data-options="dxTemplate:{ name:'statesGroup' }">
-				<div style="display: inline-block">
+			<div data-options="dxTemplate:{ name:'statesGroup' }" style="overflow:hidden">
+				<div style="float: left; margin-right: 5px;">
 					<img src="images/calendar.png" />
 				</div>
-				<div style="display: inline-block">
+				<div style="float: left;">
 					<div style="font-size: medium; font-weight: normal; color: #ee2d24;" data-bind="text: key"></div>
 				</div>
 			</div>
@@ -36,8 +36,8 @@
 					<table>
 						<tbody>
 							<tr >
-								<td class="pv-order-code" width="auto" style="font-size: smaller;" data-bind="text:'#'+orderNumber"></td>
-								<td width="100%" class="order-total-amount" data-bind="text:totalAmount + ' đ'"></td>
+								<td class="pv-order-code" width="auto" style="font-size: smaller; line-height: 32px;" data-bind="text:'#'+orderNumber"></td>
+								<td width="100%" class="order-total-amount" style="line-height: 32px;" data-bind="text:totalAmount + ' đ'"></td>
 							</tr>
 
 						</tbody>

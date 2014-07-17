@@ -42,12 +42,12 @@
 	background-color: #efeff4;
 }
 .pv-title-item table {
-	height: 40px;
+	height: 32px;
 }
 .pv-title-item span {
 	color: #ee2d24;
 	font-size: 17px;
-	line-height: 40px;
+	line-height: 32px;
 	font-weight: bold;
 }
 .pv-order-code {
