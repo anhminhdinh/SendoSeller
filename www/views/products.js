@@ -5,7 +5,10 @@
 		totalscore : ko.observable(0),
 		score : ko.observable(0),
 		autoscore : ko.observable(0),
+		isAndroid : ko.observable(false),
 		viewShowing : function() {
+			var platform = DevExpress.devices.real().platform;
+			viewModel.isAndroid(platform === 'android' || platform === 'generic');
 			if (window.sessionStorage.getItem("MyTokenId") === null) {
 				MyApp.app.navigate({
 					view : "user",
@@ -17,8 +20,6 @@
 			}
 		},
 		viewShown : function() {
-			var platform = DevExpress.devices.real().platform;
-			var isAndroid = platform === 'android' || platform === 'generic';
 			var topbar = $("#pvtopbar");
 			var topbarHeight = topbar.outerHeight(true);
 			var searchbar = $("#pvsearchbar");
@@ -29,10 +30,10 @@
 			obj = $("#productsList");
 			var listHeight = contentHeight - topbarHeight - searchbarHeight;
 			obj.height(listHeight);
-			var list = obj.dxList("instance");
+			// var list = obj.dxList("instance");
 			// list.option('showNextButton', isAndroid);
-			if (isAndroid)
-				list.option('useNativeScrolling', false);
+			// if (isAndroid)
+				// list.option('useNativeScrolling', false);
 			// list.option('pullRefreshEnabled', !isAndroid);
 			currentLoadStart = 0;
 			doLoadProducts();
@@ -400,7 +401,6 @@
 	};
 
 	doReload = function(sortType) {
-		productsDataSource.filter("name", "contains", viewModel.searchString());
 		productsDataSource.pageIndex(0);
 		productsDataSource.sort([{
 			getter : 'upProductDate',

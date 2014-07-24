@@ -10,14 +10,17 @@
             options.name = options.name || "slideout";
             this.callBase(options)
         },
-        _createNavigation: function(navigationCommands) {
+        _createNavigationWidget: function() {
             this.$slideOut = $("<div data-bind='dxSlideOut: {  menuItemTemplate: $(\"#slideOutMenuItemTemplate\") }'></div>").appendTo(this._$hiddenBag).dxCommandContainer({id: 'global-navigation'});
             this._viewEngine._applyTemplate(this.$slideOut, this._layoutModel);
-            this.callBase(navigationCommands);
+            this.callBase();
             this.slideOut = this.$slideOut.dxSlideOut("instance");
+            this.$slideOut.find(".dx-slideout-item-container").append(this._$mainLayout);
+            return this.$slideOut
+        },
+        _renderNavigationImpl: function(navigationCommands) {
             var container = this.$slideOut.dxCommandContainer("instance");
-            this._commandManager.renderCommandsToContainers(navigationCommands, [container]);
-            this.$slideOut.find(".dx-slideout-item-container").append(this._$mainLayout)
+            this._commandManager._arrangeCommandsToContainers(navigationCommands, [container])
         },
         _getRootElement: function() {
             return this.$slideOut

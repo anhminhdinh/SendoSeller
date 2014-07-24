@@ -20,7 +20,8 @@
 		pageLoadingText: 'Đang tải tiếp ...',
 		refreshingText: 'Đang tải ...',
 		itemClickAction: function(e) { showDetailsData(e); },
-		groupTemplate: 'statesGroup'
+		groupTemplate: 'statesGroup',
+		useNativeScrolling: !isAndroid
 		}">
 			<div data-options="dxTemplate:{ name:'statesGroup' }" style="overflow:hidden">
 				<div style="float: left; margin-right: 5px;">

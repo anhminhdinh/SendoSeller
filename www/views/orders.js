@@ -1,4 +1,4 @@
-﻿MyApp.orders = function(id, params) {
+﻿MyApp.orders = function(params) {
 	var LOADSIZE = 50;
 	var NEW_ORDER = "New", PROCESSING_ORDER = "Processing", DELAYED_ORDER = "Delayed", DELAYING_ORDER = "Delaying", SHIPPING_ORDER = "Shipping", SPLITTED_ORDER = "Splitted";
 	var myUserName = "";
@@ -11,7 +11,11 @@
 	// // immediate : true,
 	// });
 	var viewModel = {
+		nextPageId : ko.observable(params.id),
 		viewShowing : function() {
+			var platform = DevExpress.devices.real().platform;
+			viewModel.isAndroid(platform === 'android' || platform === 'generic');
+
 			myUserName = window.localStorage.getItem("UserName");
 			viewModel.ordersStore(new DevExpress.data.LocalStore({
 				type : "local",
@@ -44,13 +48,11 @@
 		isAndroid : ko.observable(false),
 		showRefresh : ko.observable(false),
 		viewShown : function() {
-			var platform = DevExpress.devices.real().platform;
-			viewModel.isAndroid(platform === 'android' || platform === 'generic');
 			var obj = null;
 			obj = $("#ordersList");
-			var list = obj.dxList("instance");
-			if (viewModel.isAndroid())
-				list.option('useNativeScrolling', false);
+			// var list = obj.dxList("instance");
+			// if (viewModel.isAndroid())
+			// list.option('useNativeScrolling', false);
 			// list.option('showNextButton', viewModel.isAndroid());
 			// list.option('pullRefreshEnabled', !isAndroid);
 			var contentObj = $("#content");
@@ -58,8 +60,9 @@
 			var typeBar = $("#typeBar");
 			var typeBarHeight = typeBar.outerHeight();
 			obj.height(contentHeight - typeBarHeight);
-			if (window.sessionStorage.getItem("firstloadorder") === null) {
+			if ((window.sessionStorage.getItem("firstloadorder") === null) || (window.sessionStorage.getItem("MustRefreshOrder") === true)) {
 				window.sessionStorage.setItem("firstloadorder", true);
+				window.sessionStorage.removeItem("MustRefreshOrder");
 				doLoadDataByOrderStatus(viewModel.selectedOrder());
 			} else {
 				refreshList(viewModel.selectedOrder());
@@ -244,6 +247,13 @@
 				// var list = obj.dxList("instance");
 				// list.option('dataSource', results);
 				loadNextImages();
+				if ((viewModel.nextPageId() !== null) && (viewModel.nextPageId() !== undefined)) {
+					MyApp.app.navigate({
+						view : "orderdetails",
+						id : viewModel.nextPageId(),
+					});
+					viewModel.nextPageId(null);
+				}
 			});
 		});
 	};

@@ -50,7 +50,7 @@
 				OK : "Chấp nhận",
 			}
 		});
-		
+
 		jQuery.support.cors = true;
 		// localStorage.clear();
 		MyApp.app.router.register(":view/:id", {
@@ -140,39 +140,58 @@
 			myNotifications = AppMobi.notification.getNotificationList();
 			len = myNotifications.length;
 			//It may contain more than one message, so iterate over them
-			var pushes = [];
+			// var pushes = [];
 			if (len > 0) {
 				// alert("have pushed " + len);
-				for (var i = 0; i < len; i++) {
-					//Get message object
-					var msgObj = null;
-					msgObj = AppMobi.notification.getNotificationData(myNotifications[i]);
+				// for (var i = 0; i < len; i++) {
+				//Get message object
+				var msgObj = null;
+				msgObj = AppMobi.notification.getNotificationData(myNotifications[0]);
 
-					try {
-						if ( typeof msgObj == "object" && msgObj.id == myNotifications[i]) {
-							//Display the message now.
-							//You can do this however you like - it doesn't have to be an alert.
-							pushes.push(msgObj.msg);
-							// AppMobi.notification.alert(msgObj.msg, "Sendo.vn", "OK");
-							//Always mark the messages as read and delete them.
-							//If you dont, your users will get them over and over again.
-
-							AppMobi.notification.deletePushNotifications(msgObj.id);
-							//here we have added return statement to show only first valid message, you can manage it accordingly if you want to read all messages
-						}
-						// DevExpress.ui.notify('Tin nhắn nhanh từ Sendo không hợp lệ', 'error', 2000);
-					} catch(e) {
-						DevExpress.ui.notify('Tin nhắn nhanh từ Sendo không hợp lệ ' + e.message, 'error', 2000);
+				try {
+					if ( typeof msgObj == "object" && msgObj.id == myNotifications[0]) {
+						//Display the message now.
+						//You can do this however you like - it doesn't have to be an alert.
+						// pushes.push(msgObj.msg);
+						// AppMobi.notification.alert(msgObj.msg, "Sendo.vn", "OK");
 						//Always mark the messages as read and delete them.
 						//If you dont, your users will get them over and over again.
-						AppMobi.notification.deletePushNotifications(msgObj.id);
+						if (window.sessionStorage.getItem("MyTokenId") !== null) {
+							AppMobi.notification.deletePushNotifications(msgObj.id);
+							var newPage = "orders";
+							var dataString = "" + msgObj.data; 
+							if (dataString.indexOf("newChat") === 0) {
+								newPage = "chats";
+								dataString.replace("newChat_","");
+							} else if (dataString.indexOf("newOrder") === 0) {
+								dataString.replace("newOrder_","");
+							} 
+							MyApp.app.navigate({
+								view : newPage,
+								id : dataString,
+							}, {
+								root : true
+							});
+						}
+						//here we have added return statement to show only first valid message, you can manage it accordingly if you want to read all messages
 					}
+					// DevExpress.ui.notify('Tin nhắn nhanh từ Sendo không hợp lệ', 'error', 2000);
+				} catch(e) {
+					DevExpress.ui.notify('Tin nhắn nhanh từ Sendo không hợp lệ ' + e.message, 'error', 2000);
+					//Always mark the messages as read and delete them.
+					//If you dont, your users will get them over and over again.
+					AppMobi.notification.deletePushNotifications(msgObj.id);
 				}
+				// }
+			} else {
+				window.sessionStorage.setItem("MustRefreshOrder", true);
+				window.sessionStorage.setItem("MustRefreshChat", true);
 			}
-			alert("process pushes " + pushes.length);
-			for ( i = 0; i < pushes.length; i++) {
-				DevExpress.ui.dialog.alert(pushes[i], "Sendo.vn");
-			}
+
+			// alert("process pushes " + pushes.length);
+			// for ( i = 0; i < pushes.length; i++) {
+			// DevExpress.ui.dialog.alert(pushes[i], "Sendo.vn");
+			// }
 		};
 		document.addEventListener("appMobi.notification.push.receive", receivedPush, false);
 		document.addEventListener("appMobi.device.resume", function(e) {

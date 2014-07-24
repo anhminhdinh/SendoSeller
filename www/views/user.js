@@ -71,7 +71,7 @@
 					DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
 					return;
 				}
-				if (data.Data.StorStatus !== 2) {
+				if (data.Data.StoreStatus !== 2) {
 					var message = "Shop trong trạng thái ";
 					switch (data.Data.StoreStatus) {
 						case 0:
@@ -94,7 +94,7 @@
 							break;
 					}
 					DevExpress.ui.dialog.alert(message, "Sendo.vn");
-					return;
+					// return;
 				}
 
 				window.localStorage.setItem("UserName", viewModel.username());

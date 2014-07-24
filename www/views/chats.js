@@ -2,9 +2,13 @@
 	var LOADSIZE = 100;
 	var viewModel = {
 		// dataSource : ko.observableArray(),
+		nextPageId : ko.observable(params.id),
 		chatIdsStore : ko.observable(),
 		chatsDataSource : ko.observable(),
 		viewShowing : function() {
+			var platform = DevExpress.devices.real().platform;
+			viewModel.isAndroid(platform === 'android' || platform === 'generic');
+
 			var myUserName = window.localStorage.getItem("UserName");
 			viewModel.chatIdsStore(new DevExpress.data.LocalStore({
 				name : myUserName + "chatIdsStore",
@@ -38,21 +42,18 @@
 		isAndroid : ko.observable(false),
 		showRefresh : ko.observable(false),
 		viewShown : function() {
-			var platform = DevExpress.devices.real().platform;
-			viewModel.isAndroid(platform === 'android' || platform === 'generic');
-			var obj = null;
-			obj = $("#chatidlist");
-			var list = obj.dxList("instance");
-			if (viewModel.isAndroid())
-				list.option('useNativeScrolling', false);
-
+			// var obj = null;
+			// obj = $("#chatidlist");
+			// var list = obj.dxList("instance");
+			// if (viewModel.isAndroid())
+			// list.option('useNativeScrolling', false);
 			// list.option('showNextButton', viewModel.isAndroid());
-
 			// list.option('pullRefreshEnabled', !isAndroid);
 			// list.option('autoPagingEnabled', !isAndroid);
 			var myUserName = window.localStorage.getItem("UserName");
-			if (window.sessionStorage.getItem(myUserName + "firstloadchats") === null) {
+			if ((window.sessionStorage.getItem(myUserName + "firstloadchats") === null) || (window.sessionStorage.getItem("MustRefreshChat") === true)) {
 				window.sessionStorage.setItem(myUserName + "firstloadchats", true);
+				window.sessionStorage.removeItem("MustRefreshChat");
 				doLoadChatIdsData();
 			}
 
@@ -173,6 +174,13 @@
 				}]);
 				viewModel.chatsDataSource().load();
 				loadChatsImages();
+				if ((viewModel.nextPageId() !== null) && (viewModel.nextPageId() !== undefined)) {
+					MyApp.app.navigate({
+						view : "chatdetails",
+						id : viewModel.nextPageId(),
+					});
+					viewModel.nextPageId(null);
+				}
 			});
 		}).fail(function(jqxhr, textStatus, error) {
 			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");

@@ -18,10 +18,11 @@ body {
 .dx-theme-android-typography img {
 	border-style: solid;
 }
-/* orders */
 .dx-device-android .dx-list .dx-scrollview-top-pocket {
 	margin: 0;
 }
+
+/* orders */
 
 .conversations-list, .orders-list {
 	width: 100%;
