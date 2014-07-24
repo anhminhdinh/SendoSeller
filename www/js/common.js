@@ -20,10 +20,8 @@ function registerPush() {
 			AppMobi.notification.checkPushUser(userId, "nopassword");
 		}
 	} else {
-		alert("here 1");
 		var pushNotification = window.plugins.pushNotification;
-		alert("here 2");
-		DevExpress.ui.notify('Đăng ký tin nhắn nhanh từ Cordova cho ' + device.platform, 'info', 200);
+		DevExpress.ui.notify('Đăng ký tin nhắn nhanh từ Cordova cho ' + window.device.platform, 'info', 200);
 		if (device.platform == 'android' || device.platform == 'Android') {
 			pushNotification.register(successHandler, errorHandler, {
 				"senderID" : "1017201532317",
