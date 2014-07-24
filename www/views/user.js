@@ -71,6 +71,32 @@
 					DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
 					return;
 				}
+				if (data.Data.StorStatus !== 2) {
+					var message = "Shop trong trạng thái ";
+					switch (data.Data.StoreStatus) {
+						case 0:
+							message += "nháp";
+							break;
+						case 1:
+							message += "chờ duyệt";
+							break;
+						case 3:
+							message += "bị từ chối";
+							break;
+						case 4:
+							message += "đã huỷ";
+							break;
+						case 5:
+							message += "đã xoá";
+							break;
+						default:
+							message += "chưa duyệt";
+							break;
+					}
+					DevExpress.ui.dialog.alert(message, "Sendo.vn");
+					return;
+				}
+
 				window.localStorage.setItem("UserName", viewModel.username());
 				if (viewModel.savePassword)
 					window.localStorage.setItem(viewModel.username() + "Password", viewModel.pass());

@@ -39,15 +39,26 @@
 			commandMapping : commandMapping
 
 		});
-
+		Globalize.addCultureInfo("default", {
+			messages : {
+				Yes : "Có",
+				No : "Không",
+				Cancel : "Bỏ qua",
+				Done : "Xong",
+				Loading : "Đang tải...",
+				Back : "Trở về",
+				OK : "Chấp nhận",
+			}
+		});
+		
 		jQuery.support.cors = true;
 		// localStorage.clear();
 		MyApp.app.router.register(":view/:id", {
 			view : "user",
 			id : undefined
 		});
-		// window.sessionStorage.setItem("domain", "http://ban.sendo.vn");
-		window.sessionStorage.setItem("domain", "http://180.148.138.140/sellerTest2");
+		window.sessionStorage.setItem("domain", "http://ban.sendo.vn");
+		// window.sessionStorage.setItem("domain", "http://180.148.138.140/sellerTest2");
 		function onBackButton() {
 			DevExpress.hardwareBackButton.fire();
 		}
@@ -123,6 +134,7 @@
 
 		var receivedPush = function() {
 			//Get the notifications object
+			// alert("have pushed");
 			var myNotifications = null;
 			var len = 0;
 			myNotifications = AppMobi.notification.getNotificationList();
@@ -130,6 +142,7 @@
 			//It may contain more than one message, so iterate over them
 			var pushes = [];
 			if (len > 0) {
+				// alert("have pushed " + len);
 				for (var i = 0; i < len; i++) {
 					//Get message object
 					var msgObj = null;
@@ -156,6 +169,7 @@
 					}
 				}
 			}
+			alert("process pushes " + pushes.length);
 			for ( i = 0; i < pushes.length; i++) {
 				DevExpress.ui.dialog.alert(pushes[i], "Sendo.vn");
 			}

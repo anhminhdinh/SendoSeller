@@ -23,13 +23,15 @@ function registerPush() {
 }
 
 function numberWithCommas(x) {
-	return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+	if (x !== null && x !== undefined)
+		return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+	return 0;
 }
 
-function validateEmail(email) { 
-    var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    return re.test(email);
-} 
+function validateEmail(email) {
+	var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+	return re.test(email);
+}
 
 var DateDiff = {
 
@@ -59,7 +61,7 @@ var DateDiff = {
 	inYears : function(d1, d2) {
 		return d2.getFullYear() - d1.getFullYear();
 	},
-	
+
 	showDiff : function(d1, d2) {
 		var same = d1.getFullYear() === d2.getFullYear();
 		same &= d1.getMonth() === d2.getMonth();
@@ -71,5 +73,4 @@ var DateDiff = {
 			return Globalize.format(d2, 'HH:mm') + ' hôm qua';
 		return Globalize.format(d2, 'dd/MM/yyyy');
 	}
-	
 };

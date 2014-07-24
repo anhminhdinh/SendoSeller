@@ -271,6 +271,7 @@
 
 .dx-theme-ios7 .slideout-layout .view-footer .dx-toolbar {
     height: 57px;
+    margin-top: -20px;
 }
 
 .dx-theme-ios7 .slideout-layout .view-footer .dx-toolbar-center {

@@ -7,20 +7,20 @@
 			<div data-bind="text:selectedOrderName" style="line-height: 24px; padding-left: 10px; float: left;"></div>
 		</div>
 		<div id="ordersList" data-bind=" dxList: {
-		dataSource: newDataSource,
+		dataSource: ordersDataSource,
 		grouped: true,
 		autoPagingEnabled: true,
 		pageLoadingAction: function() { loadNextOrders(); },
 		pullRefreshEnabled: true,
 		pullRefreshAction: function() { doLoadDataByOrderStatus(selectedOrder()); },
-		noDataText: 'Chưa có đơn hàng nào ở mục này',
+		noDataText: '',
 		pulledDownText: 'Thả để tải lại...',
 		pullingDownText: 'Kéo để tải lại...',
 		nextButtonText: 'Tải tiếp ...',
 		pageLoadingText: 'Đang tải tiếp ...',
 		refreshingText: 'Đang tải ...',
 		itemClickAction: function(e) { showDetailsData(e); },
-		groupTemplate: 'statesGroup',
+		groupTemplate: 'statesGroup'
 		}">
 			<div data-options="dxTemplate:{ name:'statesGroup' }" style="overflow:hidden">
 				<div style="float: left; margin-right: 5px;">
@@ -81,7 +81,7 @@
 		usePopover: true,
 		target : '#top'
 		}"></div>
-		<div id="swicthOrdersSheet" data-bind="dxActionSheet: {
+		<div id="switchOrdersSheet" data-bind="dxActionSheet: {
 		dataSource: switchOrdersData,
 		visible: switchOrdersVisible,
 		showTitle : false,
@@ -89,7 +89,17 @@
 		target : '#topright'
 		}"></div>
 
-		<div class="popup" data-bind="dxPopup:{visible:popupDelayVisible, fullScreen:true, title:'Hoãn đơn hàng'}">
+		<div class="popup" data-bind="dxPopup:{visible:popupDelayVisible, fullScreen:true, titleTemplate:'myDelayTitle'}">
+			<div data-options="dxTemplate: { name:'myDelayTitle' }">
+				<table style="border-spacing: 10px; border-collapse: separate;">
+					<tbody>
+						<tr height="36px">
+							<td class="transparent-button" data-bind="dxButton: {clickAction: hideDelayPopUp, icon:'back-arrow'}"></td>
+							<td width="100%" style="font-weight: bolder;white-space: pre-wrap; word-wrap: break-word;">Hoãn đơn hàng</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 			<div data-options="dxTemplate:{name: 'content'}">
 				<div class="dx-fieldset">
 					<div class="dx-field">
@@ -106,21 +116,45 @@
 				</div>
 			</div>
 		</div>
-		<div class="popup" data-bind="dxPopup:{visible:popupSplitVisible, fullScreen:true, title:'Chọn sản phẩm còn hàng'}">
+		<div class="popup" data-bind="dxPopup:{visible:popupSplitVisible, fullScreen:true, titleTemplate:'mySplitTitle'}">
+			<div data-options="dxTemplate: { name:'mySplitTitle' }">
+				<table style="border-spacing: 10px; border-collapse: separate;">
+					<tbody>
+						<tr height="36px">
+							<td class="transparent-button" data-bind="dxButton: {clickAction: hideSplitPopUp, icon:'back-arrow'}"></td>
+							<td width="100%" style="font-weight: bolder;white-space: pre-wrap; word-wrap: break-word;">Chọn sản phẩm còn hàng</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 			<div id="popupSplitContent" data-options="dxTemplate:{name: 'content'}">
-				<div id="popupSplitList" data-bind="dxList: {dataSource: productsToSplit,
+				<!-- <div id="popupSplitList" data-bind="dxList: {dataSource: productsToSplit,
 				}">
-					<div data-options="dxTemplate:{ name:'item' }">
-						<div>
-							<table>
-								<tbody>
-									<tr>
-										<td width="100%" style="font-weight: bolder;white-space: pre-wrap; word-wrap: break-word;" data-bind="text: name"></td>
-										<td data-bind="dxCheckBox: {checked:selected, valueChangeAction: splitCheckChanged}"></td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
+				<div data-options="dxTemplate:{ name:'item' }">
+				<div>
+				<table>
+				<tbody>
+				<tr>
+				<td width="100%" style="font-weight: bolder;white-space: pre-wrap; word-wrap: break-word;" data-bind="text: name"></td>
+				<td data-bind="dxCheckBox: {checked:selected, valueChangeAction: splitCheckChanged}"></td>
+				</tr>
+				</tbody>
+				</table>
+				</div>
+				</div>
+				</div> -->
+				<div id="popupSplitList">
+					<div>
+						<table width="100%" style="background-color: #EFEFF4; box-shadow: 0 0 4px gray; border-collapse: separate; border-spacing: 10px">
+							<tbody>
+								<!-- ko foreach: productsToSplit -->
+								<tr height="36px">
+									<td width="100%" style="font-weight: bolder;white-space: pre-wrap; word-wrap: break-word;" data-bind="text: name"></td>
+									<td data-bind="dxCheckBox: {checked:selected, valueChangeAction: splitCheckChanged}"></td>
+								</tr>
+								<!-- /ko -->
+							</tbody>
+						</table>
 					</div>
 				</div>
 				<div id="popupSplitFooter" class="popup-split-footer" style="padding-bottom: 10px;">

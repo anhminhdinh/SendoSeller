@@ -37,7 +37,7 @@
 						viewModel.orderStatus("Đang hoãn");
 						break;
 					case "Delaying":
-						viewModel.orderStatus("Đang chờ hoãn");
+						viewModel.orderStatus("Yêu cầu hoãn");
 						break;
 					case "Splitted":
 						viewModel.orderStatus("Đang chờ tách");
@@ -47,13 +47,52 @@
 						break;
 				}
 				viewModel.shippingFee(numberWithCommas(dataItem.shippingFee));
-				viewModel.shippngSupport(numberWithCommas(dataItem.shippngSupport));
+				viewModel.sendoShippingSupport(numberWithCommas(dataItem.sendoShippingSupport));
 				viewModel.voucher(numberWithCommas(dataItem.voucher));
+				viewModel.shopShippingSupport(numberWithCommas(dataItem.shopSupportFeeToBuyer));
+				switch (dataItem.paymentStatus) {
+					case 2:
+						viewModel.paymentStatus("Đã thanh toán COD");
+						break;
+					case 3:
+						viewModel.paymentStatus("Đã thanh toán");
+						break;
+					case 4:
+						viewModel.paymentStatus("Hoàn tất");
+						break;
+					case 5:
+						viewModel.paymentStatus("Đã hoàn tiền");
+						break;
+					case 6:
+						viewModel.paymentStatus("Đợi xác nhận");
+						break;
+					case 7:
+						viewModel.paymentStatus("Từ chối");
+						break;
+					case 1:
+					default:
+						viewModel.paymentStatus("Chưa thanh toán");
+						break;
+				}
+
+				viewModel.carrierName(dataItem.carrierName);
+				if ((dataItem.carrierName === null) || (dataItem.carrierName === undefined) || (dataItem.carrierName === '')) {
+					$("#carrierField").hide();
+				} else
+					$("#carrierField").show();
+
+				viewModel.trackingNumber(dataItem.trackingNumber);
+				if ((dataItem.trackingNumber === null) || (dataItem.trackingNumber === undefined) || (dataItem.trackingNumber === '')) {
+					$("#trackingField").hide();
+				} else
+					$("#trackingField").show();
 
 				viewModel.note(dataItem.note);
 				if ((dataItem.note === null) || (dataItem.note === undefined) || (dataItem.note === '')) {
 					$("#noteField").hide();
-				}
+				} else
+					$("#noteField").show();
+
 				viewModel.products(dataItem.products);
 				viewModel.canDelay(dataItem.canDelay);
 				viewModel.canCancel(dataItem.canCancel);
@@ -64,6 +103,7 @@
 					$("#delayField").hide();
 				else
 					$("#delayField").show();
+
 				viewModel.dataItem(dataItem);
 			}).fail(function(error) {
 				alert(JSON.stringify(error));
@@ -92,8 +132,12 @@
 		paymentMethod : ko.observable(''),
 		shippingMethod : ko.observable(''),
 		shippingFee : ko.observable('0'),
-		shippngSupport : ko.observable('0'),
+		sendoShippingSupport : ko.observable('0'),
 		voucher : ko.observable('0'),
+		shopShippingSupport : ko.observable('0'),
+		paymentStatus : ko.observable(8),
+		carrierName : ko.observable(''),
+		trackingNumber : ko.observable('0'),
 		canDelay : ko.observable(false),
 		canCancel : ko.observable(false),
 		canSplit : ko.observable(false),
@@ -119,7 +163,7 @@
 		},
 
 		showSplitPopUp : function() {
-			viewModel.productsToSplit().length = 0;
+			viewModel.productsToSplit.removeAll();
 			for (var i = 0; i < viewModel.products().length; i++) {
 				var product = {
 					name : viewModel.products()[i].name,
@@ -127,18 +171,18 @@
 					thumbnail : viewModel.products()[i].thumbnail,
 					selected : ko.observable(false),
 				};
-				viewModel.productsToSplit().push(product);
+				viewModel.productsToSplit.push(product);
 			}
 
-			viewModel.popupSplitVisible(true);
 			var splitObj = $("#popupSplitList");
-			var splitList = splitObj.dxList('instance');
-			splitList.option('dataSource', viewModel.productsToSplit());
+			// var splitList = splitObj.dxList('instance');
+			// splitList.option('dataSource', viewModel.productsToSplit());
 
 			var totalHeight = $("#popupSplitContent").height();
 			var footerHeight = $("#popupSplitFooter").height();
-			$("popupSplitList").height(totalHeight - footerHeight);
+			splitObj.height(totalHeight - footerHeight);
 			viewModel.cantSplitCurrentItem(true);
+			viewModel.popupSplitVisible(true);
 		},
 
 		hideDetailSplitPopUp : function() {
@@ -322,18 +366,17 @@
 				}
 			});
 		},
-
-		splitDetailCheckChanged : function() {
-			var len = viewModel.productsToSplit().length;
-			for ( i = 0; i < len; i++) {
-				var product = viewModel.productsToSplit()[i];
-				if (product.selected() === true) {
-					viewModel.cantSplitCurrentItem(false);
-					return;
-				}
+	};
+	splitDetailCheckChanged = function() {
+		var len = viewModel.productsToSplit().length;
+		var checkedCount = 0;
+		for ( i = 0; i < len; i++) {
+			var product = viewModel.productsToSplit()[i];
+			if (product.selected() === true) {
+				checkedCount++;
 			}
-			viewModel.cantSplitCurrentItem(true);
-		},
+		}
+		viewModel.cantSplitCurrentItem((checkedCount === 0) || (checkedCount === len));
 	};
 
 	return viewModel;

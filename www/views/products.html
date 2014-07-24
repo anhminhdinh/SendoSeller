@@ -37,8 +37,8 @@
 		<div id="productsList" data-bind="dxList: { dataSource: productsDataSource,
 		autoPagingEnabled: true,
 		pageLoadingAction: function() { loadNextProducts(); },
-		noDataText: 'Chưa có sản phẩm nào phù hợp',
-				 }">
+		noDataText: '',
+		}">
 			<div class="pv-list-item"data-options="dxTemplate : { name: 'item' }">
 				<div class="products-info-header" style="z-index: 1000; position: relative; margin-top: 10px;">
 					<table>
@@ -57,11 +57,9 @@
 								<td width="80px" rowspan="4" valign=top><img class="product-thumbnail lazy" data-bind="attr: { src: thumbnail }"><img></td>
 							</tr>
 							<tr class="pv-product-price">
-								<!-- <td width="auto" class="transparent-button" data-bind="dxButton: {iconSrc: 'images/moneyicon.png'}"></td> -->
 								<td class="product-price" data-bind="text: price + ' đ'"></td>
 							</tr>
 							<tr>
-								<!-- <td width="auto" class="transparent-button" data-bind="dxButton: {iconSrc: 'images/weight.png'}"></td> -->
 								<td style="font-size: smaller;" data-bind="text: weight + ' g'"></td>
 							</tr>
 							<!-- ko if:displayUpProductDate -->
@@ -89,24 +87,26 @@
 		</div>
 		<div data-bind="dxPopup:{visible:popupEditVisible, fullScreen:true, title:'Chỉnh sửa sản phẩm'}">
 			<div data-options="dxTemplate:{name: 'content'}">
-				<div class="dx-fieldset">
-					<div class="dx-field">
-						<div>
-							Tên:
+				<div data-bind="dxScrollView:{}" style="padding: 10px; color: black;">
+					<div class="dx-fieldset">
+						<div class="dx-field">
+							<div>
+								Tên:
+							</div>
+							<div style="background-color: #E6E7EB;" id="nameBox" data-bind="dxTextBox: { value: editName, showClearButton: true}"></div>
 						</div>
-						<div style="background-color: #E6E7EB;" id="nameBox" data-bind="dxTextBox: { value: editName, showClearButton: true}"></div>
-					</div>
-					<div class="dx-field">
-						<div>
-							Giá (đ):
+						<div class="dx-field">
+							<div>
+								Giá (đ):
+							</div>
+							<div style="background-color: #E6E7EB;" id="priceBox" data-bind="dxTextBox: { value: editPrice, keyUpAction: updatePriceFormat, valueUpdateEvent: 'keyup', showClearButton: true}"></div>
 						</div>
-						<div style="background-color: #E6E7EB;" id="priceBox" data-bind="dxTextBox: { value: editPrice, keyUpAction: updatePriceFormat, valueUpdateEvent: 'keyup', showClearButton: true}"></div>
-					</div>
-					<div class="dx-field">
-						<div>
-							Khối lượng (g):
+						<div class="dx-field">
+							<div>
+								Khối lượng (g):
+							</div>
+							<div style="background-color: #E6E7EB;" id="weightBox" data-bind="dxTextBox: { value: editWeight, valueChangeAction: updateWeightFormat, valueUpdateEvent: 'keyup', showClearButton: true}"></div>
 						</div>
-						<div style="background-color: #E6E7EB;" id="weightBox" data-bind="dxTextBox: { value: editWeight, valueChangeAction: updateWeightFormat, valueUpdateEvent: 'keyup', showClearButton: true}"></div>
 					</div>
 				</div>
 				<div class="default-button" data-bind="dxButton: { text: 'Sửa', clickAction: changeProductProperties, icon:'edit' }"></div>

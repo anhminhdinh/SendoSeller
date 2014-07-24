@@ -1,7 +1,7 @@
 ﻿MyApp.orders = function(id, params) {
 	var LOADSIZE = 50;
 	var NEW_ORDER = "New", PROCESSING_ORDER = "Processing", DELAYED_ORDER = "Delayed", DELAYING_ORDER = "Delaying", SHIPPING_ORDER = "Shipping", SPLITTED_ORDER = "Splitted";
-	var myUserName = window.localStorage.getItem("UserName");
+	var myUserName = "";
 
 	// ordersStore = new DevExpress.data.LocalStore({
 	// type : "local",
@@ -12,6 +12,24 @@
 	// });
 	var viewModel = {
 		viewShowing : function() {
+			myUserName = window.localStorage.getItem("UserName");
+			viewModel.ordersStore(new DevExpress.data.LocalStore({
+				type : "local",
+				name : myUserName + "OrdersStore",
+				key : "orderNumber",
+				// flushInterval : 1000,
+				immediate : true,
+			}));
+			viewModel.ordersDataSource(new DevExpress.data.DataSource({
+				store : viewModel.ordersStore(),
+				pageSize : 50,
+				sort : {
+					getter : 'orderDate',
+					desc : true
+				},
+				// group : 'orderDate',
+				postProcess : groupByDate,
+			}));
 			if (window.sessionStorage.getItem("MyTokenId") === null) {
 				MyApp.app.navigate({
 					view : "user",
@@ -20,12 +38,6 @@
 					root : true
 				});
 			} else {
-				if (window.sessionStorage.getItem("firstloadorder") === null) {
-					window.sessionStorage.setItem("firstloadorder", true);
-					doLoadDataByOrderStatus(viewModel.selectedOrder());
-				} else {
-					refreshList(viewModel.selectedOrder());
-				}
 			}
 		},
 		loadFrom : ko.observable(0),
@@ -37,14 +49,21 @@
 			var obj = null;
 			obj = $("#ordersList");
 			var list = obj.dxList("instance");
-			list.option('showNextButton', viewModel.isAndroid());
+			if (viewModel.isAndroid())
+				list.option('useNativeScrolling', false);
+			// list.option('showNextButton', viewModel.isAndroid());
 			// list.option('pullRefreshEnabled', !isAndroid);
 			var contentObj = $("#content");
 			var contentHeight = contentObj.height();
 			var typeBar = $("#typeBar");
 			var typeBarHeight = typeBar.outerHeight();
 			obj.height(contentHeight - typeBarHeight);
-			loadNextImages();
+			if (window.sessionStorage.getItem("firstloadorder") === null) {
+				window.sessionStorage.setItem("firstloadorder", true);
+				doLoadDataByOrderStatus(viewModel.selectedOrder());
+			} else {
+				refreshList(viewModel.selectedOrder());
+			}
 			// refreshList(NEW_ORDER);
 		},
 		selectedOrder : ko.observable(NEW_ORDER),
@@ -70,7 +89,7 @@
 			},
 			disabled : ko.observable(true),
 		}, {
-			text : "Tách đơn hàng",
+			text : "Hết hàng một phần",
 			clickAction : function() {
 				processActionSheet("Split");
 			},
@@ -135,7 +154,7 @@
 		loadPanelVisible : ko.observable(false),
 		showActionSheet : function(e) {
 			var orderNumber = e.model.orderNumber;
-			viewModel.ordersStore.byKey(orderNumber).done(function(dataItem) {
+			viewModel.ordersStore().byKey(orderNumber).done(function(dataItem) {
 				var idOrderNumber = "#" + orderNumber;
 				var actionSheet = $("#actionsheet").dxActionSheet("instance");
 				// actionSheet.option('target', idOrderNumber);
@@ -156,19 +175,14 @@
 		},
 		switchOrdersVisible : ko.observable(false),
 		showOrders : function() {
-			var ordersSheet = $("#swicthOrdersSheet").dxActionSheet("instance");
+			var ordersSheet = $("#switchOrdersSheet").dxActionSheet("instance");
 			var ordersSheetPopOver = ordersSheet._popup;
 			ordersSheetPopOver.option('shading', true);
 			viewModel.switchOrdersVisible(true);
 		},
 		// dataStore : ordersStore,
-		ordersStore : new DevExpress.data.LocalStore({
-			type : "local",
-			name : myUserName + "OrdersStore",
-			key : "orderNumber",
-			// flushInterval : 1000,
-			immediate : true,
-		}),
+		ordersStore : ko.observable(),
+		ordersDataSource : ko.observable(),
 	};
 
 	showLoading = function(show) {
@@ -217,75 +231,20 @@
 				typeBar.css("backgroundColor", "#cd6e02");
 				break;
 		}
-		viewModel.ordersStore.load().done(function(result) {
-			switch (status) {
-				case NEW_ORDER:
-					newDataSource.filter("status", status);
-					newDataSource.pageIndex(0);
-					newDataSource.sort({
-						getter : 'orderDate',
-						desc : true
-					});
-					newDataSource.load().done(function(results) {
-						$("#ordersList").dxList("instance").option('dataSource', results);
-					});
-					break;
-				case PROCESSING_ORDER:
-					processingDataSource.filter("status", status);
-					processingDataSource.pageIndex(0);
-					processingDataSource.sort({
-						getter : 'orderDate',
-						desc : true
-					});
-					processingDataSource.load().done(function(results) {
-						$("#ordersList").dxList("instance").option('dataSource', results);
-					});
-					break;
-				case DELAYED_ORDER:
-					delayedDataSource.filter("status", status);
-					delayedDataSource.pageIndex(0);
-					delayedDataSource.sort({
-						getter : 'orderDate',
-						desc : true
-					});
-					delayedDataSource.load().done(function(results) {
-						$("#ordersList").dxList("instance").option('dataSource', results);
-					});
-					break;
-				case DELAYING_ORDER:
-					delayingDataSource.filter("status", status);
-					delayingDataSource.pageIndex(0);
-					delayingDataSource.sort({
-						getter : 'orderDate',
-						desc : true
-					});
-					delayingDataSource.load().done(function(results) {
-						$("#ordersList").dxList("instance").option('dataSource', results);
-					});
-					break;
-				case SHIPPING_ORDER:
-					shippingDataSource.filter("status", status);
-					shippingDataSource.pageIndex(0);
-					shippingDataSource.sort({
-						getter : 'orderDate',
-						desc : true
-					});
-					shippingDataSource.load().done(function(results) {
-						$("#ordersList").dxList("instance").option('dataSource', results);
-					});
-					break;
-				case SPLITTED_ORDER:
-					splittedDataSource.filter("status", status);
-					splittedDataSource.pageIndex(0);
-					splittedDataSource.sort({
-						getter : 'orderDate',
-						desc : true
-					});
-					splittedDataSource.load().done(function(results) {
-						$("#ordersList").dxList("instance").option('dataSource', results);
-					});
-					break;
-			}
+		viewModel.ordersStore().load().done(function(result) {
+			var filter = status;
+			viewModel.ordersDataSource().filter("status", filter);
+			viewModel.ordersDataSource().pageIndex(0);
+			viewModel.ordersDataSource().sort({
+				getter : 'orderDate',
+				desc : true
+			});
+			viewModel.ordersDataSource().load().done(function(results) {
+				// var obj = $("#ordersList");
+				// var list = obj.dxList("instance");
+				// list.option('dataSource', results);
+				loadNextImages();
+			});
 		});
 	};
 
@@ -315,7 +274,7 @@
 					var item = viewModel.dataItem();
 					var oldStatus = item.status;
 					var orderRemove = item.orderNumber;
-					viewModel.ordersStore.remove(orderRemove);
+					viewModel.ordersStore().remove(orderRemove);
 					DevExpress.ui.notify('Huỷ đơn hàng thành công', 'success', 2000);
 					doLoadDataByOrderStatus(oldStatus);
 				}).fail(function(jqxhr, textStatus, error) {
@@ -354,7 +313,7 @@
 					var item = viewModel.dataItem();
 					var oldStatus = item.status;
 					var orderRemove = item.orderNumber;
-					viewModel.ordersStore.remove(orderRemove);
+					viewModel.ordersStore().remove(orderRemove);
 					DevExpress.ui.notify('Xử lý đơn hàng thành công', 'success', 2000);
 					doLoadDataByOrderStatus(oldStatus);
 				}).fail(function(jqxhr, textStatus, error) {
@@ -403,7 +362,7 @@
 					var item = viewModel.dataItem();
 					var oldStatus = item.status;
 					var orderRemove = item.orderNumber;
-					viewModel.ordersStore.remove(orderRemove);
+					viewModel.ordersStore().remove(orderRemove);
 					DevExpress.ui.notify('Hoãn một phần đơn hàng thành công', 'success', 2000);
 					doLoadDataByOrderStatus(oldStatus);
 				}).fail(function(jqxhr, textStatus, error) {
@@ -445,7 +404,7 @@
 					var item = viewModel.dataItem();
 					var oldStatus = item.status;
 					var orderRemove = item.orderNumber;
-					viewModel.ordersStore.remove(orderRemove);
+					viewModel.ordersStore().remove(orderRemove);
 					DevExpress.ui.notify('Hoãn đơn hàng thành công', 'success', 2000);
 					doLoadDataByOrderStatus(oldStatus);
 				}).fail(function(jqxhr, textStatus, error) {
@@ -509,78 +468,6 @@
 		return result;
 	}
 
-	newDataSource = new DevExpress.data.DataSource({
-		store : viewModel.ordersStore,
-		pageSize : 50,
-		sort : {
-			getter : 'orderDate',
-			desc : true
-		},
-		// group : 'orderDate',
-		postProcess : groupByDate,
-		filter : ["status", "=", NEW_ORDER],
-	});
-
-	processingDataSource = new DevExpress.data.DataSource({
-		store : viewModel.ordersStore,
-		pageSize : 50,
-		sort : {
-			getter : 'orderDate',
-			desc : true
-		},
-		// group : 'orderDate',
-		postProcess : groupByDate,
-		filter : ["status", "=", PROCESSING_ORDER]
-	});
-
-	delayedDataSource = new DevExpress.data.DataSource({
-		store : viewModel.ordersStore,
-		pageSize : 50,
-		sort : {
-			getter : 'orderDate',
-			desc : true
-		},
-		// group : 'orderDate',
-		postProcess : groupByDate,
-		filter : ["status", "=", DELAYED_ORDER]
-	});
-
-	delayingDataSource = new DevExpress.data.DataSource({
-		store : viewModel.ordersStore,
-		pageSize : 50,
-		sort : {
-			getter : 'orderDate',
-			desc : true
-		},
-		// group : 'orderDate',
-		postProcess : groupByDate,
-		filter : ["status", "=", DELAYING_ORDER]
-	});
-
-	shippingDataSource = new DevExpress.data.DataSource({
-		store : viewModel.ordersStore,
-		pageSize : 50,
-		sort : {
-			getter : 'orderDate',
-			desc : true
-		},
-		// group : 'orderDate',
-		postProcess : groupByDate,
-		filter : ["status", "=", SHIPPING_ORDER]
-	});
-
-	splittedDataSource = new DevExpress.data.DataSource({
-		store : viewModel.ordersStore,
-		pageSize : 50,
-		sort : {
-			getter : 'orderDate',
-			desc : true
-		},
-		// group : 'orderDate',
-		postProcess : groupByDate,
-		filter : ["status", "=", SPLITTED_ORDER]
-	});
-
 	processActionSheet = function(text) {
 		switch (text) {
 			case PROCESSING_ORDER:
@@ -590,7 +477,7 @@
 				viewModel.popupDelayVisible(true);
 				break;
 			case "Split":
-				viewModel.productsToSplit().length = 0;
+				viewModel.productsToSplit.removeAll();
 				for (var i = 0; i < viewModel.products().length; i++) {
 					var product = {
 						name : viewModel.products()[i].name,
@@ -599,16 +486,15 @@
 						stockAvailability : viewModel.products()[i].stockAvailabilityDisplay,
 						selected : ko.observable(false),
 					};
-					viewModel.productsToSplit().push(product);
+					viewModel.productsToSplit.push(product);
 				}
-
-				viewModel.popupSplitVisible(true);
 				var totalHeight = $("#popupSplitContent").height();
 				var footerHeight = $("#popupSplitFooter").height();
 				$("popupSplitList").height(totalHeight - footerHeight);
 
-				$("#popupSplitList").dxList('instance').option('dataSource', viewModel.productsToSplit());
+				// $("#popupSplitList").dxList('instance').option('dataSource', viewModel.productsToSplit());
 				viewModel.cantSplitCurrentItem(true);
+				viewModel.popupSplitVisible(true);
 				break;
 			case NEW_ORDER:
 				doNewOrder();
@@ -626,7 +512,11 @@
 	};
 
 	doLoadDataByOrderStatus = function(status) {
-		viewModel.ordersStore.clear();
+		var obj = $("#ordersList");
+		var list = obj.dxList("instance");
+		list.option('noDataText', '');
+
+		viewModel.ordersStore().clear();
 
 		DevExpress.ui.notify("Đang tải dữ liệu", "info", 100);
 		viewModel.loadPanelVisible(true);
@@ -662,6 +552,7 @@
 			viewModel.showRefresh(data.Data === null || data.Data.length === 0 || viewModel.isAndroid());
 
 			if ((data.Data === null) || (data.Data.length === 0)) {
+				list.option('noDataText', 'Chưa có đơn hàng nào ở mục này');
 				refreshList(status);
 				return;
 			}
@@ -699,7 +590,11 @@
 					paymentMethod : item.PaymentMethod,
 					shippingMethod : item.ShippingType,
 					shippingFee : item.ShippingFee,
-					shippngSupport : item.SendoSupportFeeToBuyer,
+					sendoShippingSupport : item.SendoSupportFeeToBuyer,
+					shopShippingSupport : item.SellerShippingFee,
+					paymentStatus : item.PaymentStatus,
+					carrierName : item.CarrierName,
+					trackingNumber : item.TrackingNumber,
 					voucher : item.VoucherValue,
 					orderDateDisplay : orderDateString,
 					delayDateDisplay : delayDateString,
@@ -718,11 +613,11 @@
 			});
 
 			for (var i = 0; i < result.length; i++) {
-				viewModel.ordersStore.byKey(result[i].orderNumber).done(function(dataItem) {
+				viewModel.ordersStore().byKey(result[i].orderNumber).done(function(dataItem) {
 					if (dataItem !== undefined)
-						viewModel.ordersStore.update(result[i].orderNumber, result[i]);
+						viewModel.ordersStore().update(result[i].orderNumber, result[i]);
 					else
-						viewModel.ordersStore.insert(result[i]);
+						viewModel.ordersStore().insert(result[i]);
 				});
 			}
 			var listStatus = status;
@@ -734,6 +629,7 @@
 			if ( typeof AppMobi === 'object')
 				AppMobi.notification.hideBusyIndicator();
 			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+			viewModel.showRefresh(true);
 		});
 
 	};
@@ -744,14 +640,14 @@
 
 	splitCheckChanged = function() {
 		var len = viewModel.productsToSplit().length;
+		var checkedCount = 0;
 		for ( i = 0; i < len; i++) {
 			var product = viewModel.productsToSplit()[i];
 			if (product.selected() === true) {
-				viewModel.cantSplitCurrentItem(false);
-				return;
+				checkedCount++;
 			}
 		}
-		viewModel.cantSplitCurrentItem(true);
+		viewModel.cantSplitCurrentItem((checkedCount === 0) || (checkedCount === len));
 	};
 
 	showDetailsData = function(e) {
@@ -776,32 +672,8 @@
 	loadNextOrders = function() {
 		var page = 0;
 		var pageSize = 0;
-		switch (viewModel.selectedOrder) {
-			case NEW_ORDER:
-				page = newDataSource._pageIndex;
-				pageSize = newDataSource._pageSize;
-				break;
-			case PROCESSING_ORDER:
-				page = processingDataSource._pageIndex;
-				pageSize = processingDataSource._pageSize;
-				break;
-			case DELAYED_ORDER:
-				page = delayedDataSource._pageIndex;
-				pageSize = delayedDataSource._pageSize;
-				break;
-			case DELAYING_ORDER:
-				page = delayingDataSource._pageIndex;
-				pageSize = delayingDataSource._pageSize;
-				break;
-			case SPLITTED_ORDER:
-				page = splittedDataSource._pageIndex;
-				pageSize = splittedDataSource._pageSize;
-				break;
-			case SHIPPING_ORDER:
-				page = shippingDataSource._pageIndex;
-				pageSize = shippingDataSource._pageSize;
-				break;
-		}
+		page = viewModel.ordersDataSource()._pageIndex;
+		pageSize = viewModel.ordersDataSource()._pageSize;
 		var currentView = (page + 2) * pageSize;
 		if (currentView >= viewModel.loadFrom() + LOADSIZE - 1) {
 			doLoadDataByOrderStatus(dataName);

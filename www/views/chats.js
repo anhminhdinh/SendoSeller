@@ -3,21 +3,18 @@
 	var viewModel = {
 		// dataSource : ko.observableArray(),
 		chatIdsStore : ko.observable(),
-		chatsDataSource : ko.observable(), 
+		chatsDataSource : ko.observable(),
 		viewShowing : function() {
 			var myUserName = window.localStorage.getItem("UserName");
 			viewModel.chatIdsStore(new DevExpress.data.LocalStore({
 				name : myUserName + "chatIdsStore",
 				key : "id",
 				// flushInterval : 1000,
-				immediate: true,
+				immediate : true,
 			}));
 			viewModel.chatsDataSource(new DevExpress.data.DataSource({
 				store : viewModel.chatIdsStore(),
 				sort : [{
-					getter : 'read',
-					desc : false
-				}, {
 					getter : 'updatedDate',
 					desc : true
 				}, {
@@ -35,11 +32,6 @@
 				}, {
 					root : true
 				});
-			} else {
-				if (window.sessionStorage.getItem("firstloadchats") === null) {
-					window.sessionStorage.setItem("firstloadchats", true);
-					doLoadChatIdsData();
-				}
 			}
 		},
 		loadFrom : ko.observable(0),
@@ -51,10 +43,19 @@
 			var obj = null;
 			obj = $("#chatidlist");
 			var list = obj.dxList("instance");
-			list.option('showNextButton', viewModel.isAndroid());
+			if (viewModel.isAndroid())
+				list.option('useNativeScrolling', false);
+
+			// list.option('showNextButton', viewModel.isAndroid());
+
 			// list.option('pullRefreshEnabled', !isAndroid);
 			// list.option('autoPagingEnabled', !isAndroid);
-			loadChatsImages();
+			var myUserName = window.localStorage.getItem("UserName");
+			if (window.sessionStorage.getItem(myUserName + "firstloadchats") === null) {
+				window.sessionStorage.setItem(myUserName + "firstloadchats", true);
+				doLoadChatIdsData();
+			}
+
 		},
 		loadPanelVisible : ko.observable(false),
 	};
@@ -78,6 +79,9 @@
 	}
 
 	doLoadChatIdsData = function() {
+		var obj = $("#chatidlist");
+		var list = obj.dxList("instance");
+		list.option('noDataText', '');
 		viewModel.loadPanelVisible(true);
 		if ( typeof AppMobi === 'object')
 			AppMobi.notification.showBusyIndicator();
@@ -88,7 +92,7 @@
 			timeStamp = 0;
 		var from = viewModel.loadFrom();
 		var to = viewModel.loadFrom() + LOADSIZE - 1;
-		if (viewModel.loadFrom() > 0)
+		if (from > 0)
 			timeStamp = 0;
 		var domain = window.sessionStorage.getItem("domain");
 		var url = domain + "/api/mobile/ListComment";
@@ -108,13 +112,11 @@
 			if (viewModel.loadFrom() === 0)
 				window.localStorage.setItem(myUserName + "ListCommentTimeStamp", data.TimeStamp);
 			viewModel.showRefresh(data.Data === null || data.Data.length === 0 || viewModel.isAndroid());
+
 			if ((data.Data === undefined) || (data.Data.data === undefined) || (data.Data.data.length === 0)) {
 				viewModel.chatsDataSource().pageIndex(0);
 				viewModel.chatIdsStore().load().done(function() {
 					viewModel.chatsDataSource().sort([{
-						getter : 'read',
-						desc : false
-					}, {
 						getter : 'updatedDate',
 						desc : true
 					}, {
@@ -123,6 +125,7 @@
 					}]);
 					viewModel.chatsDataSource().load();
 				});
+				list.option('noDataText', 'Shop của bạn chưa có câu hỏi nào.');
 				return;
 			}
 			var result = $.map(data.Data.data, function(item) {
@@ -162,9 +165,6 @@
 			viewModel.chatsDataSource().pageIndex(0);
 			viewModel.chatIdsStore().load().done(function() {
 				viewModel.chatsDataSource().sort([{
-					getter : 'read',
-					desc : false
-				}, {
 					getter : 'updatedDate',
 					desc : true
 				}, {
@@ -172,12 +172,14 @@
 					desc : true
 				}]);
 				viewModel.chatsDataSource().load();
+				loadChatsImages();
 			});
 		}).fail(function(jqxhr, textStatus, error) {
 			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
 			viewModel.loadPanelVisible(false);
 			if ( typeof AppMobi === 'object')
 				AppMobi.notification.hideBusyIndicator();
+			viewModel.showRefresh(true);
 		});
 	};
 
