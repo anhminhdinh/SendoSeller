@@ -19,7 +19,23 @@ function registerPush() {
 			var userId = window.localStorage.getItem(myUserName + "UserID");
 			AppMobi.notification.checkPushUser(userId, "nopassword");
 		}
+	} else {
+		var pushNotification = window.plugins.pushNotification;
+		if (device.platform == 'android' || device.platform == 'Android') {
+			pushNotification.register(successHandler, errorHandler, {
+				"senderID" : "1017201532317",
+				"ecb" : "onNotificationGCM"
+			});
+		} else {
+			pushNotification.register(tokenHandler, errorHandler, {
+				"badge" : "true",
+				"sound" : "true",
+				"alert" : "true",
+				"ecb" : "onNotificationAPN"
+			});
+		}
 	}
+
 }
 
 function numberWithCommas(x) {

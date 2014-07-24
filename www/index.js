@@ -100,12 +100,6 @@
 					});
 				}
 			});
-			document.addEventListener("appMobi.notification.push.enable", notificationsRegistered, false);
-			document.addEventListener("appMobi.notification.push.receive", receivedPush, false);
-			document.addEventListener("appMobi.device.resume", function() {
-				DevExpress.ui.notify('Chào mừng bạn trở lại với Sendo!', 'info', 2000);
-				// DevExpress.ui.dialog.alert("Chào mừng bạn trở lại với Sendo!", "Sendo.vn");
-			}, false);
 		} else {
 			document.addEventListener("intel.xdk.device.ready", function() {
 				//hide splash screen
@@ -122,6 +116,11 @@
 					}
 				});
 				// AppMobi.device.hideSplashScreen();
+			}, false);
+			document.addEventListener("appMobi.notification.push.enable", notificationsRegistered, false);
+			document.addEventListener("appMobi.notification.push.receive", receivedPush, false);
+			document.addEventListener("appMobi.device.resume", function() {
+				DevExpress.ui.notify('Chào mừng bạn trở lại với Sendo!', 'info', 2000);
 			}, false);
 		}
 

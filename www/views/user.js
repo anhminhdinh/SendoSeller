@@ -145,6 +145,8 @@
 						viewModel.isLoggedOut(true);
 						viewModel.toggleNavs(false);
 						MyApp.app.navigation[3].option('title', 'Đăng nhập');
+						
+						window.plugins.pushNotification.unregister(null, null, null);
 						//textStatus contains the status: success, error, etc
 					}).fail(function(jqxhr, textStatus, error) {
 						DevExpress.ui.dialog.alert("Đăng xuất thất bại!", "Sendo.vn");
