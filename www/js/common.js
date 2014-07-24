@@ -21,7 +21,7 @@ function registerPush() {
 		}
 	} else {
 		var pushNotification = window.plugins.pushNotification;
-		DevExpress.ui.notify('Đăng ký tin nhắn nhanh từ Cordova', 'info', 200);
+		DevExpress.ui.notify('Đăng ký tin nhắn nhanh từ Cordova cho ' + device.platform, 'info', 200);
 		if (device.platform == 'android' || device.platform == 'Android') {
 			pushNotification.register(successHandler, errorHandler, {
 				"senderID" : "1017201532317",
