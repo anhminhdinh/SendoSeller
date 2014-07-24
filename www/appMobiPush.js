@@ -58,9 +58,9 @@ var receivedPush = function() {
 					AppMobi.notification.deletePushNotifications(msgObj.id);
 					var newPage = "orders";
 					var dataString = "" + msgObj.data;
-					if (dataString.indexOf("newChat") === 0) {
+					if (dataString.indexOf("chat") === 0) {
 						newPage = "chats";
-						dataString.replace("newChat_", "");
+						dataString.replace("chat_", "");
 					} else if (dataString.indexOf("newOrder") === 0) {
 						dataString.replace("newOrder_", "");
 					}
