@@ -57,8 +57,8 @@
 			view : "user",
 			id : undefined
 		});
-		// window.sessionStorage.setItem("domain", "http://ban.sendo.vn");
-		window.sessionStorage.setItem("domain", "http://180.148.138.140/sellerTest2");
+		window.sessionStorage.setItem("domain", "http://ban.sendo.vn");
+		// window.sessionStorage.setItem("domain", "http://180.148.138.140/sellerTest2");
 		function onBackButton() {
 			DevExpress.hardwareBackButton.fire();
 		}

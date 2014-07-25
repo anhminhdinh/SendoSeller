@@ -1,5 +1,5 @@
 function successHandler(result) {
-	alert('result = ' + result);
+	// alert('result = ' + result);
 }
 
 // result contains any error description text returned from the plugin call
@@ -31,7 +31,7 @@ function onNotificationGCM(e) {
 				// Your GCM push server needs to know the regID before it can push to this device
 				// here is where you might want to send it the regID for later use.
 				// console.log("regID = " + e.regid);
-				alert(e.regid);
+				// alert(e.regid);
 			}
 			break;
 
@@ -39,17 +39,18 @@ function onNotificationGCM(e) {
 			// if this flag is set, this notification happened while we were in the foreground.
 			// you might want to play a sound to get the user's attention, throw up a dialog, etc.
 			if (e.foreground) {
-				// on Android soundname is outside the payload.
-				// On Amazon FireOS all custom attributes are contained within payload
-				var soundfile = e.soundname || e.payload.sound;
-				// if the notification contains a soundname, play it.
-				var my_media = new Media("/android_asset/www/" + soundfile);
-				my_media.play();
+				// // on Android soundname is outside the payload.
+				// // On Amazon FireOS all custom attributes are contained within payload
+				// var soundfile = e.soundname || e.payload.sound;
+				// // if the notification contains a soundname, play it.
+				// var my_media = new Media("/android_asset/www/" + soundfile);
+				// my_media.play();
 			} else {// otherwise we were launched because the user touched a notification in the notification tray.
 				if (e.coldstart) {
 				} else {
 				}
 			}
+			// alert(JSON.stringify(e));
 			DevExpress.ui.notify(e.payload.message + ' ' + e.payload.msgcnt + ' ' + e.payload.timeStamp, 'info', 2000);
 			break;
 
