@@ -100,7 +100,12 @@
 			document.addEventListener("appMobi.notification.push.enable", notificationsRegistered, false);
 			document.addEventListener("appMobi.notification.push.receive", receivedPush, false);
 			document.addEventListener("appMobi.device.resume", function() {
-				DevExpress.ui.notify('Chào mừng bạn trở lại với Sendo!', 'info', 2000);
+				DevExpress.ui.notify('Chào mừng bạn trở lại với Sendo!', 'info', 200);
+			}, false);
+		} else {
+			// if (device.cordova !== null)
+			document.addEventListener("resume", function() {
+				DevExpress.ui.notify('Chào mừng bạn trở lại với Sendo!', 'info', 200);
 			}, false);
 		}
 

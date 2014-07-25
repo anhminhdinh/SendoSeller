@@ -174,7 +174,7 @@
 				}]);
 				viewModel.chatsDataSource().load();
 				loadChatsImages();
-				if ((viewModel.nextPageId() !== null) && (viewModel.nextPageId() !== undefined)) {
+				if ((viewModel.nextPageId() !== null) && (viewModel.nextPageId() !== undefined) && (viewModel.nextPageId() !== '')) {
 					MyApp.app.navigate({
 						view : "chatdetails",
 						id : viewModel.nextPageId(),

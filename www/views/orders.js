@@ -247,7 +247,7 @@
 				// var list = obj.dxList("instance");
 				// list.option('dataSource', results);
 				loadNextImages();
-				if ((viewModel.nextPageId() !== null) && (viewModel.nextPageId() !== undefined)) {
+				if ((viewModel.nextPageId() !== null) && (viewModel.nextPageId() !== undefined) && (viewModel.nextPageId() !== '')) {
 					MyApp.app.navigate({
 						view : "orderdetails",
 						id : viewModel.nextPageId(),

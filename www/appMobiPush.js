@@ -55,21 +55,32 @@ var receivedPush = function() {
 				//Always mark the messages as read and delete them.
 				//If you dont, your users will get them over and over again.
 				if (window.sessionStorage.getItem("MyTokenId") !== null) {
+
 					AppMobi.notification.deletePushNotifications(msgObj.id);
 					var newPage = "orders";
 					var dataString = "" + msgObj.data;
 					if (dataString.indexOf("chat") === 0) {
 						newPage = "chats";
 						dataString.replace("chat_", "");
+						window.sessionStorage.setItem("MustRefreshChat", true);
 					} else if (dataString.indexOf("newOrder") === 0) {
-						dataString.replace("newOrder_", "");
+						dataString.replace("newOrder", "");
+						dataString.replace("_", "");
+						window.sessionStorage.setItem("MustRefreshOrder", true);
 					}
-					MyApp.app.navigate({
-						view : newPage,
-						id : dataString,
-					}, {
-						root : true
+
+					var result = DevExpress.ui.dialog.confirm(msgObj.msg, "Sendo");
+					result.done(function(dialogResult) {
+						if (dialogResult) {
+							MyApp.app.navigate({
+								view : newPage,
+								id : dataString,
+							}, {
+								root : true
+							});
+						}
 					});
+
 				}
 				//here we have added return statement to show only first valid message, you can manage it accordingly if you want to read all messages
 			}

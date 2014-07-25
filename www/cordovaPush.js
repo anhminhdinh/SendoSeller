@@ -30,7 +30,7 @@ function onNotificationGCM(e) {
 			if (e.regid.length > 0) {
 				// Your GCM push server needs to know the regID before it can push to this device
 				// here is where you might want to send it the regID for later use.
-				// console.log("regID = " + e.regid);
+				console.log("regID = " + e.regid);
 				// alert(e.regid);
 			}
 			break;
@@ -50,8 +50,30 @@ function onNotificationGCM(e) {
 				} else {
 				}
 			}
+			if (window.sessionStorage.getItem("MyTokenId") !== null) {
+				var newPage = "orders";
+				var dataString = "" + e.payload.data;
+				if (dataString.indexOf("chat") === 0) {
+					newPage = "chats";
+					dataString.replace("chat", "");
+					dataString.replace("_", "");
+				} else if (dataString.indexOf("newOrder") === 0) {
+					dataString.replace("newOrder_", "");
+				}
+				var result = DevExpress.ui.dialog.confirm(e.payload.message, "Sendo");
+				result.done(function(dialogResult) {
+					if (dialogResult) {
+						MyApp.app.navigate({
+							view : newPage,
+							id : dataString,
+						}, {
+							root : true
+						});
+					}
+				});
+			}
 			// alert(JSON.stringify(e));
-			DevExpress.ui.notify(e.payload.message + ' ' + e.payload.msgcnt + ' ' + e.payload.timeStamp, 'info', 2000);
+			// DevExpress.ui.notify(e.payload.message + ' ' + e.payload.msgcnt + ' ' + e.payload.data, 'info', 2000);
 			break;
 
 		case 'error':
