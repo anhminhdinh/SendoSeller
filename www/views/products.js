@@ -33,7 +33,7 @@
 			// var list = obj.dxList("instance");
 			// list.option('showNextButton', isAndroid);
 			// if (isAndroid)
-				// list.option('useNativeScrolling', false);
+			// list.option('useNativeScrolling', false);
 			// list.option('pullRefreshEnabled', !isAndroid);
 			currentLoadStart = 0;
 			doLoadProducts();
@@ -64,26 +64,42 @@
 		},
 		actionSheetVisible : ko.observable(false),
 		dataItem : ko.observable(),
-		popupEditVisible : ko.observable(false),
-		editName : ko.observable(''),
-		editPrice : ko.observable(0),
-		editWeight : ko.observable(0),
-		hideEditPopup : function(e) {
-			this.popupEditVisible(false);
-		},
+		// popupEditVisible : ko.observable(false),
+		// editName : ko.observable(''),
+		// editPrice : ko.observable(0),
+		// editWeight : ko.observable(0),
+		//
+		// showEditName : ko.observable(''),
+		// showEditPrice : ko.observable(0),
+		// showEditWeight : ko.observable(0),
+		// showEditThumb : ko.observable(''),
+		// hideEditPopup : function(e) {
+		// this.popupEditVisible(false);
+		// },
 	};
 
 	var currentLoadStart = 0;
 
 	edit = function(e, itemData) {
-		viewModel.popupEditVisible(true);
-		productsStore.byKey(itemData.id).done(function(dataItem) {
-			viewModel.dataItem(dataItem);
-			viewModel.editName(dataItem.name);
-			viewModel.editPrice(dataItem.price);
-			viewModel.editWeight(dataItem.weight);
+		MyApp.app.navigate({
+			view : "productedit",
+			id : itemData.id,
 		});
-		$("#nameBox").dxTextBox("instance").focus();
+
+		// viewModel.popupEditVisible(true);
+		// productsStore.byKey(itemData.id).done(function(dataItem) {
+		// viewModel.dataItem(dataItem);
+		// viewModel.editName(dataItem.name);
+		// viewModel.editPrice(dataItem.price);
+		// viewModel.editWeight(dataItem.weight);
+		//
+		// viewModel.showEditName(dataItem.name);
+		// viewModel.showEditPrice(dataItem.price);
+		// viewModel.showEditWeight(dataItem.weight);
+		// viewModel.showEditThumb(dataItem.thumbnail);
+		//
+		// });
+		// $("#nameBox").dxTextBox("instance").focus();
 	};
 
 	changeStockStatus = function(e, itemData) {
@@ -106,7 +122,7 @@
 					if ( typeof AppMobi === 'object')
 						AppMobi.notification.hideBusyIndicator();
 					if (data.Flag !== true) {
-						DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
+						prepareLogout(data.Message);
 						return;
 					}
 					viewModel.loadPanelVisible(true);
@@ -122,7 +138,7 @@
 						if ( typeof AppMobi === 'object')
 							AppMobi.notification.hideBusyIndicator();
 						if (data.Flag !== true) {
-							DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+							prepareLogout(data.Message);
 							return;
 						}
 						if (true) {
@@ -136,9 +152,9 @@
 							UpdatedDateDisplay = Globalize.format(UpdatedDate, 'dd/MM/yyyy');
 
 							productsStore.byKey(itemData.id).done(function(dataItem) {
-								dataItem.upProductDate = UpProductDate;
+								dataItem.upProductDate = data.Data.UpProductDate;
 								dataItem.upProductDateDisplay = UpProductDateDisplay;
-								dataItem.updatedDate = UpdatedDate;
+								dataItem.updatedDate = data.Data.UpdatedDate;
 								dataItem.updatedDateDisplay = UpdatedDateDisplay;
 								dataItem.displayUpProductDate = UpProductDate.getFullYear() > 1;
 								dataItem.stockAvailability = data.Data.StockAvailability;
@@ -165,55 +181,69 @@
 		});
 	};
 
-	changeProductProperties = function() {
-		var result = DevExpress.ui.dialog.confirm("Bạn có chắc muốn sửa thông tin sản phẩm?", "Sendo");
-		result.done(function(dialogResult) {
-			viewModel.loadPanelVisible(true);
-			if ( typeof AppMobi === 'object')
-				AppMobi.notification.showBusyIndicator();
-			if (!dialogResult) {
-				viewModel.loadPanelVisible(false);
-				AppMobi.notification.hideBusyIndicator();
-				return;
-			}
-			var tokenId = window.sessionStorage.getItem("MyTokenId");
-			var newPrice = Number(viewModel.editPrice().toString().replace(/,/g, ''));
-			var newWeight = Number(viewModel.editWeight().toString().replace(/,/g, ''));
-			var domain = window.sessionStorage.getItem("domain");
-			var url = domain + "/api/mobile/UpdateProduct";
-			return $.post(url, {
-				TokenId : tokenId,
-				Id : viewModel.dataItem().id,
-				Name : viewModel.editName(),
-				Weight : newWeight,
-				Price : newPrice,
-			}, "json").done(function(data) {
-				viewModel.loadPanelVisible(false);
-				if ( typeof AppMobi === 'object')
-					AppMobi.notification.hideBusyIndicator();
-				viewModel.popupEditVisible(false);
-				if (data.Flag !== true) {
-					DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
-					return;
-				}
-				productsStore.byKey(viewModel.dataItem().id).done(function(dataItem) {
-					dataItem.name = viewModel.editName();
-					dataItem.price = viewModel.editPrice();
-					dataItem.weight = viewModel.editWeight();
-					productsStore.remove(dataItem.id);
-					productsStore.insert(dataItem);
-				});
-				doReload(true);
-			}).fail(function(jqxhr, textStatus, error) {
-				viewModel.loadPanelVisible(false);
-				if ( typeof AppMobi === 'object')
-					AppMobi.notification.hideBusyIndicator();
-				viewModel.popupEditVisible(false);
-				DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
-			});
-
-		});
-	};
+	// changeProductProperties = function() {
+	// if (viewModel.editName() === '') {
+	// DevExpress.ui.notify('Tên sản phẩm không được để trống', 'error', 2000);
+	// $("#nameBox").dxTextBox("instance").focus();
+	// return;
+	// }
+	// if (viewModel.editPrice() === '') {
+	// DevExpress.ui.notify('Giá sản phẩm không được để trống', 'error', 2000);
+	// $("#priceBox").dxTextBox("instance").focus();
+	// return;
+	// }
+	// if (viewModel.editWeight() === '') {
+	// DevExpress.ui.notify('Khối lượng sản phẩm không được để trống', 'error', 2000);
+	// $("#weightBox").dxTextBox("instance").focus();
+	// return;
+	// }
+	// var result = DevExpress.ui.dialog.confirm("Bạn có chắc muốn sửa thông tin sản phẩm?", "Sendo");
+	// result.done(function(dialogResult) {
+	// viewModel.loadPanelVisible(true);
+	// if ( typeof AppMobi === 'object')
+	// AppMobi.notification.showBusyIndicator();
+	// if (!dialogResult) {
+	// viewModel.loadPanelVisible(false);
+	// AppMobi.notification.hideBusyIndicator();
+	// return;
+	// }
+	// var tokenId = window.sessionStorage.getItem("MyTokenId");
+	// var newPrice = Number(viewModel.editPrice().toString().replace(/,/g, ''));
+	// var newWeight = Number(viewModel.editWeight().toString().replace(/,/g, ''));
+	// var domain = window.sessionStorage.getItem("domain");
+	// var url = domain + "/api/mobile/UpdateProduct";
+	// return $.post(url, {
+	// TokenId : tokenId,
+	// Id : viewModel.dataItem().id,
+	// Name : viewModel.editName(),
+	// Weight : newWeight,
+	// Price : newPrice,
+	// }, "json").done(function(data) {
+	// viewModel.loadPanelVisible(false);
+	// if ( typeof AppMobi === 'object')
+	// AppMobi.notification.hideBusyIndicator();
+	// viewModel.popupEditVisible(false);
+	// if (data.Flag !== true) {
+	// prepareLogout(data.Message);
+	// return;
+	// }
+	// productsStore.byKey(viewModel.dataItem().id).done(function(dataItem) {
+	// dataItem.name = viewModel.editName();
+	// dataItem.price = viewModel.editPrice();
+	// dataItem.weight = viewModel.editWeight();
+	// productsStore.update(dataItem.id, dataItem);
+	// });
+	// doReload(true);
+	// }).fail(function(jqxhr, textStatus, error) {
+	// viewModel.loadPanelVisible(false);
+	// if ( typeof AppMobi === 'object')
+	// AppMobi.notification.hideBusyIndicator();
+	// viewModel.popupEditVisible(false);
+	// DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+	// });
+	//
+	// });
+	// };
 
 	var dataArray = [];
 
@@ -272,7 +302,7 @@
 			if ( typeof AppMobi === 'object')
 				AppMobi.notification.hideBusyIndicator();
 			if (data.Flag !== true) {
-				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
+				prepareLogout(data.Message);
 				return;
 			}
 
@@ -288,7 +318,8 @@
 			var result = $.map(data.Data, function(item) {
 				var UpProductDate = convertDate(item.UpProductDate);
 				var today = new Date();
-				var UpProductDateDisplay = DateDiff.showDiff(today, UpProductDate);
+				var UpProductDateDisplay = Globalize.format(UpProductDate, 'HH:mm dd/MM/yyyy');
+				//DateDiff.showDiff(today, UpProductDate);
 				var UpdatedDate = convertDate(item.UpdatedDate);
 				UpdatedDateDisplay = Globalize.format(UpdatedDate, 'dd/MM/yyyy');
 				var price = numberWithCommas(item.Price);
@@ -302,15 +333,15 @@
 					quantity : item.Quantity,
 					weight : item.Weight,
 					storeSKU : item.StoreSku,
-					upProductDate : UpProductDate,
-					updatedDate : UpdatedDate,
+					upProductDate : item.UpProductDate,
+					updatedDate : item.UpdatedDate,
 					displayUpProductDate : showUpProductDate,
 					upProductDateDisplay : UpProductDateDisplay,
 					updatedDateDisplay : UpdatedDateDisplay,
 					stockAvailability : item.StockAvailability,
 					stockAvailabilityDisplay : item.StockAvailability ? 'Còn hàng' : 'Hết hàng',
 					noEdit : !item.CanEdit,
-					noUp : !item.CanUp || !item.StockAvailability,
+					noUp : !item.CanUp || !item.StockAvailability || (viewModel.totalscore() === 0),
 				};
 			});
 			productsStore.clear();
@@ -336,72 +367,41 @@
 	};
 
 	upProduct = function(id) {
-		var result = DevExpress.ui.dialog.confirm("Bạn có chắc muốn up sản phẩm?", "Sendo");
-		result.done(function(dialogResult) {
-			if (dialogResult) {
-				viewModel.loadPanelVisible(true);
-				if ( typeof AppMobi === 'object')
-					AppMobi.notification.showBusyIndicator();
-				var tokenId = window.sessionStorage.getItem("MyTokenId");
-				var domain = window.sessionStorage.getItem("domain");
-				var url = domain + "/api/mobile/UpProduct";
-				return $.post(url, {
-					TokenId : tokenId,
-					ProductId : id,
-				}, "json").done(function(upData, upTextStatus) {
-					viewModel.loadPanelVisible(false);
-					if ( typeof AppMobi === 'object')
-						AppMobi.notification.hideBusyIndicator();
-					if (upData.Flag !== true) {
-						DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
-						return;
-					}
-					viewModel.loadPanelVisible(true);
-					if ( typeof AppMobi === 'object')
-						AppMobi.notification.showBusyIndicator();
-					var domain = window.sessionStorage.getItem("domain");
-					var url = domain + "/api/mobile/ProductInfoById";
-					$.post(url, {
-						TokenId : tokenId,
-						Id : id,
-					}, "json").done(function(data) {
-						viewModel.loadPanelVisible(false);
-						if ( typeof AppMobi === 'object')
-							AppMobi.notification.hideBusyIndicator();
-						if (data.Flag !== true) {
-							DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
-							return;
-						}
-						var UpProductDate = convertDate(data.Data.UpProductDate);
-						var today = new Date();
-						var UpProductDateDisplay = DateDiff.showDiff(today, UpProductDate);
-
-						var UpdatedDate = convertDate(data.Data.UpdatedDate);
-						UpdatedDateDisplay = Globalize.format(UpdatedDate, 'dd/MM/yyyy');
-
-						productsStore.byKey(id).done(function(dataItem) {
-							dataItem.upProductDate = UpProductDate;
-							dataItem.upProductDateDisplay = UpProductDateDisplay;
-							dataItem.updatedDate = UpdatedDate;
-							dataItem.updatedDateDisplay = UpdatedDateDisplay;
-							dataItem.displayUpProductDate = true;
-							productsStore.remove(id);
-							productsStore.insert(dataItem);
-						});
-						doReload(true);
-					});
-				}).fail(function(jqxhr, textStatus, error) {
-					viewModel.loadPanelVisible(false);
-					if ( typeof AppMobi === 'object')
-						AppMobi.notification.hideBusyIndicator();
-					DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
-				});
+		if (viewModel.totalscore() === 0) {
+			DevExpress.ui.dialog.alert("Hết lượt up, bạn có thể vào ban.sendo.vn để mua thêm!", "Sendo.vn");
+			return;
+		}
+		/*var result = DevExpress.ui.dialog.confirm("Bạn có chắc muốn up sản phẩm?", "Sendo");
+		 result.done(function(dialogResult) {
+		 if (dialogResult) {*/
+		viewModel.loadPanelVisible(true);
+		if ( typeof AppMobi === 'object')
+			AppMobi.notification.showBusyIndicator();
+		var tokenId = window.sessionStorage.getItem("MyTokenId");
+		var domain = window.sessionStorage.getItem("domain");
+		var url = domain + "/api/mobile/UpProduct";
+		return $.post(url, {
+			TokenId : tokenId,
+			ProductId : id,
+		}, "json").done(function(upData, upTextStatus) {
+			if (data.Flag === true) {
+				DevExpress.ui.notify('Up sản phẩm thành công', 'success', 1000);
+				doLoadProducts();
+			} else {
+				DevExpress.ui.notify('Up sản phẩm thất bại, xin vui lòng thử lại sau.', 'error', 1000);
 			}
+		}).fail(function(jqxhr, textStatus, error) {
+			viewModel.loadPanelVisible(false);
+			if ( typeof AppMobi === 'object')
+				AppMobi.notification.hideBusyIndicator();
+			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
 		});
+
+		/*}
+		 );}*/
 	};
 
 	doReload = function(sortType) {
-		productsDataSource.pageIndex(0);
 		productsDataSource.sort([{
 			getter : 'upProductDate',
 			desc : true
@@ -409,6 +409,7 @@
 			getter : 'updatedDate',
 			desc : true
 		}]);
+		productsDataSource.pageIndex(0);
 		productsDataSource.load().done(function(results) {
 			loadImages();
 		});
@@ -432,24 +433,24 @@
 		loadImages();
 	};
 
-	updatePriceFormat = function() {
-		var priceBox = $("#priceBox").dxTextBox("instance");
-		priceBox.endUpdate();
-		var price = priceBox.option('value');
-		price = price.toString().replace(/,/g, '');
-		var newprice = numberWithCommas(price);
-		priceBox.option('value', newprice);
-		// viewModel.editPrice(newPrice);
-	};
-
-	updateWeightFormat = function() {
-		var weightBox = $("#weightBox").dxTextBox("instance");
-		weightBox.endUpdate();
-		var weight = weightBox.option('value');
-		weight = weight.toString().replace(/,/g, '');
-		var newweight = numberWithCommas(weight);
-		weightBox.option('value', newweight);
-	};
+	// updatePriceFormat = function() {
+	// var priceBox = $("#priceBox").dxTextBox("instance");
+	// priceBox.endUpdate();
+	// var price = priceBox.option('value');
+	// price = price.toString().replace(/,/g, '');
+	// var newprice = numberWithCommas(price);
+	// priceBox.option('value', newprice);
+	// // viewModel.editPrice(newPrice);
+	// };
+	//
+	// updateWeightFormat = function() {
+	// var weightBox = $("#weightBox").dxTextBox("instance");
+	// weightBox.endUpdate();
+	// var weight = weightBox.option('value');
+	// weight = weight.toString().replace(/,/g, '');
+	// var newweight = numberWithCommas(weight);
+	// weightBox.option('value', newweight);
+	// };
 
 	return viewModel;
 };

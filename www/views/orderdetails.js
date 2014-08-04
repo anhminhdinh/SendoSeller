@@ -12,6 +12,7 @@
 		}),
 		viewShown : function(e) {
 			//this.title("Đơn hàng " + this.id);
+			window.sessionStorage.setItem("ViewDetails", true);
 			viewModel.ordersStore.byKey(this.id).done(function(dataItem) {
 				viewModel.totalAmount(dataItem.totalAmount);
 				viewModel.orderId(dataItem.orderId);
@@ -49,7 +50,7 @@
 				viewModel.shippingFee(numberWithCommas(dataItem.shippingFee));
 				viewModel.sendoShippingSupport(numberWithCommas(dataItem.sendoShippingSupport));
 				viewModel.voucher(numberWithCommas(dataItem.voucher));
-				viewModel.shopShippingSupport(numberWithCommas(dataItem.shopSupportFeeToBuyer));
+				viewModel.shopShippingSupport(numberWithCommas(dataItem.shopShippingSupport));
 				switch (dataItem.paymentStatus) {
 					case 2:
 						viewModel.paymentStatus("Đã thanh toán COD");
@@ -106,7 +107,7 @@
 
 				viewModel.dataItem(dataItem);
 			}).fail(function(error) {
-				alert(JSON.stringify(error));
+				DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
 			});
 			viewModel.loadImages();
 		},
@@ -225,7 +226,6 @@
 
 						var orderRemove = viewModel.orderNumber();
 						viewModel.ordersStore.remove(orderRemove);
-						window.sessionStorage.removeItem("firstloadorder");
 						MyApp.app.back();
 						DevExpress.ui.notify('Huỷ đơn hàng thành công', 'success', 2000);
 					}).fail(function(jqxhr, textStatus, error) {
@@ -270,7 +270,6 @@
 						}
 						var orderRemove = viewModel.orderNumber();
 						viewModel.ordersStore.remove(orderRemove);
-						window.sessionStorage.removeItem("firstloadorder");
 						MyApp.app.back();
 						DevExpress.ui.notify('Xử lý đơn hàng thành công', 'success', 2000);
 					}).fail(function(jqxhr, textStatus, error) {
@@ -313,7 +312,6 @@
 						}
 						var orderRemove = viewModel.orderNumber();
 						viewModel.ordersStore.remove(orderRemove);
-						window.sessionStorage.removeItem("firstloadorder");
 						MyApp.app.back();
 						DevExpress.ui.notify('Hoãn một phần đơn hàng thành công', 'success', 2000);
 					}).fail(function(jqxhr, textStatus, error) {
@@ -354,7 +352,6 @@
 						}
 						var orderRemove = viewModel.orderNumber();
 						viewModel.ordersStore.remove(orderRemove);
-						window.sessionStorage.removeItem("firstloadorder");
 						MyApp.app.back();
 						DevExpress.ui.notify('Hoãn đơn hàng thành công', 'success', 2000);
 					}).fail(function(jqxhr, textStatus, error) {

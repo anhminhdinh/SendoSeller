@@ -37,7 +37,7 @@
 			if ( typeof AppMobi === 'object')
 				AppMobi.notification.hideBusyIndicator();
 			if (data.Flag !== true) {
-				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
+				prepareLogout(data.Message);
 				return;
 			}
 			if (data.Data === null || data.Data.data === null || data.Data.data.length === 0)
@@ -111,7 +111,7 @@
 			if ( typeof AppMobi === 'object')
 				AppMobi.notification.hideBusyIndicator();
 			if (data.Flag !== true) {
-				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
+				prepareLogout(data.Message);
 				return;
 			}
 

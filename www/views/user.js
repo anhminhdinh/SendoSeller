@@ -14,28 +14,35 @@
 			localStorage.setItem(myUserName + "SavePassword", Boolean(viewModel.savePassword()));
 		},
 		isLoggedOut : ko.observable(false),
+		forced : params.id,
 		viewShowing : function() {
 			viewModel.loadPanelVisible(false);
 			if ( typeof AppMobi === 'object')
 				AppMobi.notification.hideBusyIndicator();
+
+			var myUserName = window.localStorage.getItem("UserName");
+			if (myUserName !== null) {
+				viewModel.username(myUserName);
+			}
+
+			var mySavePassword = localStorage.getItem(myUserName + 'SavePassword');
+			if (mySavePassword !== null) {
+				viewModel.savePassword(Boolean(mySavePassword));
+			}
+
+			var myPassword = window.localStorage.getItem(myUserName + "Password");
+			if (myPassword !== null) {
+				viewModel.pass(myPassword);
+			}
+
 			var tokenId = window.sessionStorage.getItem("MyTokenId");
 			var isLoggedOut = tokenId === null;
 			viewModel.isLoggedOut(isLoggedOut);
+
 			if (isLoggedOut) {
 				viewModel.toggleNavs(false);
-				var myUserName = window.localStorage.getItem("UserName");
-				if (myUserName !== null) {
-					viewModel.username(myUserName);
-					var myPassword = window.localStorage.getItem(myUserName + "Password");
-					var mySavePassword = localStorage.getItem(myUserName + 'SavePassword');
-					if (mySavePassword !== null) {
-						viewModel.savePassword(Boolean(mySavePassword));
-					}
-					if (myPassword !== null) {
-						viewModel.pass(myPassword);
-						viewModel.dologin();
-					}
-				}
+				if (myUserName !== null && myPassword !== null)
+					viewModel.dologin();
 			} else {
 				viewModel.dologout();
 			}
@@ -68,7 +75,7 @@
 				if ( typeof AppMobi === 'object')
 					AppMobi.notification.hideBusyIndicator();
 				if (data.Flag !== true) {
-					DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
+					prepareLogout(data.Message);
 					return;
 				}
 				if (data.Data.StoreStatus !== 2) {
@@ -122,41 +129,48 @@
 			});
 		},
 		dologout : function() {
-			var result = DevExpress.ui.dialog.confirm("Bạn có chắc muốn đăng xuất?", "Sendo.vn");
-			result.done(function(dialogResult) {
-				if (dialogResult) {
-					viewModel.loadPanelVisible(true);
-					if ( typeof AppMobi === 'object')
-						AppMobi.notification.showBusyIndicator();
-					var domain = window.sessionStorage.getItem("domain");
-					var url = domain + "/api/mobile/logout";
-					return $.post(url, {
-						TokenId : window.sessionStorage.getItem("MyTokenId")
-					}, "json").done(function(data, textStatus) {
-						viewModel.loadPanelVisible(false);
-						if ( typeof AppMobi === 'object')
-							AppMobi.notification.hideBusyIndicator();
-						if (data.Flag !== true) {
-							DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
-							return;
-						}
-						window.sessionStorage.removeItem("MyTokenId");
-						window.sessionStorage.removeItem("firstloadorder");
-						viewModel.isLoggedOut(true);
-						viewModel.toggleNavs(false);
-						MyApp.app.navigation[3].option('title', 'Đăng nhập');
-						
-						window.plugins.pushNotification.unregister(null, null, null);
-						//textStatus contains the status: success, error, etc
-					}).fail(function(jqxhr, textStatus, error) {
-						DevExpress.ui.dialog.alert("Đăng xuất thất bại!", "Sendo.vn");
-						viewModel.loadPanelVisible(false);
-						if ( typeof AppMobi === 'object')
-							AppMobi.notification.hideBusyIndicator();
-					});
-				}
-			});
+			if (viewModel.forced === "forced") {
+				viewModel.doRealLogout();
+			} else {
+				var result = DevExpress.ui.dialog.confirm("Bạn có chắc muốn đăng xuất?", "Sendo.vn");
+				result.done(function(dialogResult) {
+					if (dialogResult) {
+						viewModel.doRealLogout();
+					}
+				});
+			}
 		},
+		doRealLogout : function() {
+			viewModel.loadPanelVisible(true);
+			if ( typeof AppMobi === 'object')
+				AppMobi.notification.showBusyIndicator();
+			var domain = window.sessionStorage.getItem("domain");
+			var url = domain + "/api/mobile/logout";
+			return $.post(url, {
+				TokenId : window.sessionStorage.getItem("MyTokenId")
+			}, "json").done(function(data, textStatus) {
+				viewModel.loadPanelVisible(false);
+				if ( typeof AppMobi === 'object')
+					AppMobi.notification.hideBusyIndicator();
+				if (data.Flag !== true) {
+					prepareLogout(data.Message);
+					return;
+				}
+				window.sessionStorage.removeItem("MyTokenId");
+				viewModel.isLoggedOut(true);
+				viewModel.toggleNavs(false);
+				MyApp.app.navigation[3].option('title', 'Đăng nhập');
+
+				window.plugins.pushNotification.unregister(null, null, null);
+				//textStatus contains the status: success, error, etc
+			}).fail(function(jqxhr, textStatus, error) {
+				DevExpress.ui.dialog.alert("Đăng xuất thất bại!\nBạn phải tắt ứng dụng rồi bật lại.", "Sendo.vn");
+				viewModel.loadPanelVisible(false);
+				if ( typeof AppMobi === 'object')
+					AppMobi.notification.hideBusyIndicator();
+			});
+
+		}
 	};
 	return viewModel;
 };

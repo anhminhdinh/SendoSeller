@@ -8,19 +8,97 @@ function errorHandler(error) {
 }
 
 // iOS
+function tokenHandler(result) {
+	// Your iOS push server needs to know the token before it can push to this device
+	// here is where you might want to send it the token for later use.
+	// console.log('device token = ' + result);
+	// alert('device token = ' + result);
+	var platform = DevExpress.devices.real().platform;
+	var isAndroid = platform === 'android';
+
+	var tokenId = window.sessionStorage.getItem("MyTokenId");
+	var domain = window.sessionStorage.getItem("domain");
+	var url = domain + "/api/mobile/APIAddAccount";
+	return $.post(url, {
+		TokenId : tokenId,
+		Registration_ids : result,
+		IsAndroid : isAndroid
+	}, "json").done(function(data) {
+	});
+
+}
+
+showCustomDialog = function(message, newPage, dataString) {
+	var view = function() {
+		return "View";
+	};
+	var cancel = function() {
+		return "Cancel";
+	};
+	var customDialog = DevExpress.ui.dialog.custom({
+		title : "Sendo.vn",
+		message : message,
+		buttons : [{
+			text : "Xem",
+			clickAction : view
+		}, {
+			text : "Bỏ qua",
+			clickAction : cancel
+		}]
+	});
+	customDialog.show().done(function(dialogResult) {
+		if (dialogResult === "View") {
+			console.log("will go to " + newPage + "/" + dataString);
+			MyApp.app.navigate({
+				view : newPage,
+				id : dataString,
+			}, {
+				root : true
+			});
+		}
+	});
+};
+
 function onNotificationAPN(event) {
-	if (event.alert) {
-		navigator.notification.alert(event.alert);
+	var pushMessage = event.alert;
+	var index = pushMessage.indexOf('#');
+	if (index < 0) {
+		return;
+	}
+	var datas = pushMessage.split('#');
+	if (datas.length < 2) {
+		return;
+	}
+	if (window.sessionStorage.getItem("MyTokenId") !== null) {
+		var newPage = "orders";
+		var dataString = "" + datas[1];
+
+		if (dataString.indexOf("chat") === 0) {
+			newPage = "chats";
+			dataString = dataString.replace("chat", "");
+			dataString = dataString.replace("_", "");
+		} else if (dataString.indexOf("Order") >= 0) {
+		}
+		if (dataString.indexOf("info") < 0) {
+			showCustomDialog(datas[0], newPage, dataString);
+		} else {
+			DevExpress.ui.dialog.alert(datas[0], "Sendo");
+		}
 	}
 
-	if (event.sound) {
-		var snd = new Media(event.sound);
-		snd.play();
-	}
-
-	if (event.badge) {
-		pushNotification.setApplicationIconBadgeNumber(successHandler, errorHandler, event.badge);
-	}
+	// alert(JSON.stringify(event));
+	/*
+	 if (event.alert) {
+	 navigator.notification.alert(event.alert);
+	 }
+	 if (event.sound) {
+	 var snd = new Media(event.sound);
+	 snd.play();
+	 }
+	 if (event.badge) {
+	 pushNotification.setApplicationIconBadgeNumber(successHandler, errorHandler, event.badge);
+	 }
+	 */
 }
 
 // Android and Amazon Fire OS
@@ -32,6 +110,18 @@ function onNotificationGCM(e) {
 				// here is where you might want to send it the regID for later use.
 				console.log("regID = " + e.regid);
 				// alert(e.regid);
+				var platform = DevExpress.devices.real().platform;
+				var isAndroid = platform === 'android';
+
+				var tokenId = window.sessionStorage.getItem("MyTokenId");
+				var domain = window.sessionStorage.getItem("domain");
+				var url = domain + "/api/mobile/APIAddAccount";
+				return $.post(url, {
+					TokenId : tokenId,
+					Registration_ids : e.regid,
+					IsAndroid : isAndroid
+				}, "json").done(function(data) {
+				});
 			}
 			break;
 
@@ -55,22 +145,15 @@ function onNotificationGCM(e) {
 				var dataString = "" + e.payload.data;
 				if (dataString.indexOf("chat") === 0) {
 					newPage = "chats";
-					dataString.replace("chat", "");
-					dataString.replace("_", "");
-				} else if (dataString.indexOf("newOrder") === 0) {
-					dataString.replace("newOrder_", "");
+					dataString = dataString.replace("chat", "");
+					dataString = dataString.replace("_", "");
+				} else if (dataString.indexOf("Order") >= 0) {
 				}
-				var result = DevExpress.ui.dialog.confirm(e.payload.message, "Sendo");
-				result.done(function(dialogResult) {
-					if (dialogResult) {
-						MyApp.app.navigate({
-							view : newPage,
-							id : dataString,
-						}, {
-							root : true
-						});
-					}
-				});
+				if (dataString.indexOf("info") < 0) {
+					showCustomDialog(e.payload.message, newPage, dataString);
+				} else {
+					DevExpress.ui.dialog.alert(e.payload.message, "Sendo");
+				}
 			}
 			// alert(JSON.stringify(e));
 			// DevExpress.ui.notify(e.payload.message + ' ' + e.payload.msgcnt + ' ' + e.payload.data, 'info', 2000);

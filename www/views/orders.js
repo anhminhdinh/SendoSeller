@@ -60,11 +60,33 @@
 			var typeBar = $("#typeBar");
 			var typeBarHeight = typeBar.outerHeight();
 			obj.height(contentHeight - typeBarHeight);
-			if ((window.sessionStorage.getItem("firstloadorder") === null) || (window.sessionStorage.getItem("MustRefreshOrder") === true)) {
-				window.sessionStorage.setItem("firstloadorder", true);
-				window.sessionStorage.removeItem("MustRefreshOrder");
+
+			if ((viewModel.nextPageId() !== null) && (viewModel.nextPageId() !== undefined) && (viewModel.nextPageId() !== '')) {
+				var dataString = viewModel.nextPageId();
+				if (dataString.indexOf("splittedOrder") === 0) {
+					dataString = dataString.replace("splittedOrder", "");
+					dataString = dataString.replace("_", "");
+					viewModel.selectedOrder(SPLITTED_ORDER);
+				} else if (dataString.indexOf("delayOrder") === 0) {
+					dataString = dataString.replace("delayOrder", "");
+					dataString = dataString.replace("_", "");
+					viewModel.selectedOrder(DELAYED_ORDER);
+				} else if (dataString.indexOf("shippingOrder") === 0) {
+					dataString = dataString.replace("shippingOrder", "");
+					dataString = dataString.replace("_", "");
+					viewModel.selectedOrder(SHIPPING_ORDER);
+				} else if (dataString.indexOf("newOrder") === 0) {
+					dataString = dataString.replace("newOrder", "");
+					dataString = dataString.replace("_", "");
+					viewModel.selectedOrder(NEW_ORDER);
+				}
+				viewModel.nextPageId(dataString);
+			}
+			var mustNotRefresh = window.sessionStorage.getItem("ViewDetails");
+			if (mustNotRefresh === null) {
 				doLoadDataByOrderStatus(viewModel.selectedOrder());
 			} else {
+				window.sessionStorage.removeItem("ViewDetails");
 				refreshList(viewModel.selectedOrder());
 			}
 			// refreshList(NEW_ORDER);
@@ -248,6 +270,7 @@
 				// list.option('dataSource', results);
 				loadNextImages();
 				if ((viewModel.nextPageId() !== null) && (viewModel.nextPageId() !== undefined) && (viewModel.nextPageId() !== '')) {
+					// DevExpress.ui.dialog.alert(viewModel.nextPageId(), "Sendo");
 					MyApp.app.navigate({
 						view : "orderdetails",
 						id : viewModel.nextPageId(),
@@ -278,7 +301,7 @@
 					if ( typeof AppMobi === 'object')
 						AppMobi.notification.hideBusyIndicator();
 					if (data.Flag !== true) {
-						DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
+						prepareLogout(data.Message);
 						return;
 					}
 					var item = viewModel.dataItem();
@@ -317,7 +340,7 @@
 					if ( typeof AppMobi === 'object')
 						AppMobi.notification.hideBusyIndicator();
 					if (data.Flag !== true) {
-						DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
+						prepareLogout(data.Message);
 						return;
 					}
 					var item = viewModel.dataItem();
@@ -366,7 +389,7 @@
 					if ( typeof AppMobi === 'object')
 						AppMobi.notification.hideBusyIndicator();
 					if (data.Flag !== true) {
-						DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
+						prepareLogout(data.Message);
 						return;
 					}
 					var item = viewModel.dataItem();
@@ -408,7 +431,7 @@
 					if ( typeof AppMobi === 'object')
 						AppMobi.notification.hideBusyIndicator();
 					if (data.Flag !== true) {
-						DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
+						prepareLogout(data.Message);
 						return;
 					}
 					var item = viewModel.dataItem();
@@ -555,7 +578,7 @@
 			if ( typeof AppMobi === 'object')
 				AppMobi.notification.hideBusyIndicator();
 			if (data.Flag !== true) {
-				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
+				prepareLogout(data.Message);
 				return;
 			}
 
@@ -595,8 +618,8 @@
 					status : status,
 					orderId : Number(item.Id),
 					orderNumber : item.OrderNumber,
-					orderDate : itemOrderDate,
-					delayDate : itemDelayDate,
+					orderDate : item.OrderDate,
+					delayDate : item.DelayDate,
 					paymentMethod : item.PaymentMethod,
 					shippingMethod : item.ShippingType,
 					shippingFee : item.ShippingFee,

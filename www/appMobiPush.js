@@ -61,12 +61,11 @@ var receivedPush = function() {
 					var dataString = "" + msgObj.data;
 					if (dataString.indexOf("chat") === 0) {
 						newPage = "chats";
-						dataString.replace("chat_", "");
-						window.sessionStorage.setItem("MustRefreshChat", true);
+						dataString = dataString.replace("chat", "");
+						dataString = dataString.replace("_", "");
 					} else if (dataString.indexOf("newOrder") === 0) {
-						dataString.replace("newOrder", "");
-						dataString.replace("_", "");
-						window.sessionStorage.setItem("MustRefreshOrder", true);
+						dataString = dataString.replace("newOrder", "");
+						dataString = dataString.replace("_", "");
 					}
 
 					var result = DevExpress.ui.dialog.confirm(msgObj.msg, "Sendo");
@@ -93,8 +92,6 @@ var receivedPush = function() {
 		}
 		// }
 	} else {
-		window.sessionStorage.setItem("MustRefreshOrder", true);
-		window.sessionStorage.setItem("MustRefreshChat", true);
 	}
 
 	// alert("process pushes " + pushes.length);

@@ -80,6 +80,7 @@
 	}
 
 	doLoadChatIdsData = function() {
+		// viewModel.chatIdsStore().clear();
 		var obj = $("#chatidlist");
 		var list = obj.dxList("instance");
 		list.option('noDataText', '');
@@ -108,6 +109,7 @@
 				AppMobi.notification.hideBusyIndicator();
 			if (data.Flag !== true) {
 				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
+				prepareLogout();
 				return;
 			}
 			if (viewModel.loadFrom() === 0)
@@ -145,8 +147,8 @@
 					thumbnail : item.Product_thumb,
 					msg : message,
 					// isParent : item.IsParent,
-					updatedDate : updatedDate,
-					createdDate : date,
+					updatedDate : item.Time_update,
+					createdDate : item.Time,
 					totalComment : totalComment,
 					read : false,
 					customerName : name,
@@ -163,7 +165,6 @@
 					viewModel.chatIdsStore().insert(result[i]);
 				});
 			}
-			viewModel.chatsDataSource().pageIndex(0);
 			viewModel.chatIdsStore().load().done(function() {
 				viewModel.chatsDataSource().sort([{
 					getter : 'updatedDate',
@@ -172,15 +173,18 @@
 					getter : 'createdDate',
 					desc : true
 				}]);
-				viewModel.chatsDataSource().load();
-				loadChatsImages();
-				if ((viewModel.nextPageId() !== null) && (viewModel.nextPageId() !== undefined) && (viewModel.nextPageId() !== '')) {
-					MyApp.app.navigate({
-						view : "chatdetails",
-						id : viewModel.nextPageId(),
-					});
-					viewModel.nextPageId(null);
-				}
+				viewModel.chatsDataSource().pageIndex(0);
+				viewModel.chatsDataSource().load().done(function() {
+					loadChatsImages();
+					// DevExpress.ui.dialog.alert(viewModel.nextPageId(), "Sendo.vn");
+					if ((viewModel.nextPageId() !== null) && (viewModel.nextPageId() !== undefined) && (viewModel.nextPageId() !== '')) {
+						MyApp.app.navigate({
+							view : "chatdetails",
+							id : viewModel.nextPageId(),
+						});
+						viewModel.nextPageId(null);
+					}
+				});
 			});
 		}).fail(function(jqxhr, textStatus, error) {
 			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");

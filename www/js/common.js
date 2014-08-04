@@ -92,3 +92,18 @@ var DateDiff = {
 		return Globalize.format(d2, 'dd/MM/yyyy');
 	}
 };
+
+function prepareLogout(message) {
+	if (message === 'Bạn không có quyền truy cập') {
+		DevExpress.ui.dialog.alert(message + " - Bạn sẽ phải đăng nhập lại để dùng tiếp ứng dụng");
+		MyApp.app.navigate({
+			view : "user",
+			id : "forced",
+		}, {
+			root : true
+		});
+	} else {
+		DevExpress.ui.dialog.alert(message);
+	}
+}
+
