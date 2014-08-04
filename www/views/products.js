@@ -1,7 +1,6 @@
 ﻿MyApp.products = function(params) {
 	var LOADSIZE = 100;
 	var viewModel = {
-		// dataSource : ko.observableArray(),
 		totalscore : ko.observable(0),
 		score : ko.observable(0),
 		autoscore : ko.observable(0),
@@ -30,11 +29,6 @@
 			obj = $("#productsList");
 			var listHeight = contentHeight - topbarHeight - searchbarHeight;
 			obj.height(listHeight);
-			// var list = obj.dxList("instance");
-			// list.option('showNextButton', isAndroid);
-			// if (isAndroid)
-			// list.option('useNativeScrolling', false);
-			// list.option('pullRefreshEnabled', !isAndroid);
 			currentLoadStart = 0;
 			doLoadProducts();
 		},
@@ -64,18 +58,6 @@
 		},
 		actionSheetVisible : ko.observable(false),
 		dataItem : ko.observable(),
-		// popupEditVisible : ko.observable(false),
-		// editName : ko.observable(''),
-		// editPrice : ko.observable(0),
-		// editWeight : ko.observable(0),
-		//
-		// showEditName : ko.observable(''),
-		// showEditPrice : ko.observable(0),
-		// showEditWeight : ko.observable(0),
-		// showEditThumb : ko.observable(''),
-		// hideEditPopup : function(e) {
-		// this.popupEditVisible(false);
-		// },
 	};
 
 	var currentLoadStart = 0;
@@ -85,25 +67,9 @@
 			view : "productedit",
 			id : itemData.id,
 		});
-
-		// viewModel.popupEditVisible(true);
-		// productsStore.byKey(itemData.id).done(function(dataItem) {
-		// viewModel.dataItem(dataItem);
-		// viewModel.editName(dataItem.name);
-		// viewModel.editPrice(dataItem.price);
-		// viewModel.editWeight(dataItem.weight);
-		//
-		// viewModel.showEditName(dataItem.name);
-		// viewModel.showEditPrice(dataItem.price);
-		// viewModel.showEditWeight(dataItem.weight);
-		// viewModel.showEditThumb(dataItem.thumbnail);
-		//
-		// });
-		// $("#nameBox").dxTextBox("instance").focus();
 	};
 
 	changeStockStatus = function(e, itemData) {
-		// e.jQueryEvent.stopPropagation();
 		var result = DevExpress.ui.dialog.confirm("Bạn có chắc muốn thay đổi trạng thái còn / hết hàng?", "Sendo");
 		result.done(function(dialogResult) {
 			if (dialogResult) {
@@ -181,69 +147,6 @@
 		});
 	};
 
-	// changeProductProperties = function() {
-	// if (viewModel.editName() === '') {
-	// DevExpress.ui.notify('Tên sản phẩm không được để trống', 'error', 2000);
-	// $("#nameBox").dxTextBox("instance").focus();
-	// return;
-	// }
-	// if (viewModel.editPrice() === '') {
-	// DevExpress.ui.notify('Giá sản phẩm không được để trống', 'error', 2000);
-	// $("#priceBox").dxTextBox("instance").focus();
-	// return;
-	// }
-	// if (viewModel.editWeight() === '') {
-	// DevExpress.ui.notify('Khối lượng sản phẩm không được để trống', 'error', 2000);
-	// $("#weightBox").dxTextBox("instance").focus();
-	// return;
-	// }
-	// var result = DevExpress.ui.dialog.confirm("Bạn có chắc muốn sửa thông tin sản phẩm?", "Sendo");
-	// result.done(function(dialogResult) {
-	// viewModel.loadPanelVisible(true);
-	// if ( typeof AppMobi === 'object')
-	// AppMobi.notification.showBusyIndicator();
-	// if (!dialogResult) {
-	// viewModel.loadPanelVisible(false);
-	// AppMobi.notification.hideBusyIndicator();
-	// return;
-	// }
-	// var tokenId = window.sessionStorage.getItem("MyTokenId");
-	// var newPrice = Number(viewModel.editPrice().toString().replace(/,/g, ''));
-	// var newWeight = Number(viewModel.editWeight().toString().replace(/,/g, ''));
-	// var domain = window.sessionStorage.getItem("domain");
-	// var url = domain + "/api/mobile/UpdateProduct";
-	// return $.post(url, {
-	// TokenId : tokenId,
-	// Id : viewModel.dataItem().id,
-	// Name : viewModel.editName(),
-	// Weight : newWeight,
-	// Price : newPrice,
-	// }, "json").done(function(data) {
-	// viewModel.loadPanelVisible(false);
-	// if ( typeof AppMobi === 'object')
-	// AppMobi.notification.hideBusyIndicator();
-	// viewModel.popupEditVisible(false);
-	// if (data.Flag !== true) {
-	// prepareLogout(data.Message);
-	// return;
-	// }
-	// productsStore.byKey(viewModel.dataItem().id).done(function(dataItem) {
-	// dataItem.name = viewModel.editName();
-	// dataItem.price = viewModel.editPrice();
-	// dataItem.weight = viewModel.editWeight();
-	// productsStore.update(dataItem.id, dataItem);
-	// });
-	// doReload(true);
-	// }).fail(function(jqxhr, textStatus, error) {
-	// viewModel.loadPanelVisible(false);
-	// if ( typeof AppMobi === 'object')
-	// AppMobi.notification.hideBusyIndicator();
-	// viewModel.popupEditVisible(false);
-	// DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
-	// });
-	//
-	// });
-	// };
 
 	var dataArray = [];
 
@@ -433,24 +336,6 @@
 		loadImages();
 	};
 
-	// updatePriceFormat = function() {
-	// var priceBox = $("#priceBox").dxTextBox("instance");
-	// priceBox.endUpdate();
-	// var price = priceBox.option('value');
-	// price = price.toString().replace(/,/g, '');
-	// var newprice = numberWithCommas(price);
-	// priceBox.option('value', newprice);
-	// // viewModel.editPrice(newPrice);
-	// };
-	//
-	// updateWeightFormat = function() {
-	// var weightBox = $("#weightBox").dxTextBox("instance");
-	// weightBox.endUpdate();
-	// var weight = weightBox.option('value');
-	// weight = weight.toString().replace(/,/g, '');
-	// var newweight = numberWithCommas(weight);
-	// weightBox.option('value', newweight);
-	// };
 
 	return viewModel;
 };
