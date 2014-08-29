@@ -1,5 +1,5 @@
 ﻿<div data-options="dxView : { name: 'chats', title: 'HỎI & ĐÁP', secure: true } " >
-	<div data-bind="dxCommand: { id: 'refresh', icon: 'refresh', action: function() { doLoadChatIdsData(); }, visible: showRefresh }" ></div>
+	<div data-bind="dxCommand: { id: 'refresh', icon: 'refresh', action: function() { doLoadChatIdsData(true); }, visible: showRefresh }" ></div>
 	<div data-options="dxContent : { targetPlaceholder: 'content' } " >
 		<div data-bind="dxLoadPanel:{message: '', visible: loadPanelVisible }"></div>
 		<div id="chatidlist" data-bind="dxList:
@@ -7,7 +7,7 @@
 		autoPagingEnabled: true,
 		pageLoadingAction: function() { loadNextChats(); },
 		pullRefreshEnabled: true,
-		pullRefreshAction: function() { doLoadChatIdsData(); },
+		pullRefreshAction: function() { doLoadChatIdsData(true); },
 		noDataText: '',
 		pulledDownText: 'Thả để tải lại...',
 		pullingDownText: 'Kéo để tải lại...',
@@ -15,19 +15,20 @@
 		pageLoadingText: 'Đang tải ...',
 		refreshingText: 'Đang tải ...',
 		itemClickAction: function(e) { showChatDetails(e); },
-		grouped: true,
-		groupTemplate: 'statesGroup',
-		useNativeScrolling: !isAndroid
+		scrollAction: function(e) { scrolled(e); },
 		}">
+			<!-- grouped: true,
+			useNativeScrolling: isAndroid
+			groupTemplate: 'statesGroup',
 			<div class="listItem" data-options="dxTemplate:{ name:'statesGroup' }">
-				<div style="display: inline-block">
-					<img src="images/chat.png"></img>
-				</div>
-				<div style="display: inline-block">
-					<div style="color:red; font-size: medium;" data-bind="text: key"></div>
-				</div>
+			<div style="display: inline-block">
+			<img src="images/chat.png"></img>
 			</div>
-			<div data-options="dxTemplate : { name: 'item' } " style="padding: 0 10px; background-image: url('images/chervon.png'); background-repeat: no-repeat; background-position: right center;">
+			<div style="display: inline-block">
+			<div style="color:red; font-size: medium;" data-bind="text: key"></div>
+			</div>
+			</div> -->
+			<div data-options="dxTemplate : { name: 'item' } " style="background-color:white; padding: 0 10px; background-image: url('images/chervon.png'); background-repeat: no-repeat; background-position: right center;">
 				<table class="chats-list" width="90%" style="border-spacing: 0 5px; border-collapse: separate;">
 					<tbody>
 						<tr>

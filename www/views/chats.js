@@ -1,5 +1,5 @@
 ﻿MyApp.chats = function(params) {
-	var LOADSIZE = 100;
+	var LOADSIZE = 30;
 	var viewModel = {
 		// dataSource : ko.observableArray(),
 		nextPageId : ko.observable(params.id),
@@ -25,11 +25,11 @@
 					getter : 'createdDate',
 					desc : true
 				}],
-				postProcess : groupByData,
+				// postProcess : groupByData,
 				pageSize : LOADSIZE
 			}));
 
-			if (window.sessionStorage.getItem("MyTokenId") === null) {
+			if (window.sessionStorage.getItem("access_token") === null) {
 				MyApp.app.navigate({
 					view : "user",
 					id : undefined
@@ -50,15 +50,36 @@
 			// list.option('showNextButton', viewModel.isAndroid());
 			// list.option('pullRefreshEnabled', !isAndroid);
 			// list.option('autoPagingEnabled', !isAndroid);
-			var myUserName = window.localStorage.getItem("UserName");
-			if ((window.sessionStorage.getItem(myUserName + "firstloadchats") === null) || (window.sessionStorage.getItem("MustRefreshChat") === true)) {
-				window.sessionStorage.setItem(myUserName + "firstloadchats", true);
-				window.sessionStorage.removeItem("MustRefreshChat");
+			// var myUserName = window.localStorage.getItem("UserName");
+			// var firstLoad = window.sessionStorage.getItem(myUserName + "firstloadchats");
+			// console.log("firstLoad " + firstLoad);
+			// var mustRefresh = window.sessionStorage.getItem("MustRefreshChat");
+			// console.log("mustRefresh " + mustRefresh);
+			// if ((firstLoad === null) || (mustRefresh !== null)) {
+			// window.sessionStorage.setItem(myUserName + "firstloadchats", true);
+			// window.sessionStorage.removeItem("MustRefreshChat");
+			// doLoadChatIdsData(true);
+			// console.log("doLoadChatIdsData");
+			// } else {
+			var currentChatRefresh = window.sessionStorage.getItem("MustNotRefreshCurrentChat");
+			if (currentChatRefresh === null) {
 				doLoadChatIdsData();
+			} else {
+				window.sessionStorage.removeItem("MustNotRefreshCurrentChat");
+				var editedId = window.sessionStorage.getItem("editedChat");
+				var editedQuantity = window.sessionStorage.getItem("editedChatQuantity");
+				if (editedId !== null) {
+					viewModel.chatIdsStore().byKey(editedId).done(function(dataItem) {
+						dataItem.totalComment = editedQuantity;
+						viewModel.chatIdsStore().update(editedId, dataItem);
+						viewModel.chatsDataSource().load();
+					});
+				}
 			}
-
+			// }
 		},
 		loadPanelVisible : ko.observable(false),
+		endOfList : ko.observable(false),
 	};
 
 	function groupByData(data) {
@@ -79,8 +100,18 @@
 		return result;
 	}
 
-	doLoadChatIdsData = function() {
-		// viewModel.chatIdsStore().clear();
+	doLoadChatIdsData = function(restart, previous) {
+		if (restart === true) {
+			viewModel.loadFrom(0);
+		}
+		if (previous === true) {
+			var previousFrom = viewModel.loadFrom() - LOADSIZE;
+			if (previousFrom < 0)
+				previousFrom = 0;
+			viewModel.loadFrom(previousFrom);
+		}
+		viewModel.chatIdsStore().clear();
+
 		var obj = $("#chatidlist");
 		var list = obj.dxList("instance");
 		list.option('noDataText', '');
@@ -88,28 +119,35 @@
 		if ( typeof AppMobi === 'object')
 			AppMobi.notification.showBusyIndicator();
 		var myUserName = window.localStorage.getItem("UserName");
-		var tokenId = window.sessionStorage.getItem("MyTokenId");
 		var timeStamp = Number(window.localStorage.getItem(myUserName + "ListCommentTimeStamp"));
 		if (timeStamp === null)
 			timeStamp = 0;
 		var from = viewModel.loadFrom();
-		var to = viewModel.loadFrom() + LOADSIZE - 1;
-		if (from > 0)
+		var to = viewModel.loadFrom() + LOADSIZE;
+		if (from > 0 || restart === true)
 			timeStamp = 0;
 		var domain = window.sessionStorage.getItem("domain");
-		var url = domain + "/api/mobile/ListComment";
-		return $.post(url, {
-			TokenId : tokenId,
-			TimeStamp : timeStamp,
-			From : from,
-			To : to
-		}, "json").done(function(data, textStatus) {
+		var url = domain + "/api/Comment/ListComment";
+		return $.ajax({
+			type : 'POST',
+			dataType : "json",
+			contentType : "application/json",
+			url : url,
+			data : JSON.stringify({
+				TimeStamp : 0,
+				From : from,
+				To : to
+			}),
+			beforeSend : function(xhr) {
+				xhr.setRequestHeader('Authorization', 'Bearer ' + window.sessionStorage.getItem("access_token"));
+			},
+		}).done(function(data) {
+			// console.log(JSON.stringify(data));
 			viewModel.loadPanelVisible(false);
 			if ( typeof AppMobi === 'object')
 				AppMobi.notification.hideBusyIndicator();
 			if (data.Flag !== true) {
-				DevExpress.ui.dialog.alert(data.Message, "Sendo.vn");
-				prepareLogout();
+				prepareLogout(data.Message);
 				return;
 			}
 			if (viewModel.loadFrom() === 0)
@@ -117,6 +155,7 @@
 			viewModel.showRefresh(data.Data === null || data.Data.length === 0 || viewModel.isAndroid());
 
 			if ((data.Data === undefined) || (data.Data.data === undefined) || (data.Data.data.length === 0)) {
+				viewModel.endOfList(true);
 				viewModel.chatsDataSource().pageIndex(0);
 				viewModel.chatIdsStore().load().done(function() {
 					viewModel.chatsDataSource().sort([{
@@ -135,6 +174,7 @@
 				var date = convertDate(item.Time);
 				var name = item.Customer_name;
 				var message = item.Content;
+				message = message.replace(/([^\s-]{20})(?=[^\s-])/g, '$1 ');
 				var updatedDate = convertDate(item.Time_update);
 				var today = new Date();
 				var dateString = DateDiff.showDiff(today, updatedDate);
@@ -155,39 +195,44 @@
 					dateString : dateString,
 				};
 			});
-			for (var i = 0; i < result.length; i++) {
-				viewModel.chatIdsStore().byKey(result[i].id).done(function(dataItem) {
-					if (dataItem !== undefined)
-						viewModel.chatIdsStore().update(result[i].id, result[i]);
-					else
-						viewModel.chatIdsStore().insert(result[i]);
-				}).fail(function(error) {
-					viewModel.chatIdsStore().insert(result[i]);
-				});
-			}
-			viewModel.chatIdsStore().load().done(function() {
-				viewModel.chatsDataSource().sort([{
-					getter : 'updatedDate',
-					desc : true
-				}, {
-					getter : 'createdDate',
-					desc : true
-				}]);
-				viewModel.chatsDataSource().pageIndex(0);
-				viewModel.chatsDataSource().load().done(function() {
-					loadChatsImages();
-					// DevExpress.ui.dialog.alert(viewModel.nextPageId(), "Sendo.vn");
-					if ((viewModel.nextPageId() !== null) && (viewModel.nextPageId() !== undefined) && (viewModel.nextPageId() !== '')) {
-						MyApp.app.navigate({
-							view : "chatdetails",
-							id : viewModel.nextPageId(),
-						});
-						viewModel.nextPageId(null);
-					}
-				});
+			for (var i = 0; i < result.length; i++)
+				viewModel.chatIdsStore().insert(result[i]);
+
+			// for (var i = 0; i < result.length; i++) {
+			// viewModel.chatIdsStore().byKey(result[i].id).done(function(dataItem) {
+			// if (dataItem !== undefined) {
+			// viewModel.chatIdsStore().update(result[i].id, result[i]);
+			// } else
+			// viewModel.chatIdsStore().insert(result[i]);
+			// }).fail(function(error) {
+			// viewModel.chatIdsStore().insert(result[i]);
+			// });
+			// }
+			viewModel.endOfList(result.length < LOADSIZE);
+			viewModel.chatsDataSource().sort([{
+				getter : 'updatedDate',
+				desc : true
+			}, {
+				getter : 'createdDate',
+				desc : true
+			}]);
+			viewModel.chatsDataSource().pageIndex(0);
+			viewModel.chatsDataSource().load().done(function() {
+				setTimeout(function() {
+					DevExpress.ui.notify('Trang ' + (1 + (viewModel.loadFrom() / LOADSIZE)), 'info', 1000);
+				}, 500);
+				loadChatsImages();
+				// DevExpress.ui.dialog.alert(viewModel.nextPageId(), "Sendo.vn");
+				if ((viewModel.nextPageId() !== null) && (viewModel.nextPageId() !== undefined) && (viewModel.nextPageId() !== '')) {
+					MyApp.app.navigate({
+						view : "chatdetails",
+						id : viewModel.nextPageId(),
+					});
+					viewModel.nextPageId(null);
+				}
 			});
 		}).fail(function(jqxhr, textStatus, error) {
-			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+			prepareLogout("Lỗi mạng");
 			viewModel.loadPanelVisible(false);
 			if ( typeof AppMobi === 'object')
 				AppMobi.notification.hideBusyIndicator();
@@ -198,10 +243,10 @@
 	loadNextChats = function() {
 		var page = viewModel.chatsDataSource()._pageIndex;
 		var pageSize = viewModel.chatsDataSource()._pageSize;
-		var currentView = (page + 2) * pageSize;
-		if (currentView >= viewModel.loadFrom() + LOADSIZE - 1) {
-			doLoadChatIdsData();
+		var currentView = (page + 1) * pageSize;
+		if (currentView >= LOADSIZE) {
 			viewModel.loadFrom(viewModel.loadFrom() + LOADSIZE);
+			doLoadChatIdsData(false);
 		}
 		loadChatsImages();
 	};
@@ -223,6 +268,18 @@
 			view : 'chatdetails',
 			id : e.itemData.id
 		});
+	};
+
+	scrolled = function(e) {
+		/*if (viewModel.isAndroid() === true) {
+		 if (e.reachedBottom === true) {
+		 if (viewModel.endOfList() === true)
+		 if (viewModel.loadPanelVisible() === false)
+		 setTimeout(function() {
+		 DevExpress.ui.notify('Hết danh sách', 'info', 1000);
+		 }, 500);
+		 }
+		 }*/
 	};
 
 	return viewModel;

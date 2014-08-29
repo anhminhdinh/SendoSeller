@@ -1,14 +1,23 @@
 ﻿MyApp.productedit = function(params) {
 	var viewModel = {
 		viewShown : function() {
+			window.sessionStorage.setItem("mustNotRefreshProduct", true);
 			viewModel.loadPanelVisible(true);
-			var tokenId = window.sessionStorage.getItem("MyTokenId");
 			var domain = window.sessionStorage.getItem("domain");
-			var url = domain + "/api/mobile/ProductInfoById";
-			return $.post(url, {
-				TokenId : tokenId,
-				Id : params.id,
-			}, "json").done(function(data) {
+			var url = domain + "/api/Products/ProductInfoById";
+			return $.ajax({
+				type : 'POST',
+				dataType : "json",
+				contentType : "application/json",
+				url : url,
+				data : JSON.stringify({
+					Id : params.id,
+				}),
+				beforeSend : function(xhr) {
+					xhr.setRequestHeader('Authorization', 'Bearer ' + window.sessionStorage.getItem("access_token"));
+				},
+			}).done(function(data) {
+
 				viewModel.loadPanelVisible(false);
 				if ( typeof AppMobi === 'object')
 					AppMobi.notification.hideBusyIndicator();
@@ -28,7 +37,7 @@
 				viewModel.loadPanelVisible(false);
 				if ( typeof AppMobi === 'object')
 					AppMobi.notification.hideBusyIndicator();
-				DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+				prepareLogout("Lỗi mạng");
 			});
 
 		},
@@ -44,59 +53,91 @@
 	};
 
 	changeProductProperties = function() {
-		if (viewModel.editName() === '') {
-			DevExpress.ui.notify('Tên sản phẩm không được để trống', 'error', 2000);
-			$("#nameBox").dxTextBox("instance").focus();
-			return;
-		}
-		if (viewModel.editPrice() === '') {
-			DevExpress.ui.notify('Giá sản phẩm không được để trống', 'error', 2000);
-			$("#priceBox").dxTextBox("instance").focus();
-			return;
-		}
-		if (viewModel.editWeight() === '') {
-			DevExpress.ui.notify('Khối lượng sản phẩm không được để trống', 'error', 2000);
-			$("#weightBox").dxTextBox("instance").focus();
-			return;
-		}
-		var result = DevExpress.ui.dialog.confirm("Bạn có chắc muốn sửa thông tin sản phẩm?", "Sendo");
-		result.done(function(dialogResult) {
-			viewModel.loadPanelVisible(true);
-			if ( typeof AppMobi === 'object')
-				AppMobi.notification.showBusyIndicator();
-			if (!dialogResult) {
-				viewModel.loadPanelVisible(false);
-				AppMobi.notification.hideBusyIndicator();
+		setTimeout(function() {
+			if (viewModel.editName() === '') {
+				DevExpress.ui.notify('Tên sản phẩm không được để trống', 'error', 2000);
+				$("#nameBox").dxTextBox("instance").focus();
 				return;
 			}
-			var tokenId = window.sessionStorage.getItem("MyTokenId");
-			var newPrice = Number(viewModel.editPrice().toString().replace(/,/g, ''));
-			var newWeight = Number(viewModel.editWeight().toString().replace(/,/g, ''));
-			var domain = window.sessionStorage.getItem("domain");
-			var url = domain + "/api/mobile/UpdateProduct";
-			return $.post(url, {
-				TokenId : tokenId,
-				Id : params.id,
-				Name : viewModel.editName(),
-				Weight : newWeight,
-				Price : newPrice,
-			}, "json").done(function(data) {
-				viewModel.loadPanelVisible(false);
+			if (viewModel.editPrice() === '') {
+				DevExpress.ui.notify('Giá sản phẩm không được để trống', 'error', 2000);
+				$("#priceBox").dxTextBox("instance").focus();
+				return;
+			}
+			if (!isNumber(viewModel.editPrice())) {
+				DevExpress.ui.notify('Giá sản phẩm phải là dạng số', 'error', 2000);
+				$("#priceBox").dxTextBox("instance").focus();
+				return;
+			}
+			if (viewModel.editWeight() === '') {
+				DevExpress.ui.notify('Khối lượng sản phẩm không được để trống', 'error', 2000);
+				$("#weightBox").dxTextBox("instance").focus();
+				return;
+			}
+			if (!isNumber(viewModel.editWeight())) {
+				DevExpress.ui.notify('Khối lượng sản phẩm phải là dạng số', 'error', 2000);
+				$("#weightBox").dxTextBox("instance").focus();
+				return;
+			}
+			if ((viewModel.editName() === viewModel.showEditName()) && (viewModel.editPrice() === viewModel.showEditPrice()) && (viewModel.editWeight() === viewModel.showEditWeight())) {
+				DevExpress.ui.notify('Chưa có thay đổi thông tin của sản phẩm', 'error', 2000);
+				$("#nameBox").dxTextBox("instance").focus();
+				return;
+			}
+
+			var result = DevExpress.ui.dialog.confirm("Bạn có chắc muốn sửa thông tin sản phẩm?", "Sendo");
+			result.done(function(dialogResult) {
+				viewModel.loadPanelVisible(true);
 				if ( typeof AppMobi === 'object')
-					AppMobi.notification.hideBusyIndicator();
-				if (data.Flag !== true) {
-					prepareLogout(data.Message);
+					AppMobi.notification.showBusyIndicator();
+				if (!dialogResult) {
+					viewModel.loadPanelVisible(false);
+					if ( typeof AppMobi === 'object')
+						AppMobi.notification.hideBusyIndicator();
 					return;
 				}
-				backToProduct();
-			}).fail(function(jqxhr, textStatus, error) {
-				viewModel.loadPanelVisible(false);
-				if ( typeof AppMobi === 'object')
-					AppMobi.notification.hideBusyIndicator();
-				DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
-			});
+				var newPrice = Number(viewModel.editPrice().toString().replace(/,/g, ''));
+				var newWeight = Number(viewModel.editWeight().toString().replace(/,/g, ''));
+				var domain = window.sessionStorage.getItem("domain");
+				var url = domain + "/api/Products/UpdateProduct";
+				return $.ajax({
+					type : 'POST',
+					dataType : "json",
+					contentType : "application/json",
+					url : url,
+					data : JSON.stringify({
+						Id : params.id,
+						Name : viewModel.editName(),
+						Weight : newWeight,
+						Price : newPrice,
+					}),
+					beforeSend : function(xhr) {
+						xhr.setRequestHeader('Authorization', 'Bearer ' + window.sessionStorage.getItem("access_token"));
+					},
+				}).done(function(data) {
+					// window.sessionStorage.removeItem("mustNotRefreshProduct");
+					viewModel.loadPanelVisible(false);
+					if ( typeof AppMobi === 'object')
+						AppMobi.notification.hideBusyIndicator();
+					if (data.Flag !== true) {
+						prepareLogout(data.Message);
+						return;
+					}
+					window.sessionStorage.setItem("editedProduct", params.id);
+					window.sessionStorage.setItem("editedProductName", viewModel.editName());
+					window.sessionStorage.setItem("editedProductPrice", viewModel.editPrice());
+					window.sessionStorage.setItem("editedProductWeight", viewModel.editWeight());
+					backToProduct();
+				}).fail(function(jqxhr, textStatus, error) {
+					viewModel.loadPanelVisible(false);
+					if ( typeof AppMobi === 'object')
+						AppMobi.notification.hideBusyIndicator();
+					prepareLogout("Lỗi mạng");
+				});
 
-		});
+			});
+		}, 500);
+
 	};
 
 	backToProduct = function() {
@@ -120,6 +161,25 @@
 		weight = weight.toString().replace(/,/g, '');
 		var newweight = numberWithCommas(weight);
 		weightBox.option('value', newweight);
+	};
+
+	checkNameEmpty = function() {
+		if (viewModel.editName().length === 0) {
+			$("#nameBox").dxTextBox("instance").focus();
+			return;
+		}
+	};
+	checkPriceEmpty = function() {
+		if (viewModel.editPrice().length === 0) {
+			$("#priceBox").dxTextBox("instance").focus();
+			return;
+		}
+	};
+	checkWeightEmpty = function() {
+		if (viewModel.editWeight().length === 0) {
+			$("#weightBox").dxTextBox("instance").focus();
+			return;
+		}
 	};
 
 	return viewModel;

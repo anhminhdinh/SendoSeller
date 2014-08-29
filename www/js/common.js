@@ -5,12 +5,27 @@ function convertDate(inputDateString) {
 	if ((dateString.indexOf("+") === -1) && (dateString.indexOf("Z") === -1))
 		dateString += 'Z';
 	var date = new Date(dateString);
+	// var mOffset = date.getTimezoneOffset() * 60 * 1000;
+	// var dTime = date.getTime();
+	// dTime += mOffset;
+	// date.setTime(dTime);
 	return date;
+}
+
+String.prototype.trunc = String.prototype.trunc ||
+function(n, useWordBoundary) {
+	var toLong = this.length > n, s_ = toLong ? this.substr(0, n - 1) : this;
+	s_ = useWordBoundary && toLong ? s_.substr(0, s_.lastIndexOf(' ')) : s_;
+	return toLong ? s_ + '&hellip;' : s_;
+};
+
+function isNumber(obj) {
+	return !isNaN(parseFloat(obj));
 }
 
 function registerPush() {
 	if ( typeof AppMobi === 'object') {
-		DevExpress.ui.notify('Đăng ký tin nhắn nhanh từ Sendo', 'info', 2000);
+		//DevExpress.ui.notify('Đăng ký tin nhắn nhanh từ Sendo', 'info', 2000);
 		var myUserName = window.localStorage.getItem("UserName");
 		var didAddPushUser = window.localStorage.getItem(myUserName + "didAddPushUser");
 		if (didAddPushUser === null) {
@@ -21,13 +36,13 @@ function registerPush() {
 		}
 	} else {
 		var pushNotification = window.plugins.pushNotification;
-		DevExpress.ui.notify('Đăng ký tin nhắn nhanh từ Cordova cho ' + window.device.platform, 'info', 200);
+		//DevExpress.ui.notify('Đăng ký tin nhắn nhanh từ Cordova cho ' + window.device.platform, 'info', 200);
 		if (device.platform == 'android' || device.platform == 'Android') {
 			pushNotification.register(successHandler, errorHandler, {
 				"senderID" : "1017201532317",
 				"ecb" : "onNotificationGCM"
 			});
-			DevExpress.ui.notify('Đăng ký tin nhắn nhanh từ Cordova cho Android', 'info', 2000);
+			// DevExpress.ui.notify('Đăng ký tin nhắn nhanh từ Cordova cho Android', 'info', 2000);se {
 		} else {
 			pushNotification.register(tokenHandler, errorHandler, {
 				"badge" : "true",
@@ -35,6 +50,7 @@ function registerPush() {
 				"alert" : "true",
 				"ecb" : "onNotificationAPN"
 			});
+			DevExpress.ui.notify('Đăng ký tin nhắn nhanh', 'info', 1000);
 		}
 	}
 
@@ -94,16 +110,19 @@ var DateDiff = {
 };
 
 function prepareLogout(message) {
-	if (message === 'Bạn không có quyền truy cập') {
-		DevExpress.ui.dialog.alert(message + " - Bạn sẽ phải đăng nhập lại để dùng tiếp ứng dụng");
-		MyApp.app.navigate({
-			view : "user",
-			id : "forced",
-		}, {
-			root : true
+	if (message === 'Bạn không có quyền truy cập' || (message === 'Lỗi mạng')) {
+		var result = DevExpress.ui.dialog.confirm("Bạn cần đăng nhập lại, bạn có muốn chuyển đến trang đăng nhập?", "Sendo");
+		result.done(function(dialogResult) {
+			if (dialogResult === true)
+				MyApp.app.navigate({
+					view : "user",
+					id : "forced",
+				}, {
+					root : true
+				});
 		});
 	} else {
-		DevExpress.ui.dialog.alert(message);
+		DevExpress.ui.dialog.alert(message, "Sendo.vn");
 	}
 }
 

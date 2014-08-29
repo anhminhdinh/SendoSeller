@@ -1,50 +1,68 @@
 <div data-options="dxView : { name: 'orders',title:'ĐƠN HÀNG', secure: true } " >
 	<!-- , title: 'Đơn hàng' -->
 	<div id="content" data-options="dxContent : { targetPlaceholder: 'content' } " >
-		<div id="typeBar" style="margin: 5px 2% 0 2%; padding: 7px; background-color: #04a89f; color: white; border-radius: 7px; overflow: hidden; ">
-			<!-- <div class="dx-icon-orders" style="background-size: 24px;"></div> -->
+		<!-- <div id="typeBar" style="margin: 5px 2% 0 2%; padding: 7px; background-color: #EE2D24; color: white; border-radius: 7px; overflow: hidden; ">
 			<div class="pv-order"></div>
 			<div data-bind="text:selectedOrderName" style="line-height: 24px; padding-left: 10px; float: left;"></div>
-		</div>
+		</div> -->
+		<div id="typeBar" class="default-button" style="width: 100%; text-align: left" data-bind="dxButton: {icon:'orders', text: selectedOrderName, clickAction: function() { showOrders(); }}"></div>
+		<table id="pvordersearchbar" class="pv-search" style="width:100%">
+			<tbody>
+				<tr>
+					<td data-bind="dxButton: {icon:'find', clickAction:function() {doSearchOrders();}}"></td>
+					<td width="100%"><div id="searchOrderBox"
+					data-bind="dxTextBox: {
+					showClearButton : true,
+					value: searchString,
+					placeholder: 'Tìm theo số điện thoại',
+					valueChangeAction: function () { checkSearchEmpty(); }
+					}"></div></td>
+				</tr>
+			</tbody>
+		</table>
 		<div id="ordersList" data-bind=" dxList: {
 		dataSource: ordersDataSource,
-		grouped: true,
-		autoPagingEnabled: true,
 		pageLoadingAction: function() { loadNextOrders(); },
 		pullRefreshEnabled: true,
-		pullRefreshAction: function() { doLoadDataByOrderStatus(selectedOrder()); },
+		pullRefreshAction: function() { doLoadDataByOrderStatus(selectedOrder(), false, true); },
 		noDataText: '',
 		pulledDownText: 'Thả để tải lại...',
 		pullingDownText: 'Kéo để tải lại...',
-		nextButtonText: 'Tải tiếp ...',
 		pageLoadingText: 'Đang tải tiếp ...',
 		refreshingText: 'Đang tải ...',
 		itemClickAction: function(e) { showDetailsData(e); },
-		groupTemplate: 'statesGroup',
-		useNativeScrolling: !isAndroid
+		scrollAction: function(e) { scrolled(e); },
 		}">
-			<div data-options="dxTemplate:{ name:'statesGroup' }" style="overflow:hidden">
-				<div style="float: left; margin-right: 5px;">
-					<img src="images/calendar.png" />
-				</div>
-				<div style="float: left;">
-					<div style="font-size: medium; font-weight: normal; color: #ee2d24;" data-bind="text: key"></div>
-				</div>
+			<!--
+			useNativeScrolling: isAndroid,
+			grouped: true,
+			groupTemplate: 'statesGroup',
+			autoPagingEnabled: true,-->
+			<!-- <div data-options="dxTemplate:{ name:'statesGroup' }" style="overflow:hidden">
+			<div style="float: left; margin-right: 5px;">
+			<img src="images/calendar.png" />
 			</div>
+			<div style="float: left;">
+			<div style="font-size: medium; font-weight: normal; color: #ee2d24;" data-bind="text: key"></div>
+			</div>
+			</div> -->
 			<!-- itemClickAction: function(e) { $root.showActionSheet(e); }, -->
-			<div style="padding: 3px 6px; background-color: white; box-shadow: 0 1px 4px #CFCFCF" data-options="dxTemplate : { name: 'item' }">
-				<div class="pv-title-item">
+			<!-- <div style="padding: 3px 6px; background-color: white; box-shadow: 0 1px 4px #CFCFCF" data-options="dxTemplate : { name: 'item' }">
+			<div data-bind="text:orderNumber"></div>
+			</div> -->
+
+			<div style="padding: 3px 6px; box-shadow: 0px 0px 2px 0px #000; margin-bottom: 10px;" data-options="dxTemplate : { name: 'item' }">
+				<div class="pv-title-item" data-bind="style: { color: orderTypeColor}">
 					<table>
 						<tbody>
 							<tr >
-								<td class="pv-order-code" width="auto" style="font-size: smaller; line-height: 32px;" data-bind="text:'#'+orderNumber"></td>
+								<td class="pv-order-code" width="auto" style="font-size: smaller; line-height: 32px;" data-bind="text:'#'+orderNumber + ' - ' + status"></td>
 								<td width="100%" class="order-total-amount" style="line-height: 32px;" data-bind="text:totalAmount + ' đ'"></td>
 							</tr>
 
 						</tbody>
 					</table>
 				</div>
-
 				<!-- ko foreach: products -->
 				<div class="products-info">
 					<table>
@@ -61,10 +79,6 @@
 							<tr class="pv-product-description">
 								<td data-bind="text:description"></td>
 							</tr>
-							<!-- <tr>
-							<td data-bind="text:weight + 'g'"></td>
-							</tr> -->
-
 						</tbody>
 					</table>
 				</div>
@@ -77,7 +91,8 @@
 		<div id="actionsheet" data-bind="dxActionSheet: {
 		dataSource: actionSheetData,
 		visible: actionSheetVisible,
-		showTitle : false,
+		showTitle : true,
+		title:'',
 		cancelText: 'Bỏ qua',
 		usePopover: true,
 		target : '#top'
@@ -87,21 +102,21 @@
 		visible: switchOrdersVisible,
 		showTitle : false,
 		usePopover: true,
-		target : '#topright'
+		target : '#typeBar'
 		}"></div>
 
-		<div class="popup" data-bind="dxPopup:{visible:popupDelayVisible, fullScreen:true, titleTemplate:'myDelayTitle'}">
+		<div class="popup" data-bind="dxPopup:{visible:popupDelayVisible, fullScreen:false, titleTemplate:'myDelayTitle'}">
 			<div data-options="dxTemplate: { name:'myDelayTitle' }">
 				<table style="border-spacing: 10px; border-collapse: separate;">
 					<tbody>
 						<tr height="36px">
-							<td class="transparent-button" data-bind="dxButton: {clickAction: hideDelayPopUp, icon:'back-arrow'}"></td>
+							<td class="transparent-button" data-bind="dxButton: {clickAction: hideDelayPopUp, icon:'close'}"></td>
 							<td width="100%" style="font-weight: bolder;white-space: pre-wrap; word-wrap: break-word;">Hoãn đơn hàng</td>
 						</tr>
 					</tbody>
 				</table>
 			</div>
-			<div data-options="dxTemplate:{name: 'content'}">
+			<div style="padding: 0 10px;" data-options="dxTemplate:{name: 'content'}">
 				<div class="dx-fieldset">
 					<div class="dx-field">
 						<div class="dx-field-label">
@@ -111,49 +126,32 @@
 						dxDateBox: { value: dateBoxValue, format: 'date' }"></div>
 					</div>
 				</div>
-				<div class="product-popup-footer">
+				<div class="popup-split-footer" style="padding-bottom: 10px;">
 					<div class="default-button" data-bind="dxButton: { text: 'Hoãn', clickAction: function() {doDelayOrder();}, icon:'clock' }"></div>
 					<div class="default-button" data-bind="dxButton: { text: 'Huỷ hoãn', clickAction: hideDelayPopUp, icon: 'close' }"></div>
 				</div>
 			</div>
 		</div>
-		<div class="popup" data-bind="dxPopup:{visible:popupSplitVisible, fullScreen:true, titleTemplate:'mySplitTitle'}">
+		<div class="popup" data-bind="dxPopup:{visible:popupSplitVisible, fullScreen:false, titleTemplate:'mySplitTitle'}">
 			<div data-options="dxTemplate: { name:'mySplitTitle' }">
 				<table style="border-spacing: 10px; border-collapse: separate;">
 					<tbody>
 						<tr height="36px">
-							<td class="transparent-button" data-bind="dxButton: {clickAction: hideSplitPopUp, icon:'back-arrow'}"></td>
+							<td class="transparent-button" data-bind="dxButton: {clickAction: hideSplitPopUp, icon:'close'}"></td>
 							<td width="100%" style="font-weight: bolder;white-space: pre-wrap; word-wrap: break-word;">Chọn sản phẩm còn hàng</td>
 						</tr>
 					</tbody>
 				</table>
 			</div>
-			<div id="popupSplitContent" data-options="dxTemplate:{name: 'content'}">
-				<!-- <div id="popupSplitList" data-bind="dxList: {dataSource: productsToSplit,
-				}">
-				<div data-options="dxTemplate:{ name:'item' }">
-				<div>
-				<table>
-				<tbody>
-				<tr>
-				<td width="100%" style="font-weight: bolder;white-space: pre-wrap; word-wrap: break-word;" data-bind="text: name"></td>
-				<td data-bind="dxCheckBox: {checked:selected, valueChangeAction: splitCheckChanged}"></td>
-				</tr>
-				</tbody>
-				</table>
-				</div>
-				</div>
-				</div> -->
-				<div id="popupSplitList">
-					<div>
-						<table width="100%" style="background-color: #EFEFF4; box-shadow: 0 0 4px gray; border-collapse: separate; border-spacing: 10px">
+			<div style="padding: 0 10px;" id="popupSplitContent" data-options="dxTemplate:{name: 'content'}">
+				<div id="popupSplitList" data-bind=" dxList: { dataSource: productsToSplit}">
+					<div data-options="dxTemplate : { name: 'item' }">
+						<table width="100%">
 							<tbody>
-								<!-- ko foreach: productsToSplit -->
 								<tr height="36px">
 									<td width="100%" style="font-weight: bolder;white-space: pre-wrap; word-wrap: break-word;" data-bind="text: name"></td>
 									<td data-bind="dxCheckBox: {checked:selected, valueChangeAction: splitCheckChanged}"></td>
 								</tr>
-								<!-- /ko -->
 							</tbody>
 						</table>
 					</div>
@@ -168,5 +166,5 @@
 		<div id="topright" style="display:block; position: absolute; top: 0; right:30px; height: 0;"></div>
 	</div>
 	<div data-bind="dxCommand: { id: 'refresh', icon: 'refresh', action: function() { refresh(); }, visible:showRefresh }" ></div>
-	<div id="switchOrdersMenu" data-bind="dxCommand: { id: 'switchorder', icon: 'overflow', action: function() { showOrders(); } }" ></div>
+	<!--<div id="switchOrdersMenu" data-bind="dxCommand: { id: 'switchorder', icon: 'overflow', action: function() { showOrders(); } }" ></div>-->
 </div>

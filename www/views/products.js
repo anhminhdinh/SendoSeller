@@ -1,14 +1,45 @@
 ﻿MyApp.products = function(params) {
-	var LOADSIZE = 100;
+	var LOADSIZE = 30;
 	var viewModel = {
 		totalscore : ko.observable(0),
 		score : ko.observable(0),
 		autoscore : ko.observable(0),
 		isAndroid : ko.observable(false),
 		viewShowing : function() {
+			if (window.sessionStorage.getItem("mustNotRefreshProduct") === null) {
+				productsStore.clear();
+				productsDataSource.load();
+				viewModel.totalscore(0);
+				viewModel.score(0);
+				viewModel.autoscore(0);
+			} else {
+				var id = window.sessionStorage.getItem("editedProduct");
+
+				if (id !== null) {
+					productsStore.byKey(id).done(function(dataItem) {
+						var name = window.sessionStorage.getItem("editedProductName");
+						var price = window.sessionStorage.getItem("editedProductPrice");
+						var weight = window.sessionStorage.getItem("editedProductWeight");
+
+						dataItem.noUp = true;
+						dataItem.noEdit = true;
+						dataItem.name = name;
+						dataItem.price = price;
+						dataItem.weight = weight;
+						productsStore.update(id, dataItem);
+						productsDataSource.load();
+						viewModel.loadPanelVisible(false);
+						window.sessionStorage.removeItem("editedProduct");
+						window.sessionStorage.removeItem("editedProductName");
+						window.sessionStorage.removeItem("editedProductPrice");
+						window.sessionStorage.removeItem("editedProductWeight");
+
+					});
+				}
+			}
 			var platform = DevExpress.devices.real().platform;
 			viewModel.isAndroid(platform === 'android' || platform === 'generic');
-			if (window.sessionStorage.getItem("MyTokenId") === null) {
+			if (window.sessionStorage.getItem("access_token") === null) {
 				MyApp.app.navigate({
 					view : "user",
 					id : undefined,
@@ -30,7 +61,10 @@
 			var listHeight = contentHeight - topbarHeight - searchbarHeight;
 			obj.height(listHeight);
 			currentLoadStart = 0;
-			doLoadProducts();
+			if (window.sessionStorage.getItem("mustNotRefreshProduct") === null)
+				doLoadProducts(true);
+			else
+				window.sessionStorage.removeItem("mustNotRefreshProduct");
 		},
 		loadPanelVisible : ko.observable(false),
 		searchString : ko.observable(''),
@@ -58,9 +92,11 @@
 		},
 		actionSheetVisible : ko.observable(false),
 		dataItem : ko.observable(),
+		endOfList : ko.observable(false),
+
 	};
 
-	var currentLoadStart = 0;
+	var currentLoadStart = 1;
 
 	edit = function(e, itemData) {
 		MyApp.app.navigate({
@@ -76,77 +112,55 @@
 				viewModel.loadPanelVisible(true);
 				if ( typeof AppMobi === 'object')
 					AppMobi.notification.showBusyIndicator();
-				var tokenId = window.sessionStorage.getItem("MyTokenId");
 				var domain = window.sessionStorage.getItem("domain");
-				var url = domain + "/api/mobile/UpdateProductStock";
-				return $.post(url, {
-					TokenId : tokenId,
-					Id : itemData.id,
-					StockAvailability : !itemData.stockAvailability,
-				}, "json").done(function(data) {
+				var url = domain + "/api/Products/UpdateProductStock";
+				return $.ajax({
+					type : 'POST',
+					dataType : "json",
+					contentType : "application/json",
+					url : url,
+					data : JSON.stringify({
+						Id : itemData.id,
+						StockAvailability : !itemData.stockAvailability,
+					}),
+					beforeSend : function(xhr) {
+						xhr.setRequestHeader('Authorization', 'Bearer ' + window.sessionStorage.getItem("access_token"));
+					},
+				}).done(function(data) {
 					viewModel.loadPanelVisible(false);
 					if ( typeof AppMobi === 'object')
 						AppMobi.notification.hideBusyIndicator();
-					if (data.Flag !== true) {
+					if (data.Flag === true) {
+						productsStore.byKey(itemData.id).done(function(dataItem) {
+							dataItem.stockAvailability = !itemData.stockAvailability;
+							dataItem.noUp = !dataItem.stockAvailability || dataItem.noEdit || (viewModel.totalscore() === 0);
+							productsStore.update(itemData.id, dataItem);
+							productsDataSource.sort({
+								getter : 'upProductDate',
+								desc : true
+							});
+							productsDataSource.load();
+							viewModel.loadPanelVisible(false);
+						});
+						// doLoadProducts(false);
+						DevExpress.ui.notify('Báo trạng thái sản phẩm thành công', 'success', 1000);
+					} else {
 						prepareLogout(data.Message);
 						return;
 					}
-					viewModel.loadPanelVisible(true);
-					if ( typeof AppMobi === 'object')
-						AppMobi.notification.showBusyIndicator();
-					var domain = window.sessionStorage.getItem("domain");
-					var url = domain + "/api/mobile/ProductInfoById";
-					$.post(url, {
-						TokenId : tokenId,
-						Id : itemData.id,
-					}, "json").done(function(data) {
-						viewModel.loadPanelVisible(false);
-						if ( typeof AppMobi === 'object')
-							AppMobi.notification.hideBusyIndicator();
-						if (data.Flag !== true) {
-							prepareLogout(data.Message);
-							return;
-						}
-						if (true) {
-							doLoadProducts();
-						} else {
-							var UpProductDate = convertDate(data.Data.UpProductDate);
-							var today = new Date();
-							var UpProductDateDisplay = DateDiff.showDiff(today, UpProductDate);
-
-							var UpdatedDate = convertDate(data.Data.UpdatedDate);
-							UpdatedDateDisplay = Globalize.format(UpdatedDate, 'dd/MM/yyyy');
-
-							productsStore.byKey(itemData.id).done(function(dataItem) {
-								dataItem.upProductDate = data.Data.UpProductDate;
-								dataItem.upProductDateDisplay = UpProductDateDisplay;
-								dataItem.updatedDate = data.Data.UpdatedDate;
-								dataItem.updatedDateDisplay = UpdatedDateDisplay;
-								dataItem.displayUpProductDate = UpProductDate.getFullYear() > 1;
-								dataItem.stockAvailability = data.Data.StockAvailability;
-								dataItem.stockAvailabilityDisplay = data.Data.StockAvailability ? 'Còn hàng' : 'Hết hàng';
-								dataItem.noEdit = !data.Data.CanEdit;
-								dataItem.noUp = !data.Data.CanUp || !data.Data.StockAvailability;
-								productsStore.remove(itemData.id);
-								productsStore.insert(dataItem);
-							});
-							doReload(true);
-						}
-					});
 					// doLoadDataByProductID();
 					//textStatus contains the status: success, error, etc
 				}).fail(function(jqxhr, textStatus, error) {
 					viewModel.loadPanelVisible(false);
 					if ( typeof AppMobi === 'object')
 						AppMobi.notification.hideBusyIndicator();
-					DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+					prepareLogout("Lỗi mạng");
 				});
 			} else {
 				doReload(true);
 			}
 		});
 	};
-
 
 	var dataArray = [];
 
@@ -160,14 +174,47 @@
 		sort : [{
 			getter : 'upProductDate',
 			desc : true
-		}, {
-			getter : 'updatedDate',
-			desc : true
 		}],
-		pageSize : 10
+		pageSize : LOADSIZE
 	});
 
-	doLoadProducts = function() {
+	doLoadUpCount = function(callback) {
+		var domain = window.sessionStorage.getItem("domain");
+		var url = domain + "/api/Products/ListUpProduct";
+		$.ajax({
+			type : 'POST',
+			dataType : "json",
+			contentType : "application/json",
+			url : url,
+			data : {
+			},
+			beforeSend : function(xhr) {
+				xhr.setRequestHeader('Authorization', 'Bearer ' + window.sessionStorage.getItem("access_token"));
+			},
+		}).done(function(data) {
+			if (data.Flag === true) {
+				viewModel.score(data.Data.Score);
+				viewModel.autoscore(data.Data.AutoScore);
+				viewModel.totalscore(viewModel.score() + viewModel.autoscore());
+				if (callback !== null && callback !== undefined)
+					callback();
+			}
+		}).fail(function() {
+		});
+	};
+	doLoadProducts = function(refresh, previous) {
+		viewModel.searchString(viewModel.searchString().trim());
+		if (refresh === true) {
+			currentLoadStart = 1;
+		}
+		if (previous === true) {
+			var oldStart = currentLoadStart - LOADSIZE;
+			if (oldStart < 1)
+				oldStart = 1;
+			currentLoadStart = oldStart;
+		}
+		productsStore.clear();
+		productsDataSource.load();
 		var listObj = $("#productsList");
 		var List = listObj.dxList('instance');
 		List.option('noDataText', '');
@@ -175,32 +222,27 @@
 		if ( typeof AppMobi === 'object')
 			AppMobi.notification.showBusyIndicator();
 		var myUserName = window.localStorage.getItem("UserName");
-		var tokenId = window.sessionStorage.getItem("MyTokenId");
-		var domain = window.sessionStorage.getItem("domain");
-		var url = domain + "/api/mobile/ListUpProduct";
-		$.post(url, {
-			TokenId : tokenId,
-		}, "json").done(function(data) {
-			if (data.Flag === true) {
-				viewModel.score(data.Data.Score);
-				viewModel.autoscore(data.Data.AutoScore);
-				viewModel.totalscore(viewModel.score() + viewModel.autoscore());
-			}
-		}).fail(function() {
-		});
-
-		var searchString = viewModel.searchString();
+		doLoadUpCount();
+		var searchString = viewModel.searchString().trim();
 		if (searchString === "")
 			searchString = "#";
 		var domain = window.sessionStorage.getItem("domain");
-		var url = domain + "/api/mobile/SearchProductByName";
-		return $.post(url, {
-			TokenId : tokenId,
-			Name : searchString,
-			From : currentLoadStart,
-			To : currentLoadStart + LOADSIZE - 1,
-			TimeStamp : 0,
-		}, "json").done(function(data) {
+		var url = domain + "/api/Products/SearchProductByName";
+		return $.ajax({
+			type : 'POST',
+			dataType : "json",
+			contentType : "application/json",
+			url : url,
+			data : JSON.stringify({
+				Name : searchString,
+				From : currentLoadStart,
+				To : currentLoadStart + LOADSIZE - 1,
+				TimeStamp : 0,
+			}),
+			beforeSend : function(xhr) {
+				xhr.setRequestHeader('Authorization', 'Bearer ' + window.sessionStorage.getItem("access_token"));
+			},
+		}).done(function(data) {
 			viewModel.loadPanelVisible(false);
 			if ( typeof AppMobi === 'object')
 				AppMobi.notification.hideBusyIndicator();
@@ -210,6 +252,7 @@
 			}
 
 			if ((data.Data === null) || (data.Data.length === 0)) {
+				viewModel.endOfList(true);
 				List.option('noDataText', 'Không tìm thấy sản phẩm nào phù hợp!');
 				doReload(true);
 				return;
@@ -236,7 +279,7 @@
 					quantity : item.Quantity,
 					weight : item.Weight,
 					storeSKU : item.StoreSku,
-					upProductDate : item.UpProductDate,
+					upProductDate : UpProductDate.getTime(),
 					updatedDate : item.UpdatedDate,
 					displayUpProductDate : showUpProductDate,
 					upProductDateDisplay : UpProductDateDisplay,
@@ -244,10 +287,10 @@
 					stockAvailability : item.StockAvailability,
 					stockAvailabilityDisplay : item.StockAvailability ? 'Còn hàng' : 'Hết hàng',
 					noEdit : !item.CanEdit,
-					noUp : !item.CanUp || !item.StockAvailability || (viewModel.totalscore() === 0),
+					noUp : !item.CanUp || !item.StockAvailability || (viewModel.totalscore() === 0) || !item.CanEdit,
 				};
 			});
-			productsStore.clear();
+			// productsStore.clear();
 			for (var i = 0; i < result.length; i++) {
 				productsStore.byKey(result[i].id).done(function(dataItem) {
 					if (dataItem !== undefined)
@@ -258,10 +301,11 @@
 					productsStore.insert(result[i]);
 				});
 			}
+			viewModel.endOfList(result.length < LOADSIZE);
 			doReload(true);
 
 		}).fail(function(jqxhr, textStatus, error) {
-			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+			prepareLogout("Lỗi mạng");
 			viewModel.loadPanelVisible(false);
 			if ( typeof AppMobi === 'object')
 				AppMobi.notification.hideBusyIndicator();
@@ -280,24 +324,56 @@
 		viewModel.loadPanelVisible(true);
 		if ( typeof AppMobi === 'object')
 			AppMobi.notification.showBusyIndicator();
-		var tokenId = window.sessionStorage.getItem("MyTokenId");
 		var domain = window.sessionStorage.getItem("domain");
-		var url = domain + "/api/mobile/UpProduct";
-		return $.post(url, {
-			TokenId : tokenId,
-			ProductId : id,
-		}, "json").done(function(upData, upTextStatus) {
+		var url = domain + "/api/Products/UpProduct";
+		return $.ajax({
+			type : 'POST',
+			dataType : "json",
+			contentType : "application/json",
+			url : url,
+			data : JSON.stringify({
+				ProductId : id,
+			}),
+			beforeSend : function(xhr) {
+				xhr.setRequestHeader('Authorization', 'Bearer ' + window.sessionStorage.getItem("access_token"));
+			},
+		}).done(function(data) {
 			if (data.Flag === true) {
-				DevExpress.ui.notify('Up sản phẩm thành công', 'success', 1000);
-				doLoadProducts();
+				if (data.Data.Warning !== '')
+					DevExpress.ui.notify("Up sản phẩm thành công - " + data.Data.Warning, 'success', 3000);
+				else
+					DevExpress.ui.notify("Up sản phẩm thành công", 'success', 1000);
+				viewModel.score(data.Data.Score);
+				viewModel.autoscore(data.Data.AutoScore);
+				viewModel.totalscore(viewModel.score() + viewModel.autoscore());
+				if (viewModel.totalscore() === 0)
+					doLoadProducts();
+				else
+					productsStore.byKey(id).done(function(dataItem) {
+						var today = new Date();
+						dataItem.upProductDate = today.getTime();
+						var UpProductDateDisplay = Globalize.format(today, 'HH:mm dd/MM/yyyy');
+						dataItem.upProductDateDisplay = UpProductDateDisplay;
+						dataItem.displayUpProductDate = true;
+						dataItem.noUp = dataItem.noUp || (viewModel.totalscore() === 0);
+						productsStore.update(id, dataItem);
+						productsDataSource.sort({
+							getter : 'upProductDate',
+							desc : true
+						});
+						productsDataSource.load();
+						viewModel.loadPanelVisible(false);
+					});
+				//
 			} else {
-				DevExpress.ui.notify('Up sản phẩm thất bại, xin vui lòng thử lại sau.', 'error', 1000);
+				viewModel.loadPanelVisible(false);
+				DevExpress.ui.notify(data.Message + ' - Xin vui lòng thử lại sau.', 'error', 1000);
 			}
 		}).fail(function(jqxhr, textStatus, error) {
 			viewModel.loadPanelVisible(false);
 			if ( typeof AppMobi === 'object')
 				AppMobi.notification.hideBusyIndicator();
-			DevExpress.ui.dialog.alert("Lỗi mạng, thử lại sau!", "Sendo.vn");
+			prepareLogout("Lỗi mạng");
 		});
 
 		/*}
@@ -308,13 +384,13 @@
 		productsDataSource.sort([{
 			getter : 'upProductDate',
 			desc : true
-		}, {
-			getter : 'updatedDate',
-			desc : true
 		}]);
 		productsDataSource.pageIndex(0);
 		productsDataSource.load().done(function(results) {
 			loadImages();
+			setTimeout(function() {
+				DevExpress.ui.notify('Trang ' + (1 + (currentLoadStart - 1 ) / LOADSIZE), 'info', 1000);
+			}, 500);
 		});
 	};
 
@@ -328,14 +404,25 @@
 	loadNextProducts = function() {
 		var page = productsDataSource._pageIndex;
 		var pageSize = productsDataSource._pageSize;
-		var currentView = (page + 2) * pageSize;
-		if (currentView >= currentLoadStart + LOADSIZE - 1) {
+		var currentView = (page + 1) * pageSize;
+		if (currentView >= LOADSIZE - 1) {
 			currentLoadStart += LOADSIZE;
-			doLoadProducts();
+			doLoadProducts(false);
 		}
 		loadImages();
 	};
 
+	scrolled = function(e) {
+		/*if (viewModel.isAndroid() === true) {
+		 if (e.reachedBottom === true) {
+		 if (viewModel.endOfList() === true)
+		 if (viewModel.loadPanelVisible() === false)
+		 setTimeout(function() {
+		 DevExpress.ui.notify('Hết danh sách', 'info', 1000);
+		 }, 500);
+		 }
+		 }*/
+	};
 
 	return viewModel;
 };

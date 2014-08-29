@@ -20,34 +20,38 @@
 			<table id="pvsearchbar" class="pv-search products-list" style="width:100%">
 				<tbody>
 					<tr>
-						<td data-bind="dxButton: {icon:'find', clickAction:doLoadProducts}"></td>
+						<td data-bind="dxButton: {icon:'find', clickAction:function() {doLoadProducts(true);}}"></td>
 						<td width="100%"><div id="searchBox"
 						data-bind="dxTextBox: {
 						showClearButton : true,
 						value: searchString,
 						placeholder: 'Tìm sản phẩm theo tên',
-						valueChangeAction: doLoadProducts
+						valueChangeAction: function () {doLoadProducts(true);}
 						}"></div></td>
-
 					</tr>
 				</tbody>
 			</table>
-
 		</div>
 		<div id="productsList" data-bind="dxList: { dataSource: productsDataSource,
 		autoPagingEnabled: true,
 		pageLoadingAction: function() { loadNextProducts(); },
 		pageLoadingText: 'Đang tải tiếp ...',
+		pullRefreshEnabled: true,
+		pullRefreshAction: function() { doLoadProducts(false, true); },
 		noDataText: '',
-		useNativeScrolling: !isAndroid
+		pulledDownText: 'Thả để tải lại...',
+		pullingDownText: 'Kéo để tải lại...',
+		refreshingText: 'Đang tải ...',
+		scrollAction: function(e) { scrolled(e); },
 		}">
+			<!-- useNativeScrolling: isAndroid -->
 			<div class="pv-list-item"data-options="dxTemplate : { name: 'item' }">
 				<div class="products-info-header" style="z-index: 1000; position: relative; margin-top: 10px;">
 					<table>
 						<tbody>
 							<tr>
 								<td width="100%" colspan="4" style="white-space: pre-wrap; word-wrap: break-word; text-align: left; font-weight: bold; font-size: 16px; padding: 5px;" data-bind="text: name"></td>
-								<td width="auto" valign="top" class="transparent-button" data-bind="dxButton: {icon:'edit', disabled: noEdit, clickAction: function(e) {edit(e, $data);}}"></td>
+								<td width="auto" valign="top" class="transparent-button" style="padding: 5px;" data-bind="dxButton: {icon:'edit', disabled: noEdit, clickAction: function(e) {edit(e, $data);}}"></td>
 							</tr>
 						</tbody>
 					</table>
@@ -75,12 +79,12 @@
 						<tbody>
 							<tr>
 								<!-- ko if:stockAvailability -->
-								<td class="pv" width="50%" class="default-button" data-bind="dxButton: {text:'BÁO HẾT HÀNG', clickAction: function(e) { changeStockStatus(e,$data); } }"></td>
+								<td width="50%" class="default-green-button" data-bind="dxButton: {text:'BÁO HẾT HÀNG', disabled:noEdit, clickAction: function(e) { changeStockStatus(e,$data); } }"></td>
 								<!-- /ko -->
 								<!-- ko ifnot:stockAvailability -->
-								<td class="pv" width="50%" class="default-button" data-bind="dxButton: {text:'BÁO CÒN HÀNG', clickAction: function(e) { changeStockStatus(e,$data); } }"></td>
+								<td width="50%" class="default-button" data-bind="dxButton: {text:'BÁO CÒN HÀNG', disabled:noEdit, clickAction: function(e) { changeStockStatus(e,$data); } }"></td>
 								<!-- /ko -->
-								<td class="pv" width="50%" class="default-button" data-bind="dxButton: {text:'UP TIN', disabled: noUp, clickAction: function() {upProduct(id);}}"></td>
+								<td width="50%" class="default-button" data-bind="dxButton: {icon: 'up-arrow', text:'UP TIN', disabled: noUp, clickAction: function() {upProduct(id);}}"></td>
 							</tr>
 						</tbody>
 					</table>

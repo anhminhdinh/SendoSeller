@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="fpt.sendoseller.vn" version="1.0.6" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+	<name>SendoSeller</name>
+	<description>Copyright @ 2013 Sendo.vn
+		Công ty Cổ phần Dịch vụ Trực tuyến FPT
+		Địa chỉ: Tầng 2 - Tòa nhà FPT Tân Thuận, Lô 29B-31B-33B, Đường Tân Thuận, KCX Tân Thuận, Phường Tân Thuận Đông, Quận 7, Tp.HCM. Số ĐKKD: 0305045911</description>
+	<author email="minhda@fpt.com.vn" href="http://ban.sendo.vn">Apache Cordova Team</author>
+	<content src="index.html" />
+	<access origin="*" />
+	<preference name="Orientation" value="portrait" />
+	<preference name="SplashScreen" value="screen" />
+	<preference name="SplashScreenDelay" value="8000" />
+</widget>

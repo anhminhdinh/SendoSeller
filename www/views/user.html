@@ -4,27 +4,34 @@
 		<div data-bind="dxScrollView: {}">
 			<!-- <img class="user-photo" src="images/logo-sendo.png" /> -->
 			<!-- <div align="center">
-				Ứng dụng quản trị dành cho người bán
+			Ứng dụng quản trị dành cho người bán
 			</div> -->
 			<div style="padding: 10px; margin: 10px; background-color: #e6e7eb; border-radius: 5px;">
 				<!-- ko if:isLoggedOut -->
 				<div class="dx-fieldset">
 					<div class="dx-field">
 						<div id="nameBox" data-bind="
-						dxTextBox: { mode:'email', placeholder: 'Tên người dùng', showClearButton : true, value:username }"></div>
+						dxTextBox: 
+						{ mode:'email', 
+						placeholder: 'Tên người dùng', 
+						showClearButton : true, 
+						value:username, 
+						keyUpAction: function() { checkPassword();},
+						valueUpdateEvent: 'keyup',
+						}"></div>
 					</div>
 					<div class="dx-field">
 						<div id="passBox" data-bind="
 						dxTextBox: { mode: 'password', placeholder: 'Mật khẩu', showClearButton : true, value:pass }"></div>
 					</div>
-					<div class="dx-field">
-						<div class="dx-field-label" style="width: 110px;" >
-							Lưu mật khẩu
-						</div>
-						<div class="dx-field-value" style="float: left;" width="44px" data-bind="dxCheckBox : { checked:savePassword, valueChangeAction: toggleSavePassword }">
-
-						</div>
+					<!-- <div class="dx-field">
+					<div class="dx-field-label" style="width: 110px;" >
+					Lưu mật khẩu
 					</div>
+					<div class="dx-field-value" style="float: left;" width="44px" data-bind="dxCheckBox : { checked:savePassword, valueChangeAction: toggleSavePassword }">
+
+					</div>
+					</div> -->
 				</div>
 				<!-- <table>
 				<tbody>

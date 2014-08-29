@@ -57,8 +57,11 @@
 			view : "user",
 			id : undefined
 		});
-		window.sessionStorage.setItem("domain", "http://ban.sendo.vn");
-		// window.sessionStorage.setItem("domain", "http://180.148.138.140/sellerTest2");
+		// window.sessionStorage.setItem("domain", "http://ban.sendo.vn");
+		// window.sessionStorage.setItem("domain", "http://180.148.138.140/sellerTest2");http://180.148.138.140/mobilesellertest2/api/mobile/ListSalesOrderByStatus
+		// window.sessionStorage.setItem("domain", "http://180.148.138.140/mobilesellertest2");
+		// window.sessionStorage.setItem("domain", "http://mobile.ban.sendo.vn");
+		window.sessionStorage.setItem("domain", "https://sapi.sendo.vn");
 		function onBackButton() {
 			DevExpress.hardwareBackButton.fire();
 		}
@@ -100,12 +103,20 @@
 			document.addEventListener("appMobi.notification.push.enable", notificationsRegistered, false);
 			document.addEventListener("appMobi.notification.push.receive", receivedPush, false);
 			document.addEventListener("appMobi.device.resume", function() {
-				DevExpress.ui.notify('Chào mừng bạn trở lại với Sendo!', 'info', 200);
+				DevExpress.ui.notify('Chào mừng bạn trở lại với Sendo!', 'info', 500);
 			}, false);
 		} else {
+			MyApp.app.navigatingBack.add(function(e) {
+				if (!MyApp.app.canBack()) {
+					e.cancel = true;
+					if (device.cordova) {
+						exitApp();
+					}
+				}
+			});
 			// if (device.cordova !== null)
 			document.addEventListener("resume", function() {
-				DevExpress.ui.notify('Chào mừng bạn trở lại với Sendo!', 'info', 200);
+				DevExpress.ui.notify('Chào mừng bạn trở lại với Sendo!', 'info', 500);
 			}, false);
 		}
 

@@ -20,22 +20,22 @@
 					<div>
 						Tên:
 					</div>
-					<div style="background-color: #E6E7EB;" id="nameBox" data-bind="dxTextBox: { value: editName, showClearButton: true}"></div>
+					<div style="background-color: #E6E7EB;" id="nameBox" data-bind="dxTextBox: { value: editName, showClearButton: true, valueChangeAction: function () { checkNameEmpty(); }}"></div>
 				</div>
 				<div class="dx-field">
 					<div>
 						Giá (đ):
 					</div>
-					<div style="background-color: #E6E7EB;" id="priceBox" data-bind="dxTextBox: { value: editPrice, keyUpAction: updatePriceFormat, valueUpdateEvent: 'keyup', showClearButton: true}"></div>
+					<div style="background-color: #E6E7EB;" id="priceBox" data-bind="dxTextBox: { value: editPrice, keyUpAction: updatePriceFormat, valueUpdateEvent: 'keyup', showClearButton: true, valueChangeAction: function () { checkPriceEmpty(); }}"></div>
 				</div>
 				<div class="dx-field">
 					<div>
 						Khối lượng (g):
 					</div>
-					<div style="background-color: #E6E7EB;" id="weightBox" data-bind="dxTextBox: { value: editWeight, valueChangeAction: updateWeightFormat, valueUpdateEvent: 'keyup', showClearButton: true}"></div>
+					<div style="background-color: #E6E7EB;" id="weightBox" data-bind="dxTextBox: { value: editWeight, keyUpAction: updateWeightFormat, valueUpdateEvent: 'keyup', showClearButton: true, valueChangeAction: function () { checkWeightEmpty(); }}"></div>
 				</div>
 			</div>
-			<div class="default-button" data-bind="dxButton: { text: 'Sửa', clickAction: changeProductProperties, icon:'edit-white' }"></div>
+			<div class="default-button" data-bind="dxButton: { text: 'Gửi duyệt', clickAction: changeProductProperties, icon:'edit-white' }"></div>
 			<div class="default-button" data-bind="dxButton: { text: 'Huỷ', clickAction: backToProduct, icon:'close' }"></div>
 		</div>
 		<div data-bind="dxLoadPanel:{message: '', visible: loadPanelVisible }"></div>

@@ -1,13 +1,19 @@
 ﻿<div data-options="dxView : { name: 'orderdetails', title:  'CHI TIẾT ĐƠN HÀNG' } " >
 	<div data-options="dxContent : { targetPlaceholder: 'content' } " >
 		<div data-bind="dxScrollView:{}" style="padding: 10px; color: black;">
+			<!-- ko if: displayInfo -->
 			<div>
+				<div class="pv-order-code" width="100%" style="font-size: smaller; margin-bottom: 10px; color: white; padding: 5px" data-bind="text:'#'+orderNumber() + ' - ' + orderStatus(), style: { backgroundColor: orderTypeColor}"></div>
+				<!-- ko if:displayRemainingTime -->
+				<div width="100%" style="font-size: smaller; margin-bottom: 10px;">
+					Thời gian xác nhận còn <span style="color: red" data-bind="text:confirmRemainingTime"></span> giờ(h)
+				</div>
+				<!-- /ko -->
 				<div class="pv-title-item pv-bg-white">
-					<table>
+					<table width="100%">
 						<tbody>
-							<tr >
-								<td class="pv-order-code" width="auto" style="font-size: smaller;" data-bind="text:'#'+orderNumber()"></td>
-								<td width="100%" class="order-total-amount" data-bind="text:totalAmount() + ' đ'"></td>
+							<tr>
+								<td width="auto" class="order-total-amount" style="text-align: right;" data-bind="text:totalAmount() + ' đ'"></td>
 							</tr>
 
 						</tbody>
@@ -45,12 +51,14 @@
 			<div class="pv-order-info">
 				<div class="order-info">
 					<div class="dx-fieldset" style="font-weight: bold; font-size: smaller">
+						<!-- ko if: displayTracking -->
 						<div id="trackingField" class="dx-field">
 							<div class="dx-field-label">
 								Mã vận đơn
 							</div>
 							<div class="dx-field-value" data-bind="text: ': ' + trackingNumber()" ></div>
 						</div>
+						<!-- /ko -->
 						<div class="dx-field">
 							<div class="dx-field-label">
 								Loại thanh toán
@@ -63,54 +71,66 @@
 							</div>
 							<div class="dx-field-value" data-bind="text: ': ' + paymentStatus()" ></div>
 						</div>
+						<!-- ko if: displayVoucher -->
 						<div class="dx-field">
 							<div class="dx-field-label">
 								Voucher
 							</div>
 							<div class="dx-field-value product-price" data-bind="text: ': ' + voucher() + ' đ'" ></div>
 						</div>
+						<!-- /ko -->
+						<!-- ko if: displayCarrier -->
 						<div id="carrierField" class="dx-field">
 							<div class="dx-field-label">
 								Nhà vận chuyển
 							</div>
 							<div class="dx-field-value" data-bind="text: ': ' + carrierName()" ></div>
 						</div>
+						<!-- /ko -->
+						<!-- ko if: displayShippingFee -->
 						<div class="dx-field">
 							<div class="dx-field-label">
 								Phí vận chuyển
 							</div>
 							<div class="dx-field-value product-price" data-bind="text: ': ' + shippingFee() + ' đ'" ></div>
 						</div>
+						<!-- /ko -->
+						<!-- ko if: displayShippingSendo -->
 						<div class="dx-field">
 							<div class="dx-field-label">
 								Sendo hỗ trợ PVC
 							</div>
 							<div class="dx-field-value product-price" data-bind="text: ': ' + sendoShippingSupport() + ' đ'" ></div>
 						</div>
+						<!-- /ko -->
+						<!-- ko if: displayShippingShop -->
 						<div class="dx-field">
 							<div class="dx-field-label">
 								Shop hỗ trợ PVC
 							</div>
 							<div class="dx-field-value product-price" data-bind="text: ': ' + shopShippingSupport() + ' đ'" ></div>
 						</div>
-						<div class="dx-field">
-							<div class="dx-field-label">
-								Trạng thái
-							</div>
-							<div class="dx-field-value" data-bind="text: ': ' + orderStatus()" ></div>
+						<!-- /ko -->
+						<!-- <div class="dx-field">
+						<div class="dx-field-label">
+						Trạng thái
 						</div>
+						<div class="dx-field-value" data-bind="text: ': ' + orderStatus()" ></div>
+						</div> -->
 						<div class="dx-field">
 							<div class="dx-field-label">
 								Ngày đặt hàng
 							</div>
 							<div class="dx-field-value" data-bind="text: ': ' + orderDateDisplay()" ></div>
 						</div>
+						<!-- ko if: displayDelay -->
 						<div id="delayField" class="dx-field">
 							<div class="dx-field-label">
 								Ngày hoãn
 							</div>
 							<div class="dx-field-value" data-bind="text: ': ' + delayDateDisplay()" ></div>
 						</div>
+						<!-- /ko -->
 						<div class="dx-field">
 							<div class="dx-field-label">
 								Người nhận hàng
@@ -129,7 +149,9 @@
 					</div>
 				</div>
 
+				<!-- ko if: displayNote -->
 				<div id="noteField" style="background: #e6e7eb; border-radius : 10px; padding: 10px; background-image: url('images/qa-icon.png'); background-repeat: no-repeat; background-position: right top;" data-bind="text:note" ></div>
+				<!-- /ko -->
 				<!-- ko if:canCancel -->
 				<div style="text-align: center;padding: 10px 0px; width: 100%;" id="cancelbutton" class="default-button" data-bind="dxButton: {text:'HẾT HÀNG', clickAction: function() {doCancelOrderByOrderID();}}"></div>
 				<!-- /ko -->
@@ -145,20 +167,21 @@
 			</div>
 
 			<div style="padding: 10px;"></div>
+			<!-- /ko -->
 		</div>
 		<div data-bind="dxLoadPanel:{message: 'Đang xử lý...', visible: loadPanelVisible }"></div>
-		<div class="popup" data-bind="dxPopup:{visible:popupDelayVisible, fullScreen:true, titleTemplate:'myDelayTitle'}">
+		<div class="popup" data-bind="dxPopup:{visible:popupDelayVisible, fullScreen:false, titleTemplate:'myDelayTitle'}">
 			<div data-options="dxTemplate: { name:'myDelayTitle' }">
 				<table style="border-spacing: 10px; border-collapse: separate;">
 					<tbody>
 						<tr height="36px">
-							<td class="transparent-button" data-bind="dxButton: {clickAction: hideDetailDelayPopUp, icon:'back-arrow'}"></td>
+							<td class="transparent-button" data-bind="dxButton: {clickAction: hideDetailDelayPopUp, icon:'close'}"></td>
 							<td width="100%" style="font-weight: bolder;white-space: pre-wrap; word-wrap: break-word;">Hoãn đơn hàng</td>
 						</tr>
 					</tbody>
 				</table>
 			</div>
-			<div data-options="dxTemplate:{name: 'content'}">
+			<div style="padding: 0 10px;" data-options="dxTemplate:{name: 'content'}">
 				<div class="dx-fieldset">
 					<div class="dx-field">
 						<div class="dx-field-label">
@@ -168,49 +191,32 @@
 						dxDateBox: { value: dateBoxValue, format: 'date' }"></div>
 					</div>
 				</div>
-				<div class="product-popup-footer">
+				<div class="popup-split-footer" style="padding-bottom: 10px;">
 					<div class="default-button" data-bind="dxButton: { text: 'Hoãn', clickAction: function() { doDelayOrderByOrderID(); }, icon:'clock' }"></div>
 					<div class="default-button" data-bind="dxButton: { text: 'Huỷ hoãn', clickAction: function() { hideDetailDelayPopUp(); }, icon: 'close' }"></div>
 				</div>
 			</div>
 		</div>
-		<div class="popup" data-bind="dxPopup:{visible:popupSplitVisible, fullScreen:true, titleTemplate:'myTitle'}">
+		<div class="popup" data-bind="dxPopup:{visible:popupSplitVisible, fullScreen:false, titleTemplate:'myTitle'}">
 			<div data-options="dxTemplate: { name:'myTitle' }">
 				<table style="border-spacing: 10px; border-collapse: separate;">
 					<tbody>
 						<tr height="36px">
-							<td class="transparent-button" data-bind="dxButton: {clickAction: hideDetailSplitPopUp, icon:'back-arrow'}"></td>
+							<td class="transparent-button" data-bind="dxButton: {clickAction: hideDetailSplitPopUp, icon:'close'}"></td>
 							<td width="100%" style="font-weight: bolder;white-space: pre-wrap; word-wrap: break-word;">Chọn sản phẩm còn hàng</td>
 						</tr>
 					</tbody>
 				</table>
 			</div>
-			<div id="popupSplitContent" data-options="dxTemplate:{name: 'content'}">
-				<!-- <div id="popupSplitList" data-bind="dxList: {dataSource: productsToSplit,
-				}">
-				<div data-options="dxTemplate:{ name:'item' }">
-				<div>
-				<table>
-				<tbody>
-				<tr>
-				<td width="100%" style="font-weight: bolder;white-space: pre-wrap; word-wrap: break-word;" data-bind="text: name"></td>
-				<td data-bind="dxCheckBox: {checked:selected, valueChangeAction: splitCheckChanged}"></td>
-				</tr>
-				</tbody>
-				</table>
-				</div>
-				</div>
-				</div> -->
-				<div id="popupSplitList">
-					<div>
-						<table width="100%" style="background-color: #EFEFF4; box-shadow: 0 0 4px gray; border-collapse: separate; border-spacing: 10px">
+			<div style="padding: 0 10px;" id="popupSplitContent" data-options="dxTemplate:{name: 'content'}">
+				<div id="popupSplitList" data-bind=" dxList: { dataSource: productsToSplit}">
+					<div data-options="dxTemplate : { name: 'item' }">
+						<table width="100%">
 							<tbody>
-								<!-- ko foreach: productsToSplit -->
 								<tr height="36px">
 									<td width="100%" style="font-weight: bolder;white-space: pre-wrap; word-wrap: break-word;" data-bind="text: name"></td>
 									<td data-bind="dxCheckBox: {checked:selected, valueChangeAction: splitDetailCheckChanged}"></td>
 								</tr>
-								<!-- /ko -->
 							</tbody>
 						</table>
 					</div>

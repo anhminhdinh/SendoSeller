@@ -4,17 +4,16 @@
 		pass : ko.observable(),
 		loadPanelVisible : ko.observable(false),
 		passMode : "password",
-		savePassword : ko.observable(false),
-		toggleSavePassword : function() {
-			var myUserName = window.localStorage.getItem("UserName");
-			if (!viewModel.savePassword()) {
-				localStorage.removeItem(myUserName + "Password");
-				viewModel.pass('');
-			}
-			localStorage.setItem(myUserName + "SavePassword", Boolean(viewModel.savePassword()));
-		},
+		// savePassword : ko.observable(false),
+		// toggleSavePassword : function() {
+		// var myUserName = window.localStorage.getItem("UserName");
+		// if (viewModel.savePassword() !== true) {
+		// localStorage.removeItem(myUserName + "SavePassword");
+		// viewModel.pass('');
+		// } else
+		// localStorage.setItem(myUserName + "SavePassword", viewModel.savePassword());
+		// },
 		isLoggedOut : ko.observable(false),
-		forced : params.id,
 		viewShowing : function() {
 			viewModel.loadPanelVisible(false);
 			if ( typeof AppMobi === 'object')
@@ -25,21 +24,21 @@
 				viewModel.username(myUserName);
 			}
 
-			var mySavePassword = localStorage.getItem(myUserName + 'SavePassword');
-			if (mySavePassword !== null) {
-				viewModel.savePassword(Boolean(mySavePassword));
-			}
+			// var mySavePassword = localStorage.getItem(myUserName + 'SavePassword');
+			// if (mySavePassword !== null) {
+			// viewModel.savePassword(true);
+			// }
 
 			var myPassword = window.localStorage.getItem(myUserName + "Password");
 			if (myPassword !== null) {
 				viewModel.pass(myPassword);
 			}
 
-			var tokenId = window.sessionStorage.getItem("MyTokenId");
+			var tokenId = window.sessionStorage.getItem("access_token");
 			var isLoggedOut = tokenId === null;
 			viewModel.isLoggedOut(isLoggedOut);
 
-			if (isLoggedOut) {
+			if (isLoggedOut || (params.id === "forced")) {
 				viewModel.toggleNavs(false);
 				if (myUserName !== null && myPassword !== null)
 					viewModel.dologin();
@@ -62,25 +61,49 @@
 				DevExpress.ui.dialog.alert("Địa chỉ email không hợp lệ!", "Sendo.vn");
 				return;
 			}
+			if (viewModel.pass().length < 6) {
+				DevExpress.ui.dialog.alert("Mật khẩu không hợp lệ!", "Sendo.vn");
+				return;
+			}
 			viewModel.loadPanelVisible(true);
 			if ( typeof AppMobi === 'object')
 				AppMobi.notification.showBusyIndicator();
+
 			var domain = window.sessionStorage.getItem("domain");
-			var url = domain + "/api/mobile/login";
-			return $.post(url, {
-				UserName : viewModel.username(),
-				Password : viewModel.pass()
+			var url = domain + "/api/token";
+			$.post(url, {
+				"grant_type" : "password",
+				"username" : viewModel.username(),
+				"password" : viewModel.pass()
 			}, "json").done(function(data) {
-				viewModel.loadPanelVisible(false);
-				if ( typeof AppMobi === 'object')
-					AppMobi.notification.hideBusyIndicator();
-				if (data.Flag !== true) {
-					prepareLogout(data.Message);
-					return;
-				}
-				if (data.Data.StoreStatus !== 2) {
-					var message = "Shop trong trạng thái ";
-					switch (data.Data.StoreStatus) {
+				console.log(data.access_token);
+				window.sessionStorage.setItem("access_token", data.access_token);
+				var url = domain + "/api/User/UserInfo";
+
+				// return $.post(url, {
+				// UserName : viewModel.username(),
+				// Password : viewModel.pass()
+				// }, "json").done(function(data) {
+				return $.ajax({
+					type : "POST",
+					url : url,
+					dataType : "json",
+					contentType : "application/json",
+					data : {},
+					beforeSend : function(xhr) {
+						xhr.setRequestHeader('Authorization', 'Bearer ' + window.sessionStorage.getItem("access_token"));
+					},
+				}).done(function(data) {
+					viewModel.loadPanelVisible(false);
+					if ( typeof AppMobi === 'object')
+						AppMobi.notification.hideBusyIndicator();
+					if (data.Flag !== true) {
+						prepareLogout(data.Message);
+						return;
+					}
+					if (data.Data.StoreStatus !== 2) {
+						var message = "Shop trong trạng thái ";
+						switch (data.Data.StoreStatus) {
 						case 0:
 							message += "nháp";
 							break;
@@ -99,78 +122,75 @@
 						default:
 							message += "chưa duyệt";
 							break;
+						}
+						DevExpress.ui.dialog.alert(Message, "Sendo.vn");
+						// return;
 					}
-					DevExpress.ui.dialog.alert(message, "Sendo.vn");
-					// return;
-				}
 
-				window.localStorage.setItem("UserName", viewModel.username());
-				if (viewModel.savePassword)
+					window.localStorage.setItem("UserName", viewModel.username());
 					window.localStorage.setItem(viewModel.username() + "Password", viewModel.pass());
-				if (data.Data.TokenId !== undefined)
-					window.sessionStorage.setItem("MyTokenId", data.Data.TokenId);
-				else
-					window.sessionStorage.setItem("MyTokenId", data.Data);
-				window.localStorage.setItem(viewModel.username() + "UserID", data.Data.FptId);
-				viewModel.toggleNavs(true);
-				MyApp.app.navigation[3].option('title', 'Đăng xuất');
-				MyApp.app.navigate({
-					view : "orders",
-					id : undefined,
-				}, {
-					root : true
+					window.localStorage.setItem(viewModel.username() + "UserID", data.Data.FptId);
+					viewModel.toggleNavs(true);
+					MyApp.app.navigation[3].option('title', 'Đăng xuất');
+					MyApp.app.navigate({
+						view : "orders",
+						id : undefined,
+					}, {
+						root : true
+					});
+					registerPush();
+				}).fail(function(jqxhr, textStatus, error) {
+					if (jqxhr.responseText !== null && jqxhr.responseText !== undefined) {
+						var errorObj = JSON.parse(jqxhr.responseText);
+						DevExpress.ui.dialog.alert(errorObj.error, "Sendo.vn");
+					} else
+						DevExpress.ui.dialog.alert("Lỗi mạng, đăng nhập thất bại!", "Sendo.vn");
+					viewModel.loadPanelVisible(false);
+					if ( typeof AppMobi === 'object')
+						AppMobi.notification.hideBusyIndicator();
 				});
-				registerPush();
 			}).fail(function(jqxhr, textStatus, error) {
-				DevExpress.ui.dialog.alert("Lỗi mạng, đăng nhập thất bại!", "Sendo.vn");
+				if (jqxhr.responseText !== null && jqxhr.responseText !== undefined) {
+					var errorObj = JSON.parse(jqxhr.responseText);
+					DevExpress.ui.dialog.alert(errorObj.error, "Sendo.vn");
+				} else
+					DevExpress.ui.dialog.alert("Lỗi mạng, đăng nhập thất bại!", "Sendo.vn");
 				viewModel.loadPanelVisible(false);
 				if ( typeof AppMobi === 'object')
 					AppMobi.notification.hideBusyIndicator();
 			});
 		},
+		logoutDone : function() {
+			if (params.id !== "forced") {
+				var myUserName = window.localStorage.getItem("UserName");
+				localStorage.removeItem(myUserName + 'Password');
+				viewModel.pass('');
+			}
+			window.sessionStorage.removeItem("access_token");
+			viewModel.isLoggedOut(true);
+			viewModel.toggleNavs(false);
+			MyApp.app.navigation[3].option('title', 'Đăng nhập');
+			// window.plugins.pushNotification.unregister(null, null, null);
+		},
 		dologout : function() {
-			if (viewModel.forced === "forced") {
-				viewModel.doRealLogout();
+			if (params.id === "forced") {
+				viewModel.logoutDone();
 			} else {
 				var result = DevExpress.ui.dialog.confirm("Bạn có chắc muốn đăng xuất?", "Sendo.vn");
 				result.done(function(dialogResult) {
 					if (dialogResult) {
-						viewModel.doRealLogout();
+						viewModel.logoutDone();
+						// viewModel.doRealLogout();
 					}
 				});
 			}
 		},
-		doRealLogout : function() {
-			viewModel.loadPanelVisible(true);
-			if ( typeof AppMobi === 'object')
-				AppMobi.notification.showBusyIndicator();
-			var domain = window.sessionStorage.getItem("domain");
-			var url = domain + "/api/mobile/logout";
-			return $.post(url, {
-				TokenId : window.sessionStorage.getItem("MyTokenId")
-			}, "json").done(function(data, textStatus) {
-				viewModel.loadPanelVisible(false);
-				if ( typeof AppMobi === 'object')
-					AppMobi.notification.hideBusyIndicator();
-				if (data.Flag !== true) {
-					prepareLogout(data.Message);
-					return;
-				}
-				window.sessionStorage.removeItem("MyTokenId");
-				viewModel.isLoggedOut(true);
-				viewModel.toggleNavs(false);
-				MyApp.app.navigation[3].option('title', 'Đăng nhập');
-
-				window.plugins.pushNotification.unregister(null, null, null);
-				//textStatus contains the status: success, error, etc
-			}).fail(function(jqxhr, textStatus, error) {
-				DevExpress.ui.dialog.alert("Đăng xuất thất bại!\nBạn phải tắt ứng dụng rồi bật lại.", "Sendo.vn");
-				viewModel.loadPanelVisible(false);
-				if ( typeof AppMobi === 'object')
-					AppMobi.notification.hideBusyIndicator();
-			});
-
-		}
+		checkPassword : function() {
+			var myPassword = window.localStorage.getItem(viewModel.username() + "Password");
+			if (myPassword !== null) {
+				viewModel.pass(myPassword);
+			}			
+		},
 	};
 	return viewModel;
 };

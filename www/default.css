@@ -51,7 +51,7 @@
 	font-weight: bold;
 }
 .pv-order-code {
-	color: #ee2d24;
+	/*color: black;*/
 	/*font-size: smaller !important;*/
 	font-weight: bold;
 }
@@ -126,11 +126,6 @@
 	box-shadow: 0px 2px 5px #CFCFCF;
 	z-index: 1000;
 	position: relative;
-}
-.pv-list-item {
-	padding: 0;
-	/*background-color: #FFF;*/
-	/*border-bottom: 2px solid #ee2d24;*/
 }
 .pv-fs16 {
 	font-size: 16px;
